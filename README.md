@@ -57,16 +57,12 @@ Singalong accepts flat-formatted text chord charts as its input:
 ```
 G
 I've been working on the railroad
-
-C         G
-
+C                 G
 All the live-long day.
 
 Em
-
 I've been working on the railroad
-    A       D
-
+        A              D
 Just to pass the time away.
 ```
 
@@ -103,18 +99,18 @@ to
 Eventually, it would be great to have a real authentication system allowing
 multiple private sessions to be happening at once.
 
-- [ ] Code cleanup. I'm a Javascript novice and not the world's greatest programmer. 
+* Code cleanup. I'm a Javascript novice and not the world's greatest programmer. 
 The code could use an audit and I'm sure some things could be done more 
 efficiently.
 
-- [ ] Karaoke Mode: the ability to record and play back lyrics progress triggered 
+* Karaoke Mode: the ability to record and play back lyrics progress triggered 
 by chord changes. Displayed on a special black screen, larger lyric format and 
 no chords for singers at live-band Karaoke shows.
 
-- [ ] "Client-only" option for standalone use where all server-side logic is moved to
+* "Client-only" option for standalone use where all server-side logic is moved to
 the client and files are loaded via copy-paste
 
-- [ ] Determine if my crazy method for determining song sharpness/flatness has any
+* Determine if my crazy method for determining song sharpness/flatness has any
 basis in music theory whatsoever (it seems to work most of the time, though.)
 
 ## Changelog 
