@@ -115,6 +115,7 @@ basis in music theory whatsoever (it seems to work most of the time, though.)
 
 ## Changelog 
 v0.4.0 -initial port to node/socket.io and networked terminals
+
 v0.3 - initial public release. Generated in perl and contained no server 
 component. 0.4 series represents the first all-Javascript release.
 
