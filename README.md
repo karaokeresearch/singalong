@@ -88,7 +88,7 @@ This is my basic effort to make some software to do live-band karaoke and
 singalongs with my friends. I welcome help from more experienced coders
 and musicians.
 
-- [ ] More sophisticated security. Currently, the sole security feature is that
+* More sophisticated security. Currently, the sole security feature is that
 all input must come from the machine serving the singalong session. At the
 very least, a whitelist of allowed clients to send input. Currently, you can
 change 
