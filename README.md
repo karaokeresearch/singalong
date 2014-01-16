@@ -1,10 +1,10 @@
 # singalong.js
 A product of the Karaoke Research Council
 
-Singalong is a node.js application for simultaneously scrolling chord charts 
-(or "tab") in browser windows on multiple devices at once over a LAN. Songs are 
-advanced one chord change at a time using an inexpensive USB foot pedal or via 
-the help of an assistant.
+Singalong is a node.js application for displayijng simultaneously scrolling chord 
+charts (or "tab") in browser windows on multiple devices at once over a wireless 
+LAN. Songs are advanced one chord change at a time using an inexpensive USB foot 
+pedal or via the help of an assistant.
 
 ## Key Controls
 * D - Advance to the next chord (I assign the right foot pedal to this key) 
@@ -15,31 +15,47 @@ the help of an assistant.
 
 ## Usage 
 To install:
+First, download and install node.js for your platform if you haven't already 
+
+http://nodejs.org/download/
+
+Once complete, open a command prompt, console, or shell and type:
 ```$ npm install -g singalong```
 
-To run: 
+Keep your console open and change the current directory to a directory you 
+would like to use are your location for storing files related to singalong.
+
+Then, type:
+ 
 ```$ singalong```
 
+At startup, singalong looks for a subdirectory called "songs" under the folder you 
+are calling it from. If that directory doesn't exist, singalong creates it and 
+copies "I've Been Workin' On The Railroad" as a starter song.
+
 To add additional songs, place text files containing chord charts in 
-the /songs subdirectory.
+the ./songs subdirectory.
 
 ### User experience
-Once singalong is running, open a browser windows to your computer's IP address 
-or domain name.  Have users connect to the same address. They will see the same
-thing you see!
+Once singalong is running, open a browser window to your computer's IP address 
+or domain name.  Typically something like http://localhost or http://192.168.1.5
+or http://mycomputername.  Have users connect to the same address. They should see 
+the same thing you see: a list of song files from ./songs
 
-Loaded songs begin with a list of all chords represented in the song. This is 
-useful for an initial run-through of the chords if desired.
+Click a song in your browser to load it.  Loaded songs begin with a list of all 
+chords represented in the song. This is useful for an initial review of the 
+chords if desired.
 
 Active chords are highlighted and the song automatically scrolled
-based on input given from a central controlling user or users. It is 
-designed to be used in tandem with inexpensive USB foot pedals configured 
-to send the 'D' or 'A' keys to progress or regress through the song respectively. 
-Text is formatted to fit to the browser window width for maximum readability, 
+based on input given from a central controlling user or users.  Hit 
+the 'A' or 'D' key to recede or advance the current chord, respectively.  
+To use with a two-pedal USB foot pedal, program the left pedal to emit the 
+'A' keystroke and the right pedal to emit the 'D' keystroke. Text is 
+formatted to fit to the browser window width for maximum readability, 
 and the song's key can be altered on-the-fly with the 'W' and 'S' keys. 
 
 ### Applications
-Use in leiu of printed song sheets / fakebooks for :
+Use in lieu of printed song sheets / fakebooks for :
 * Casual singalongs at parties
 * Live band karaoke
 * Music classes
@@ -67,7 +83,7 @@ Just to pass the time away.
 ```
 
 The public domain song Ive_Been_Workin_On_The_Railroad.txt is provided as a 
-sample input file in the /songs subdirectory.
+sample input file in the ./songs subdirectory.
 
 ## Purpose
 I created this tool because I realized there is no standard tool to facilitate 
@@ -81,7 +97,6 @@ control its output. Singalong has been tested in Chrome, Firefox, Opera, and
 the mobile browsers for Android and iPhone. Internet Explorer 6, 7, and 8 
 are not supported due to use of JQuery 2.0 and also I was having trouble with
 it. 
-
 
 ## Todo 
 This is my basic effort to make some software to do live-band karaoke and 
@@ -114,6 +129,8 @@ the client and files are loaded via copy-paste
 basis in music theory whatsoever (it seems to work most of the time, though.)
 
 ## Changelog 
+v0.4.1 -actually working as advertised version
+
 v0.4.0 -initial port to node/socket.io and networked terminals
 
 v0.3 - initial public release. Generated in perl and contained no server 

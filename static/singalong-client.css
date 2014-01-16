@@ -1,0 +1,80 @@
+@font-face {
+    font-family: Bitstream Vera Sans Mono Bold;
+    src: url('VeraMoBd.eot?') format('eot'),
+    url('VeraMoBd.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: Bitstream Vera Sans Mono;
+    src: url('VeraMono.eot?') format('eot'),
+    url('VeraMono.ttf') format('truetype');
+}
+
+span.startstop{
+    color: #000000;
+    background-color: #FFFFFF;
+    font-family: Bitstream Vera Sans Mono, Courier New;
+}
+
+span.chordspan{
+    color: #007fbf;
+    background-color: #FFFFFF;
+    font-family: Bitstream Vera Sans Mono, Courier New;
+    padding: 0;
+    margin-top: 0;
+    margin-right: 0;
+    margin-left: 0;
+    margin-bottom:0pt;
+    letter-spacing:0;
+    white-space: pre;
+}
+
+div.chords{
+    font-family: Bitstream Vera Sans Mono, Courier New;
+    height:1.2em;
+}
+
+div.lyrics{
+    color: black;
+    background-color: #FFFFFF;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    padding: 0;
+    margin-top: 0;
+    margin-right: 0;
+    margin-left: 1em;
+    margin-bottom:1em;
+    letter-spacing:0;
+    white-space: pre;
+}
+
+div.indexhead{
+    text-align: center;
+    color: black;
+    background-color: #FFFFFF;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    padding: 0;
+    margin-top: 0em;
+    margin-right: 0;
+    margin-left: 0;
+    margin-bottom:1em;
+    letter-spacing:0;
+    white-space: pre;
+}
+
+div.songlink{
+    text-align: center;
+    color: blue;
+    background-color: #FFFFFF;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    padding: 0;
+    margin-top: 0;
+    margin-right: 0;
+    margin-left: 0;
+    margin-bottom:1em;
+    letter-spacing:0;
+    white-space: pre;
+}
+
+body {
+    -webkit-text-size-adjust: 100%;
+}
