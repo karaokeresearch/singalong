@@ -122,7 +122,7 @@ multiple private sessions to be happening at once.
 The code could use an audit and I'm sure some things could be done more 
 efficiently.
 
- * Karaoke Mode: the ability to record and play back lyrics progress triggered
+* Karaoke Mode: the ability to record and play back lyrics progress triggered
 by chord changes. Displayed on a special black screen, larger lyric format and
 no chords for singers at live-band Karaoke shows.
 
