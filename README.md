@@ -38,11 +38,10 @@ To add additional songs, place text files containing chord charts in the ./songs
 subdirectory.
 
 ### User experience 
-Once singalong is running, open a browser window to your
-computer's IP address or domain name.  Typically something like http://localhost
-or http://192.168.1.5 or http://mycomputername.  Have users connect to the same
-address. They should see the same thing you see: a list of song files from
-./songs
+Once singalong is running, open a browser window to your computer's IP address 
+or domain name.  Typically something like http://localhost or http://192.168.1.5 
+or http://mycomputername.  Have users connect to the same address. They should 
+see the same thing you see: a list of song files from ./songs
 
 Click a song in your browser to load it.  Loaded songs begin with a list of all
 chords represented in the song. This is useful for an initial review of the
@@ -87,26 +86,26 @@ Just to pass the time away.
 The public domain song Ive_Been_Workin_On_The_Railroad.txt is provided as a
 sample input file in the ./songs subdirectory.
 
-## Purpose I created this tool because I realized there is no standard tool to
-facilitate live-band-karaoke performances and realized these performances are
-often hard for singers to follow along with. I have used singalong to teach
-people new songs, live performances in front of audiences, and casual
-singalongs.
+## Purpose 
+I created singalong because I realized there is no standard tool to facilitate 
+live-band-karaoke performances and realized these performances are often hard 
+for singers to follow along with. I have used singalong to teach people new 
+songs, live performances in front of audiences, and casual singalongs.
 
-## Requirements A modern compliant browser with Javascript support is required
-to view and control its output. Singalong has been tested in Chrome, Firefox,
-Opera, and the mobile browsers for Android and iPhone. Internet Explorer 6, 7,
-and 8 are not supported due to use of JQuery 2.0 and also I was having trouble
-with it.
+## Requirements 
+A modern compliant browser with Javascript support is required to view and 
+control its output. Singalong has been tested in Chrome, Firefox, Opera, and the 
+mobile browsers for Android and iPhone. Internet Explorer 6, 7, and 8 are not 
+supported due to use of JQuery 2.0 and also I was having trouble with it.
 
-## Todo This is my basic effort to make some software to do live-band karaoke
-and singalongs with my friends. I welcome help from more experienced coders and
+## Todo 
+This is my basic effort to make some software to do live-band karaoke and 
+singalongs with my friends. I welcome help from more experienced coders and 
 musicians.
 
-* More sophisticated security. Currently, the sole security feature is that
-all input must come from the machine serving the singalong session. At the
-very least, a whitelist of allowed clients to send input. Currently, you can
-change
+* More sophisticated security. Currently, the sole security feature is that all 
+input must come from the machine serving the singalong session. At the very 
+least, a whitelist of allowed clients to send input. Currently, you can change
 
 ```var disableSecurity=0;```
 
@@ -116,11 +115,11 @@ to
 
 ... but that turns off everything.
 
-Eventually, it would be great to have a real authentication system allowing
+Eventually, it would be great to have a real authentication system allowing 
 multiple private sessions to be happening at once.
 
-* Code cleanup. I'm a Javascript novice and not the world's greatest programmer.
-The code could use an audit and I'm sure some things could be done more
+* Code cleanup. I'm a Javascript novice and not the world's greatest programmer. 
+The code could use an audit and I'm sure some things could be done more 
 efficiently.
 
  * Karaoke Mode: the ability to record and play back lyrics progress triggered
