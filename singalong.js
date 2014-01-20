@@ -142,7 +142,8 @@ function returnIndexHTML(callback){//Spit out the index based on the list of fil
         for (var i = 0; i < data.length; i++) {
             var prettySongName= data[i].replace(/.txt$/i,'').replace(/_/g,' ').replace(/-/g,' - ');//pretty up the output
             if (prettySongName.length > longestLine) {longestLine = prettySongName.length;}
-            parseChunk = parseChunk +  '<div class="songlink" onclick="changeSong(\''+  data[i] + '\')">' +  prettySongName +'</div>'; //click here
+            var songName = data[i].replace(/\'/g, '\\\'');
+            parseChunk = parseChunk +  '<div class="songlink" onclick="changeSong(\''+  songName + '\')">' +  prettySongName +'</div>'; //click here
         }
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber1" onclick="sendChord(\'1\')">&gt;&gt;end</span>';//thing at the bottom
         if (longestLine==0){longestLine=25;}
