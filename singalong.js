@@ -157,6 +157,7 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
     //two passes: first, we collect all the chords in the song, then we create the summary at the top in the variable allChords
     //TODO: figure out a way to turn the duplicated code into a function.
     var chordNumber=0;//<DIV> number later.
+    var lyricNumber=0;//<DIV> number later.
     var parseChunk='';//The being-assembled HTML chunklets
     var k=0; //index of the chords summary displayed before the song title at the top
     var chordsInSongLine='';
@@ -210,7 +211,7 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         for (var j=0; j<line.length; j++) {
             tabline=line[j];
             if (tabline.length > longestLine ) { longestLine = tabline.length; }
-            if (tabline.match(chordRegex)) //the line is a chord
+            if (tabline.match(chordRegex)) ///********************************** IT'S CHORDS ************
             {
                 parseChunk=parseChunk +("\n\n" + '<div class="chords">');
                 var colCount=0;
@@ -234,10 +235,27 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 parseChunk=parseChunk +(chordLine);
             }//end is it a chord line
 
-            else{ //it's lyrics
-                //if (tabline.length <1){tabline =" ";} //need at least something for every lyrics line otherwise pagination is wrong
-                //tabline =~ s/\s/&nbsp;/g;
-                parseChunk=parseChunk +("\n" +  '<div class="lyrics">' + tabline +'');
+            else{ //********************************** IT'S LYRICS ************
+                parseChunk=parseChunk +("\n" +  '<div class="lyrics">');
+                var colCount=0;
+                var chordLine = "";
+                var chordchunk="";
+                var tabarray = tabline.split(/(\s)/),i; //split lyrics line into chunks of spaces                                                                                                                                                                                                                            
+				for (i = 0; i < tabarray.length; i++) {                                                                                                                                                                                                                                                                     
+				    if ( tabarray[i].match(/\s/g)){    //is it a space?                                                                                                                                                                                                                                                     
+				        chordLine=chordLine+  " "//add to the column carat for where we are so far in the line                                                                                                                                                                                                                           
+				    }                                                                                                                                                                                                                                                                                                       
+				    else {                  //it wasn't a space                                                                                                                                                                                                                                                             
+				        if ( tabarray[i].match(/\w/)) { //but also weed out the empty ones.  Don't ask me.                                                                                                                                                                                                                  
+				            lyricNumber++;
+				            var chordchunk ='';                                                                                                                                                                                                                                                                                  
+				            chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';                                                                                                                         
+				            chordLine = chordLine+chordchunk;                                                                                                                                                                                                                                                             
+				         //   colCount += tabarray[i].length; //number of columns so far is the spaces from the spaces carat above plus the length of the chord                                                                                                                                                               
+				        }    // end is this a chord                                                                                                                                                                                                                                                                         
+				    }    //end is this a word or empty element                                                                                                                                                                                                                                                              
+				}//end going through the elements                                                                                                                                                                                                                                                                           
+				parseChunk=parseChunk +(chordLine);                                                                                                                                                                                                                                                                         
             }
             parseChunk=parseChunk +('</div>'); //space before the div used to be important
         }
