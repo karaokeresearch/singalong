@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*!
-* singalong.js v0.4.1
+* singalong.js v0.4.2
 * server for the Karaoke Research Council engine
 *
 * Karaoke Research Council
@@ -142,7 +142,7 @@ function returnIndexHTML(callback){//Spit out the index based on the list of fil
         for (var i = 0; i < data.length; i++) {
             var prettySongName= data[i].replace(/.txt$/i,'').replace(/_/g,' ').replace(/-/g,' - ');//pretty up the output
             if (prettySongName.length > longestLine) {longestLine = prettySongName.length;}
-            var songName = data[i].replace(/\'/g, '\\\'');
+            var songName = data[i].replace(/\'/g, '\\\'');//necessary for filenames with single quotes in them
             parseChunk = parseChunk +  '<div class="songlink" onclick="changeSong(\''+  songName + '\')">' +  prettySongName +'</div>'; //click here
         }
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber1" onclick="sendChord(\'1\')">&gt;&gt;end</span>';//thing at the bottom
