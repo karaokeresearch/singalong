@@ -62,7 +62,7 @@ io.sockets.on('connection', function(socket) {
     socket.emit('bFlat', { message: swapFlat});
     socket.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});  //This is both the song and the current chord.  Must be processed at same time.
 
-    socket.on('id', function (data){  //user is switching chords.  
+    socket.on('id', function (data){  //user is switching chords.
         if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
             currentChord = data.data;
             io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord}); //Sent out with every chord change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next chord change.
@@ -70,7 +70,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
-    socket.on('lid', function (data){  //user is switching lyrics.  
+    socket.on('lid', function (data){  //user is switching lyrics.
         if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
             currentLyric = data.data;
             io.sockets.emit('bcurrentSong', { song: currentSong,  blid: currentLyric}); //Sent out with every lyric change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next lyric change.
@@ -251,22 +251,22 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 var chordLine = "";
                 var chordchunk="";
                 var sepchar="";
-                var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes                                                                                                                                                                                                                           
-				for (i = 0; i < tabarray.length; i++) {                                                                                                                                                                                                                                                                     
-				    if (sepchar=tabarray[i].match(/(\s|\-)/g)){    //is it a space or a dash?                                                                                                                                                                                                                                                     
-				        chordLine=chordLine + sepchar;//add to the column carat for where we are so far in the line                                                                                                                                                                                                                           
-				    }                                                                                                                                                                                                                                                                                                       
-				    else {                  //it wasn't a space                                                                                                                                                                                                                                                             
-				        if ( tabarray[i].match(/\w/)) { //but also weed out the empty ones.  Don't ask me.                                                                                                                                                                                                                  
+                var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes
+				for (i = 0; i < tabarray.length; i++) {
+				    if (sepchar=tabarray[i].match(/(\s|\-|.*?:$)/g)){    //is it a space or a dash?
+				        chordLine=chordLine + sepchar;
+				    }
+				    else {                  //it wasn't a space
+				        if ( tabarray[i].match(/\w/) ) { //but also weed out the empty ones and things like this "Chorus:"
 				            lyricNumber++;
-				            var chordchunk ='';                                                                                                                                                                                                                                                                                  
-				            chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';                                                                                                                         
-				            chordLine = chordLine+chordchunk;                                                                                                                                                                                                                                                             
-				         //   colCount += tabarray[i].length; //number of columns so far is the spaces from the spaces carat above plus the length of the chord                                                                                                                                                               
-				        }    // end is this a chord                                                                                                                                                                                                                                                                         
-				    }    //end is this a word or empty element                                                                                                                                                                                                                                                              
-				}//end going through the elements                                                                                                                                                                                                                                                                           
-				parseChunk=parseChunk +(chordLine);                                                                                                                                                                                                                                                                         
+				            var chordchunk ='';
+				            chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';
+				            chordLine = chordLine+chordchunk;
+				         //   colCount += tabarray[i].length; //number of columns so far is the spaces from the spaces carat above plus the length of the chord
+				        } 
+				    }    //end is this a word or empty element
+				}//end going through the elements
+				parseChunk=parseChunk +(chordLine);
             }
             parseChunk=parseChunk +('</div>'); //space before the div used to be important
         }

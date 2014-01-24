@@ -14,6 +14,7 @@ span.startstop{
     color: #000000;
     background-color: #FFFFFF;
     font-family: Bitstream Vera Sans Mono, Courier New;
+    cursor: pointer;
 }
 
 span.chordspan{
@@ -32,6 +33,7 @@ span.chordspan{
 div.chords{
     font-family: Bitstream Vera Sans Mono, Courier New;
     height:1.2em;
+    cursor: pointer;
 }
 
 div.lyrics{
@@ -45,6 +47,7 @@ div.lyrics{
     margin-bottom:1em;
     letter-spacing:0;
     white-space: pre;
+    cursor: pointer; 
 }
 
 div.indexhead{
@@ -73,6 +76,7 @@ div.songlink{
     margin-bottom:1em;
     letter-spacing:0;
     white-space: pre;
+    cursor: pointer;
 }
 
 body {
