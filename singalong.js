@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*!
-* singalong.js v0.4.2
+* singalong.js v0.5.0
 * server for the Karaoke Research Council engine
 *
 * Karaoke Research Council
@@ -26,6 +26,7 @@ var tabline =0;
 var longestLine=0;
 var parsedHTML='';
 var currentChord=0;
+var currentLyric=1;
 var currentMod=0;
 var totalMod=0;
 var swapFlat=0;
@@ -59,12 +60,20 @@ io.sockets.on('connection', function(socket) {
     // Welcome messages on connection to just the connecting client
     socket.emit('bTotMod', { message: totalMod});
     socket.emit('bFlat', { message: swapFlat});
-    socket.emit('bcurrentSong', { song: currentSong, bid: currentChord});  //This is both the song and the current chord.  Must be processed at same time.
+    socket.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});  //This is both the song and the current chord.  Must be processed at same time.
 
-    socket.on('id', function (data){  //user is switching chords.  Most commonly sent message
+    socket.on('id', function (data){  //user is switching chords.  
         if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
             currentChord = data.data;
             io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord}); //Sent out with every chord change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next chord change.
+            console.log(data);
+        }
+    });
+
+    socket.on('lid', function (data){  //user is switching lyrics.  
+        if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
+            currentLyric = data.data;
+            io.sockets.emit('bcurrentSong', { song: currentSong,  blid: currentLyric}); //Sent out with every lyric change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next lyric change.
             console.log(data);
         }
     });
@@ -112,20 +121,21 @@ io.sockets.on('connection', function(socket) {
 //************** HELPER FUNCTIONS ********************
 function loadNewSong(newsong){//loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
     currentChord=0;
+    currentLyric=1;
     totalMod=0;
     currentSong=(newsong);
     swapFlat=0;
     if (currentSong=="index"){
         returnIndexHTML(function(HTML){
             parsedHTML=HTML;
-            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord}); //tell all clients to load new file
+            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric}); //tell all clients to load new file
             io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
 
         });
     }else{
         returnChordHTML(newsong, function(HTML) {
             parsedHTML=HTML;
-            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord});
+            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});
             io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
         });
     }
@@ -148,7 +158,7 @@ function returnIndexHTML(callback){//Spit out the index based on the list of fil
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber1" onclick="sendChord(\'1\')">&gt;&gt;end</span>';//thing at the bottom
         if (longestLine==0){longestLine=25;}
 
-        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="1"></form>'//passing variables to the client.  Is this the right way?  My guess is probably yes.
+        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="1"><input type="hidden" id="lastLyric" value="1"></form>'//passing variables to the client.  Is this the right way?  My guess is probably yes.
         callback(parseChunk);
     });
 }
@@ -240,10 +250,11 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 var colCount=0;
                 var chordLine = "";
                 var chordchunk="";
-                var tabarray = tabline.split(/(\s)/),i; //split lyrics line into chunks of spaces                                                                                                                                                                                                                            
+                var sepchar="";
+                var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes                                                                                                                                                                                                                           
 				for (i = 0; i < tabarray.length; i++) {                                                                                                                                                                                                                                                                     
-				    if ( tabarray[i].match(/\s/g)){    //is it a space?                                                                                                                                                                                                                                                     
-				        chordLine=chordLine+  " "//add to the column carat for where we are so far in the line                                                                                                                                                                                                                           
+				    if (sepchar=tabarray[i].match(/(\s|\-)/g)){    //is it a space or a dash?                                                                                                                                                                                                                                                     
+				        chordLine=chordLine + sepchar;//add to the column carat for where we are so far in the line                                                                                                                                                                                                                           
 				    }                                                                                                                                                                                                                                                                                                       
 				    else {                  //it wasn't a space                                                                                                                                                                                                                                                             
 				        if ( tabarray[i].match(/\w/)) { //but also weed out the empty ones.  Don't ask me.                                                                                                                                                                                                                  
@@ -262,7 +273,7 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         chordNumber++;
         //longestLine = longestLine + 1; //used to do this, pretty sure we don't anymore.
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber' + chordNumber + '" onclick="sendChord(\''  + chordNumber + '\')">&gt;&gt;end</span>';
-        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"></form>'
+        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
         parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         callback(parseChunk);
     });

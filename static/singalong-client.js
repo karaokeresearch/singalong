@@ -1,5 +1,5 @@
 /*!
-* singalong-client v0.4.2
+* singalong-client v0.5.0
 * browser client for singalong.js
 *
 * Karaoke Research Council
@@ -13,9 +13,11 @@
 
 var socket = io.connect();
 var currentChord=0;
+var currentLyric=1;
 var longestLine =0;
 var lastPos=0; //the final div number
-var hitOnce=0;
+var lastLyric=0; //the final div number
+var hitOnce =new Array();//determines if a user has hit a key or not
 var SongInFlatKey=0;
 var actualKey;
 var totalModulation=0;
@@ -33,28 +35,36 @@ $(document).ready(function(){ //
 
 //detect keystrokes.
 //do it this complicated way so that holding down a key does not send multiple
-//keystrokes to the engine.  Too much input is bad.
+//keystrokes to the engine.  Too much input is bad.  We use an array so that this is
+//only applied on a per-key basis to allow multiple users on the same keyboard while
+//simultaneously preventing accidental multiple-sends of any given key
 
 $(document).on('keydown',function(event){
-    if (hitOnce==0){
-        actualKey=(event.which);
-        if (actualKey==65){ //A left
-        nudgeChord(-1)}
-        if (actualKey==68){ //D right
-        nudgeChord(1)}
-        if (actualKey==66){ //B flat/sharp overrride
-            sendFlat();
-        }
-        if (actualKey==87){ //W modulate key up
-        sendMod(1)}
-        if (actualKey==83){ //S modulate key down
-        sendMod(-1)}
-        hitOnce=1;
-    }
+	actualKey=(event.which);
+	if (hitOnce[actualKey]!= 1){
+		if (actualKey==65){ //A chord left
+		nudgeChord(-1)}
+		if (actualKey==68){ //D chord right
+		nudgeChord(1)}
+		if (actualKey==66){ //B flat/sharp overrride
+			sendFlat();}
+
+		if (actualKey==87){ //W modulate key up
+		sendMod(1)}
+		if (actualKey==83){ //S modulate key down
+		sendMod(-1)}
+
+		if (actualKey==74){ //J lyric left
+		nudgeLyric(-1)}
+		if (actualKey==76){ //K lyric right
+		nudgeLyric(1)}
+
+		hitOnce[actualKey]=1;
+	}
 });
 
 $(document).keyup(function(){
-        hitOnce=0;
+        hitOnce[event.which]=0;
     });
 });
 
@@ -76,20 +86,27 @@ socket.on('bFlat', function(data) {
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Sent every left or right movement.
     if (data.song!=currentSong){ //if there's a new song, or it's the index
         currentChord=0;
+        currentLyric=1;
         currentSong=data.song;
         jQuery("body").load("/load",function(){
+            longestLine =Number($('#longestLine').val());
+            lastPos=Number($('#lastPos').val())//the final chord div number
+            lastLyric=Number($('#lastLyric').val())//the final lyric div number
             $('html,body').animate({scrollTop: 0},0); //just makes it more professional
             textSizer(function(){
                 jumpToChord(data.bid);
+                jumpToLyric(data.blid);
                 modulateChord(totalModulation);
             });
         });
-    }else{jumpToChord(data.bid)};
+    }else{
+    	if(data.bid!=null){jumpToChord(data.bid)}
+    	if(data.blid!=null){jumpToLyric(data.blid)}
+    	
+    	};
 });
 
 function textSizer(callback) { //resize the text on the page.  The 0.6 has to do with the font ratio for both Vera and Courier New.
-    longestLine =Number($('#longestLine').val());
-    lastPos=Number($('#lastPos').val())//the final div number
     var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
     var fontSizepx =(charWidth * (1 / 0.60));
     $(".indexhead").css("font-size", Math.round(fontSizepx*1.5) + "px")
@@ -115,6 +132,9 @@ function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down t
 function moveHighlight(fromid, toid, callback) {
     //if (currentSong != 'index'){
     //first, erase the highlight from the previous chord
+    fromid = "chordNumber" + fromid;
+    toid= "chordNumber" + toid;
+
     document.getElementById(fromid).style.backgroundColor = "#FFFFFF";
     document.getElementById(fromid).style.fontFamily = "Bitstream Vera Sans Mono, Courier New";
     document.getElementById(fromid).style.color= "#007fbf";
@@ -131,6 +151,35 @@ function moveHighlight(fromid, toid, callback) {
     callback();
 }
 
+
+function moveLyricHighlight(fromid, toid, callback) {
+    if (currentSong != 'index'){
+	    fromidString = "lyricNumber" + fromid;
+	    toidString= "lyricNumber" + toid;
+	    
+	    if ((fromid>toid) || (Math.abs(fromid-toid)>1)){
+	    	document.getElementById(fromidString).style.backgroundColor = "#FFFFFF";
+	    	document.getElementById(fromidString).style.color = "#000000";
+	    	}
+	    else{
+	    	document.getElementById(fromidString).style.backgroundColor = "#FFFFFF";
+	    	document.getElementById(fromidString).style.color= "#888888";
+    	} 
+    	document.getElementById(fromidString).style.borderBottomStyle = "hidden";
+
+	    //then, move it to the new one
+	    //document.getElementById(toid).style.color = "#000000";
+	    document.getElementById(toidString).style.backgroundColor = "#FFFF00";
+	    document.getElementById(toidString).style.borderBottomStyle = "solid";
+	    document.getElementById(toidString).style.borderBottomWidth = "0.1em";
+	    document.getElementById(toidString).style.borderBottomColor = "#FF9900";
+	}
+    callback();
+}
+
+
+
+
 function nudgeChord(increment) {
     //move the active chord given a value relative to the current chord
     var newPos = currentChord + increment;
@@ -144,25 +193,51 @@ function nudgeChord(increment) {
 }
 
 
+function nudgeLyric(increment) {
+    //move the active chord given a value relative to the current chord
+    var newPos = currentLyric + increment;
+    if (newPos < 1) {
+        newPos = 1;
+    }
+    if (newPos > lastLyric) {
+        newPos = lastLyric;
+    }
+    sendLyric(newPos)
+}
+
+
 //***************** EMITTERS **********************
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
 }
+
+function sendLyric(whichLyric){
+    socket.emit('lid', { data: whichLyric }); //J or L key was tapped
+}
+
 
 function changeSong(whichsong){
     socket.emit('currentSong', { data: whichsong}); //User clicked a song or return to index link
 }
 
 function jumpToChord(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
-    var fromcolorname;
-    var toColorName;
-    fromcolorname = "chordNumber" + currentChord;
-    toColorName = "chordNumber" + whichchord;
-    moveHighlight(fromcolorname, toColorName, function(){ //implemented as a callback to reduce mobile browser choppiness on the animation
-        goToByScroll(fromcolorname, toColorName);
+    moveHighlight(currentChord, whichchord, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
+        goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);
+        currentChord = parseInt(whichchord);
     });
-    currentChord = parseInt(whichchord);
+  
 }
+
+
+function jumpToLyric(whichLyric) { //jump a lyric given an integer value that corresponds with a lyric's div id
+    moveLyricHighlight(currentLyric, whichLyric, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
+        //goToByScroll(fromcolorname, toColorName);
+    currentLyric = parseInt(whichLyric);
+
+    });
+}
+
+
 
 function sendMod(increment){
     totalModulation += increment;
