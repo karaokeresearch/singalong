@@ -251,22 +251,27 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 var chordLine = "";
                 var chordchunk="";
                 var sepchar="";
-                var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes
-				for (i = 0; i < tabarray.length; i++) {
-				    if (sepchar=tabarray[i].match(/(\s|\-|.*?:$)/g)){    //is it a space or a dash?
-				        chordLine=chordLine + sepchar;
-				    }
-				    else {                  //it wasn't a space
-				        if ( tabarray[i].match(/\w/) ) { //but also weed out the empty ones and things like this "Chorus:"
-				            lyricNumber++;
-				            var chordchunk ='';
-				            chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';
-				            chordLine = chordLine+chordchunk;
-				         //   colCount += tabarray[i].length; //number of columns so far is the spaces from the spaces carat above plus the length of the chord
-				        } 
-				    }    //end is this a word or empty element
-				}//end going through the elements
-				parseChunk=parseChunk +(chordLine);
+//                parseChunk=parseChunk+ "WHEE"+tabline+"OOOO";
+                if (tabline.match(/^[^\s]*?:$/m)) {
+                    parseChunk=parseChunk+tabline;}
+                else{
+                    var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes
+                    for (i = 0; i < tabarray.length; i++) {
+                        if (sepchar=tabarray[i].match(/(\s|\-)/g)){    //is it a space or a dash?
+                            chordLine=chordLine + sepchar;
+                        }
+                        else {                  //it wasn't a space
+                            if ( tabarray[i].match(/\w/) ) { //but also weed out the empty ones and things like this "Chorus:"
+                                lyricNumber++;
+                                var chordchunk ='';
+                                chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';
+                                chordLine = chordLine+chordchunk;
+                                //   colCount += tabarray[i].length; //number of columns so far is the spaces from the spaces carat above plus the length of the chord
+                            }
+                        }    //end is this a word or empty element
+                    }//end going through the elements
+                    parseChunk=parseChunk +(chordLine);
+                }
             }
             parseChunk=parseChunk +('</div>'); //space before the div used to be important
         }
@@ -283,11 +288,13 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
 function localIPs(){//generate a list of IP addresses
     var interfaces=os.networkInterfaces();
     var j=0;
+    console.log ("Permitted IP addresses for send:");
     for (var dev in interfaces) {
         var alias=0;
         interfaces[dev].forEach(function(details){
             if (details.family=='IPv4') {
                 listofIPs[j] = String(details.address);
+                console.log (String(details.address));
                 j++;
                 alias++;
             }
@@ -297,8 +304,10 @@ function localIPs(){//generate a list of IP addresses
 
 function securityCheck(comparisonIP){ //check to see if the local IP addresses are the one sending the signals. Used to ignore signals from clients.  Eventually, clients should not accidentally send to avoid "asleep on the D key" syndrome
     for (j = 0; j < listofIPs.length; j++) {
-        if ((listofIPs[j] == comparisonIP) || (disableSecurity==1)){return true;} else{return false;}
+        if ((listofIPs[j] == comparisonIP) || (disableSecurity==1)){return true;}
     }
+console.log("Unauthorized send: " + comparisonIP);
+return false;
 }
 
 function dirExistsSync (d) {
