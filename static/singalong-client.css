@@ -10,14 +10,14 @@
     url('VeraMono.ttf') format('truetype');
 }
 
-span.startstop{
+.startstop{
     color: #000000;
     background-color: #FFFFFF;
     font-family: Bitstream Vera Sans Mono, Courier New;
     cursor: pointer;
 }
 
-span.chordspan{
+.chordspan{
     color: #007fbf;
     background-color: #FFFFFF;
     font-family: Bitstream Vera Sans Mono, Courier New;
@@ -30,13 +30,13 @@ span.chordspan{
     white-space: pre;
 }
 
-div.chords{
+.chords{
     font-family: Bitstream Vera Sans Mono, Courier New;
-    height:1.2em;
+    height:1.25em;
     cursor: pointer;
 }
 
-div.lyrics{
+.lyrics{
     color: black;
     background-color: #FFFFFF;
     font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
@@ -50,7 +50,7 @@ div.lyrics{
     cursor: pointer; 
 }
 
-div.indexhead{
+.indexhead{
     text-align: center;
     color: black;
     background-color: #FFFFFF;
@@ -64,7 +64,7 @@ div.indexhead{
     white-space: pre;
 }
 
-div.songlink{
+.songlink{
     text-align: center;
     color: blue;
     background-color: #FFFFFF;
@@ -77,6 +77,15 @@ div.songlink{
     letter-spacing:0;
     white-space: pre;
     cursor: pointer;
+}
+
+.highlightedchord{
+	color: #000000;                                              
+	font-family: Bitstream Vera Sans Mono Bold, Courier New Bold; 
+	background-color: #8CF2FF;                                    
+	border-bottom-style: solid;                                    
+	border-bottom-width: 0.1em;                                    
+	border-bottom-color: #0000AA;                                  
 }
 
 body {

@@ -130,24 +130,10 @@ function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down t
 }
 
 function moveHighlight(fromid, toid, callback) {
-    //if (currentSong != 'index'){
     //first, erase the highlight from the previous chord
-    fromid = "chordNumber" + fromid;
-    toid= "chordNumber" + toid;
 
-    document.getElementById(fromid).style.backgroundColor = "#FFFFFF";
-    document.getElementById(fromid).style.fontFamily = "Bitstream Vera Sans Mono, Courier New";
-    document.getElementById(fromid).style.color= "#007fbf";
-    //document.getElementById(fromid).style.fontWeight = "normal";
-    document.getElementById(fromid).style.borderBottomStyle = "hidden";
-    //then, move it to the new one
-    document.getElementById(toid).style.color = "#000000";
-    document.getElementById(toid).style.fontFamily = "Bitstream Vera Sans Mono Bold, Courier New Bold";
-    document.getElementById(toid).style.backgroundColor = "#8CF2FF";
-    document.getElementById(toid).style.borderBottomStyle = "solid";
-    document.getElementById(toid).style.borderBottomWidth = "0.1em";
-    document.getElementById(toid).style.borderBottomColor = "#0000AA";
-    //}
+    $("#chordNumber" + fromid).removeClass("highlightedchord");
+    $("#chordNumber" + toid).addClass("highlightedchord");
     callback();
 }
 
