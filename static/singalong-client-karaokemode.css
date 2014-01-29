@@ -11,15 +11,14 @@
 }
 
 .startstop{
-    color: #000000;
-    background-color: #FFFFFF;
+    color: #FFFFFF;
+    background-color: #000000;
     font-family: Bitstream Vera Sans Mono, Courier New;
     cursor: pointer;
 }
 
 .chordspan{
-    color: #007fbf;
-    background-color: #FFFFFF;
+    color: #000000;
     font-family: Bitstream Vera Sans Mono, Courier New;
     padding: 0;
     margin-top: 0;
@@ -28,36 +27,39 @@
     margin-bottom:0pt;
     letter-spacing:0;
     white-space: pre;
+    font-size: 10% !important;
 }
 
 .chords{
     font-family: Bitstream Vera Sans Mono, Courier New;
-    height:1.25em;
+    height:0.1em;
     cursor: pointer;
 }
 
 .songheading{
-	color:#000099;
+	color:#AAAAFF;
 }
 
 .lyrics{
-    color: #666666;
-    background-color: #FFFFFF;
-    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    text-align:center;
+    color: #FFFFFF;
+    background-color: #000000;
+    font-family: Helvetica, Arial;
+    font-weight: bold;
     padding: 0;
     margin-top: 0;
     margin-right: 0;
     margin-left: 1em;
     margin-bottom:1em;
     letter-spacing:0;
-    white-space: pre;
+    white-space: pre-wrap;
     cursor: pointer; 
 }
 
 .indexhead{
     text-align: center;
-    color: black;
-    background-color: #FFFFFF;
+    color: white;
+    background-color: #000000;
     font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
     padding: 0;
     margin-top: 0em;
@@ -70,8 +72,8 @@
 
 .songlink{
     text-align: center;
-    color: blue;
-    background-color: #FFFFFF;
+    color: #AAAAFF;
+    background-color: #000000;
     font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
     padding: 0;
     margin-top: 0;
@@ -91,9 +93,8 @@
 	border-bottom-width: 0.1em;                                    
 	border-bottom-color: #0000AA;                                  
 }
-
 .highlightedlyric{
-	color: #000000;
+	color: #FFFF00;
 }
 
 .underlinedlyric{
@@ -104,4 +105,5 @@
 
 body {
     -webkit-text-size-adjust: 100%;
+    background-color: #000000;
 }

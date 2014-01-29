@@ -143,22 +143,20 @@ function moveLyricHighlight(fromid, toid, callback) {
 	    fromidString = "lyricNumber" + fromid;
 	    toidString= "lyricNumber" + toid;
 	    
-	    if ((fromid>toid) || (Math.abs(fromid-toid)>1)){
-	    	document.getElementById(fromidString).style.backgroundColor = "#FFFFFF";
-	    	document.getElementById(fromidString).style.color = "#000000";
+	    //clean up the old one
+	    if ((fromid>toid) || (Math.abs(fromid-toid)>1)){//going backwards
+			    $("#" + fromidString).removeClass("highlightedlyric");
+                $("#" + fromidString).removeClass("underlinedlyric");
+
 	    	}
 	    else{
-	    	document.getElementById(fromidString).style.backgroundColor = "#FFFFFF";
-	    	document.getElementById(fromidString).style.color= "#888888";
+			    $("#" + fromidString).removeClass("underlinedlyric");
     	} 
-    	document.getElementById(fromidString).style.borderBottomStyle = "hidden";
 
 	    //then, move it to the new one
 	    //document.getElementById(toid).style.color = "#000000";
-	    document.getElementById(toidString).style.backgroundColor = "#FFFF00";
-	    document.getElementById(toidString).style.borderBottomStyle = "solid";
-	    document.getElementById(toidString).style.borderBottomWidth = "0.1em";
-	    document.getElementById(toidString).style.borderBottomColor = "#FF9900";
+			    $("#" + toidString).addClass("highlightedlyric");
+			    $("#" + toidString).addClass("underlinedlyric");
 	}
     callback();
 }

@@ -251,9 +251,8 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 var chordLine = "";
                 var chordchunk="";
                 var sepchar="";
-//                parseChunk=parseChunk+ "WHEE"+tabline+"OOOO";
-                if (tabline.match(/^[^\s]*?:$/m)) {
-                    parseChunk=parseChunk+tabline;}
+                if (tabline.match(/^[^\s]*?:\s*$/m)) {
+                    parseChunk=parseChunk+ '<span class="songheading">' +tabline +'</span>';}
                 else{
                     var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes
                     for (i = 0; i < tabarray.length; i++) {
