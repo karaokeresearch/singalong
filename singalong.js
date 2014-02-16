@@ -54,7 +54,8 @@ app.get('/load', function(req, res){ //Meat of the HTML data that defines a page
     res.send(parsedHTML);
     res.end;
 });
-app.use(express.static(__dirname + '/static/')); //Where the static files are loaded from
+app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
+app.use('/audio', express.static(__dirname + '/audio')); //Where the static files are loaded from
 
 io.sockets.on('connection', function(socket) {
     // Welcome messages on connection to just the connecting client
@@ -279,6 +280,17 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber' + chordNumber + '" onclick="sendChord(\''  + chordNumber + '\')">&gt;&gt;end</span>';
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
         parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
+        
+        //audio player
+        parseChunk = parseChunk + '<audio id="demo" src="audio/test.mp3"></audio>';
+		parseChunk = parseChunk	+ '<div  id="image_fixed"><div class="timerinfo"> </div>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').play()">Play the Audio</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').pause()">Pause the Audio</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume+=0.1">Increase Volume</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume-=0.1">Decrease Volume</button>';
+		parseChunk = parseChunk	+ '<button onclick="whee()">Where are we</button>';
+		
+
         callback(parseChunk);
     });
 

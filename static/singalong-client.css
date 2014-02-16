@@ -105,3 +105,12 @@
 body {
     -webkit-text-size-adjust: 100%;
 }
+
+div#image_fixed { 
+width: XXpx; 
+height:YYpx; 
+position: fixed; 
+bottom: 0; 
+right: 0; 
+background: url(path to image) no-repeat center fixed; 
+} 

@@ -45,6 +45,7 @@ $(document).on('keydown',function(event){
 		if (actualKey==65){ //A chord left
 		nudgeChord(-1)}
 		if (actualKey==68){ //D chord right
+		whee();
 		nudgeChord(1)}
 		if (actualKey==66){ //B flat/sharp overrride
 			sendFlat();}
@@ -57,9 +58,11 @@ $(document).on('keydown',function(event){
 		if (actualKey==74){ //J lyric left
 		nudgeLyric(-1)}
 		if (actualKey==76){ //K lyric right
-		nudgeLyric(1)}
+		nudgeLyric(1)
+		whee();
+		}
 
-		hitOnce[actualKey]=1;
+	hitOnce[actualKey]=1;
 	}
 });
 
@@ -473,4 +476,10 @@ function detchordVal(chordname) {
         chordNum = 12;
     }
     return chordNum;
+}
+
+function whee(){
+		$( ".timerinfo" ).append(document.getElementById('demo').currentTime +'<BR>');
+
+	
 }
