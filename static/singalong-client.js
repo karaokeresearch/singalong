@@ -23,7 +23,13 @@ var actualKey;
 var totalModulation=0;
 var loadedModulation=0;
 var currentSong;
-var swapFlat=0
+var swapFlat=0;
+var lyricTimings =new Array();
+var chordTimings =new Array();
+var lyricOffsets = new Array();
+//lyricOffsets= [,[],[]]; //set up the array properly.
+//lyricOffsets[0][0][0]="0";
+
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
@@ -45,6 +51,7 @@ $(document).on('keydown',function(event){
 		if (actualKey==65){ //A chord left
 		nudgeChord(-1)}
 		if (actualKey==68){ //D chord right
+		chordTimings[currentChord + 1] = document.getElementById('demo').currentTime;  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
 		whee();
 		nudgeChord(1)}
 		if (actualKey==66){ //B flat/sharp overrride
@@ -58,6 +65,7 @@ $(document).on('keydown',function(event){
 		if (actualKey==74){ //J lyric left
 		nudgeLyric(-1)}
 		if (actualKey==76){ //K lyric right
+		lyricTimings[currentLyric + 1] = document.getElementById('demo').currentTime;
 		nudgeLyric(1)
 		whee();
 		}
@@ -72,7 +80,7 @@ $(document).keyup(function(){
 });
 
 
-//*************** LISTENERS ***********************
+//*************** SOCKET.IO LISTENERS ***********************
 socket.on('bmod', function(data) { //chord modulation
     modulateChord(data.message);
 });
@@ -109,6 +117,9 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
     	};
 });
 
+
+
+//**************HELPER FUNCTIONS
 function textSizer(callback) { //resize the text on the page.  The 0.6 has to do with the font ratio for both Vera and Courier New.
     var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
     var fontSizepx =(charWidth * (1 / 0.60));
@@ -196,6 +207,10 @@ function nudgeLyric(increment) {
 //***************** EMITTERS **********************
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
+    if (document.getElementById('demo').paused ==true && chordTimings[whichchord]!=null) {
+    	$( ".timerinfo" ).append('<br><font color=green>' +chordTimings[whichchord] + '</font><BR>')
+    	//document.getElementById('demo').currentTime = chordTimings[whichchord]; //rewind or fast forward
+    	}
 }
 
 function sendLyric(whichLyric){
@@ -479,7 +494,62 @@ function detchordVal(chordname) {
 }
 
 function whee(){
-		$( ".timerinfo" ).append(document.getElementById('demo').currentTime +'<BR>');
-
+	//$( ".timerinfo" ).append(document.getElementById('demo').currentTime +'<BR>');
 	
+//lyricTimings.forEach(function(name){console.log(name);});
+}
+
+
+
+function playAudio(){
+	var i;
+	var j;
+
+
+	for (i = 0; i < chordTimings.length; i++) {
+		lyricOffsets[i]=[];
+		if (chordTimings[i] != null){
+
+			for (j = 0; j < lyricTimings.length; j++) { //inefficient.  cycle through all timings to find the ones after the current chord.
+				if (lyricTimings[j] != null && (lyricTimings[j] > chordTimings[i])&& (lyricTimings[j] < chordTimings[i+1])){
+					lyricOffsets[i].push([Math.round((parseFloat(lyricTimings[j]) - parseFloat(chordTimings[i]))*1000)/1000,j]); 
+				}
+			}
+		}
+	}
+	$( ".timerinfo" ).append('<BR>');
+		
+		//Math.round((parseFloat(name[0]) - parseFloat(chordTimings[i]))*10000)/10000
+	
+	
+	
+	//read variables out of arrays.
+	for (i = 0; i < chordTimings.length; i++) {
+		if ((chordTimings[i] != null)){
+			console.log(i + "  is " +lyricOffsets[i].length);
+			    (function(i){
+			    	console.log("setting " + i);
+			    setTimeout(function(){
+				jumpToChord(i);
+				triggerLyrics(i);
+    			$( ".timerinfo" ).append('<br><font color=blue>' + i + ' ' + chordTimings[i] + '</font> &nbsp;&nbsp;&nbsp;');
+				},chordTimings[i]*1000);
+				})(i);
+		}
+	}
+		
+		
+
+
+	document.getElementById('demo').play();
+
+}
+
+function triggerLyrics(m){
+            console.log(lyricOffsets[m].length);	
+			lyricOffsets[m].forEach(function(name){
+				$( ".timerinfo" ).append('' + name[1] + ' &nbsp;&nbsp;&nbsp;<font color=red>' + name[0] + '&nbsp;&nbsp;&nbsp;</font> ');
+				setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000);
+	
+				});
 }

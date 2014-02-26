@@ -284,11 +284,11 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         //audio player
         parseChunk = parseChunk + '<audio id="demo" src="audio/test.mp3"></audio>';
 		parseChunk = parseChunk	+ '<div  id="image_fixed"><div class="timerinfo"> </div>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').play()">Play the Audio</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').pause()">Pause the Audio</button>';
+		parseChunk = parseChunk	+ '<button onclick="playAudio()">&#9654;</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').pause()">||</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').currentTime=0">&#9664;&#9664;</button>';
 		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume+=0.1">Increase Volume</button>';
 		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume-=0.1">Decrease Volume</button>';
-		parseChunk = parseChunk	+ '<button onclick="whee()">Where are we</button>';
 		
 
         callback(parseChunk);
