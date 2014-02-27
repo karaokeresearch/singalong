@@ -34,6 +34,7 @@ var currentSong="index";
 var listofIPs=new Array();
 var chordRegex=/^(([A-G](#|b)?(M|maj|m|min|\+|add|sus|mM|aug|dim|dom|flat)?[0-9]{0,2})|\s)+$/
 var disableSecurity=0;
+var timings;
 
 if(!dirExistsSync(songsDirectory)){//some sync business up front. Create and populate a local songs directory if none exists.
 	console.log(songsDirectory+" doesn't exist. Creating.");
@@ -54,6 +55,12 @@ app.get('/load', function(req, res){ //Meat of the HTML data that defines a page
     res.send(parsedHTML);
     res.end;
 });
+app.get('/timings', function(req, res){ //JSON timings object
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(timings));
+   
+});
+
 app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
 app.use('/audio', express.static(__dirname + '/audio')); //Where the static files are loaded from
 
@@ -115,6 +122,25 @@ io.sockets.on('connection', function(socket) {
             console.log(data);
         }
     });
+
+    socket.on('timings', function (data){ 
+        if (securityCheck(socket.handshake.address.address)){
+           timings=data; 
+            var outputFilename = 'timings/' +currentSong + '.JSON';
+
+			fs.writeFile(outputFilename, JSON.stringify(data, null, 4), function(err) {
+			    if(err) {
+			      console.log(err);
+			    } else {
+			      console.log("JSON saved to " + outputFilename);
+			    }
+			}); 
+            
+//          console.log(lyricOffsets);
+        }
+    });
+
+
 
 });
 
@@ -285,10 +311,11 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         parseChunk = parseChunk + '<audio id="demo" src="audio/test.mp3"></audio>';
 		parseChunk = parseChunk	+ '<div  id="image_fixed"><div class="timerinfo"> </div>';
 		parseChunk = parseChunk	+ '<button onclick="playAudio()">&#9654;</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').pause()">||</button>';
+		parseChunk = parseChunk	+ '<button onclick="pauseAudio()">||</button>';
 		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').currentTime=0">&#9664;&#9664;</button>';
 		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume+=0.1">Increase Volume</button>';
 		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume-=0.1">Decrease Volume</button>';
+		parseChunk = parseChunk	+ '<button onclick="sendJSON()">Save</button>';
 		
 
         callback(parseChunk);
@@ -326,4 +353,3 @@ function dirExistsSync (d) {
   catch (er) { return false }
   return true;
 }
-

@@ -27,8 +27,7 @@ var swapFlat=0;
 var lyricTimings =new Array();
 var chordTimings =new Array();
 var lyricOffsets = new Array();
-//lyricOffsets= [,[],[]]; //set up the array properly.
-//lyricOffsets[0][0][0]="0";
+var chordTimeouts = new Array();
 
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
@@ -95,26 +94,44 @@ socket.on('bFlat', function(data) {
     });
 
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Sent every left or right movement.
-    if (data.song!=currentSong){ //if there's a new song, or it's the index
-        currentChord=0;
-        currentLyric=1;
-        currentSong=data.song;
-        jQuery("body").load("/load",function(){
-            longestLine =Number($('#longestLine').val());
-            lastPos=Number($('#lastPos').val())//the final chord div number
-            lastLyric=Number($('#lastLyric').val())//the final lyric div number
-            $('html,body').animate({scrollTop: 0},0); //just makes it more professional
-            textSizer(function(){
-                jumpToChord(data.bid);
-                jumpToLyric(data.blid);
-                modulateChord(totalModulation);
-            });
-        });
-    }else{
-    	if(data.bid!=null){jumpToChord(data.bid)}
-    	if(data.blid!=null){jumpToLyric(data.blid)}
-    	
-    	};
+	if (data.song!=currentSong){ //if there's a new song, or it's the index
+		currentChord=0;
+		currentLyric=1;
+		currentSong=data.song;
+
+
+		jQuery("body").load("/load",function(){
+			longestLine =Number($('#longestLine').val());
+			lastPos=Number($('#lastPos').val())//the final chord div number
+			lastLyric=Number($('#lastLyric').val())//the final lyric div number
+			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
+			textSizer(function(){
+				jumpToChord(data.bid);
+				jumpToLyric(data.blid);
+				modulateChord(totalModulation);
+			});
+		});
+
+
+		$.getJSON( "/timings", function( data ) {
+        lyricOffsets=data.lyricOffsets;
+        chordTimings=data.chordTimings;
+        lyricTimings=data.lyricTimings;
+		});
+
+
+
+
+
+
+
+
+
+	}else{
+		if(data.bid!=null){jumpToChord(data.bid)}
+		if(data.blid!=null){jumpToLyric(data.blid)}
+
+	};
 });
 
 
@@ -208,8 +225,8 @@ function nudgeLyric(increment) {
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
     if (document.getElementById('demo').paused ==true && chordTimings[whichchord]!=null) {
-    	$( ".timerinfo" ).append('<br><font color=green>' +chordTimings[whichchord] + '</font><BR>')
-    	//document.getElementById('demo').currentTime = chordTimings[whichchord]; //rewind or fast forward
+    	//$( ".timerinfo" ).append('<br><font color=green>' +chordTimings[whichchord] + '</font><BR>')
+    	if (document.getElementById('demo').ended=true){document.getElementById('demo').currentTime = chordTimings[whichchord];} //rewind or fast forward
     	}
 }
 
@@ -500,40 +517,42 @@ function whee(){
 }
 
 
+function compileTimings(){
+	var i;
+	var j;
+     
+     
+    //prepare the array called lyricOffsets for use auto-highlighting lyrics
+	for (i = 0; i < chordTimings.length; i++) {
+		lyricOffsets[i]=[];
+		if (chordTimings[i] != null){
+
+			for (j = 0; j < lyricTimings.length; j++) { //inefficient.  cycle through all timings to find the ones after the current chord.
+				if (lyricTimings[j] != null &&  ( (lyricTimings[j] >= chordTimings[i])&& (lyricTimings[j] < chordTimings[i+1])) || (lyricTimings[j] >= chordTimings[i])&& (chordTimings[i+1]==null)){
+					lyricOffsets[i].push([Math.round((parseFloat(lyricTimings[j]) - parseFloat(chordTimings[i]))*1000)/1000,j]); 
+				}
+			}
+		}
+	}
+}
+
 
 function playAudio(){
 	var i;
 	var j;
 
 
+	compileTimings();
+	
+	
+	//read chord and lyrics timings out of arrays and auto-play the lyrics.
 	for (i = 0; i < chordTimings.length; i++) {
-		lyricOffsets[i]=[];
-		if (chordTimings[i] != null){
-
-			for (j = 0; j < lyricTimings.length; j++) { //inefficient.  cycle through all timings to find the ones after the current chord.
-				if (lyricTimings[j] != null && (lyricTimings[j] > chordTimings[i])&& (lyricTimings[j] < chordTimings[i+1])){
-					lyricOffsets[i].push([Math.round((parseFloat(lyricTimings[j]) - parseFloat(chordTimings[i]))*1000)/1000,j]); 
-				}
-			}
-		}
-	}
-	$( ".timerinfo" ).append('<BR>');
-		
-		//Math.round((parseFloat(name[0]) - parseFloat(chordTimings[i]))*10000)/10000
-	
-	
-	
-	//read variables out of arrays.
-	for (i = 0; i < chordTimings.length; i++) {
-		if ((chordTimings[i] != null)){
-			console.log(i + "  is " +lyricOffsets[i].length);
+		if ((chordTimings[i] != null) && (chordTimings[i] - document.getElementById('demo').currentTime>=-0.1)){
 			    (function(i){
-			    	console.log("setting " + i);
-			    setTimeout(function(){
+			    chordTimeouts[i] = setTimeout(function(){
 				jumpToChord(i);
 				triggerLyrics(i);
-    			$( ".timerinfo" ).append('<br><font color=blue>' + i + ' ' + chordTimings[i] + '</font> &nbsp;&nbsp;&nbsp;');
-				},chordTimings[i]*1000);
+				},(chordTimings[i]-document.getElementById('demo').currentTime)*1000);
 				})(i);
 		}
 	}
@@ -545,11 +564,31 @@ function playAudio(){
 
 }
 
+function pauseAudio(){
+    document.getElementById('demo').pause()
+	for (i = 0; i < chordTimings.length; i++) {
+	    clearTimeout(chordTimeouts[i]);
+	}
+	compileTimings();
+	
+}
+
+
 function triggerLyrics(m){
-            console.log(lyricOffsets[m].length);	
+//            console.log(lyricOffsets[m].length);	
 			lyricOffsets[m].forEach(function(name){
-				$( ".timerinfo" ).append('' + name[1] + ' &nbsp;&nbsp;&nbsp;<font color=red>' + name[0] + '&nbsp;&nbsp;&nbsp;</font> ');
+				//$( ".timerinfo" ).append('' + name[1] + ' &nbsp;&nbsp;&nbsp;<font color=red>' + name[0] + '&nbsp;&nbsp;&nbsp;</font> ');
 				setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000);
 	
 				});
+}
+
+
+function sendJSON(){
+var myList = [
+    {lyricTimings:lyricTimings, chordTimings:chordTimings}
+];
+            socket.emit('timings', { lyricOffsets: lyricOffsets, chordTimings:chordTimings, lyricTimings:lyricTimings}); //reset the flat/sharp override
+
+
 }
