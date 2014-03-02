@@ -57,6 +57,7 @@ app.get('/load', function(req, res){ //Meat of the HTML data that defines a page
 });
 app.get('/timings', function(req, res){ //JSON timings object
     res.setHeader('Content-Type', 'application/json');
+    
     res.end(JSON.stringify(timings));
    
 });
@@ -160,6 +161,26 @@ function loadNewSong(newsong){//loads the appropriate file (or the index) into p
 
         });
     }else{
+    
+    var inputFilename = 'timings/' +currentSong + '.JSON';
+	fs.readFile(inputFilename, 'utf8', function (err, data) {
+	  if (err) {
+	    timings=[];
+	    console.log('Error: ' + err);
+	    return;
+	  }
+	 
+	  //data = JSON.parse(data);
+	 timings=JSON.parse(data);
+	});
+
+
+
+
+
+
+
+
         returnChordHTML(newsong, function(HTML) {
             parsedHTML=HTML;
             io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});
@@ -278,16 +299,19 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
                 var chordLine = "";
                 var chordchunk="";
                 var sepchar="";
-                if (tabline.match(/^[^\s]*?:\s*$/m)) {
+                if (tabline.match(/(^[^\s]*?:\s*$|\([^\s]*?\))/m)) {//a song heading, such as "Chorus:"
                     parseChunk=parseChunk+ '<span class="songheading">' +tabline +'</span>';}
                 else{
-                    var tabarray = tabline.split(/(\s|\-)/),i; //split lyrics line into chunks of spaces and dashes
+                    var tabarray = tabline.split(/(\s|\-|\(.*?\))/),i; //split lyrics line into chunks of spaces and dashes and parens blocks
                     for (i = 0; i < tabarray.length; i++) {
-                        if (sepchar=tabarray[i].match(/(\s|\-)/g)){    //is it a space or a dash?
+                        if (sepchar=tabarray[i].match(/(\s|\-|\(.*?\))/g)){    //is it a space or a dash? (or a parens block)
+                            if (tabarray[i].match(/\(.*?\)/)){chordLine=chordLine + '<span class="parenthesis">';}
                             chordLine=chordLine + sepchar;
+                            if (tabarray[i].match(/\(.*?\)/)){chordLine=chordLine + '</span>';}
+
                         }
                         else {                  //it wasn't a space
-                            if ( tabarray[i].match(/\w/) ) { //but also weed out the empty ones and things like this "Chorus:"
+                            if ( tabarray[i].match(/\w/) ) { //but also weed out the empty ones 
                                 lyricNumber++;
                                 var chordchunk ='';
                                 chordchunk = chordchunk + '<span id="lyricNumber' + lyricNumber + '" onclick="sendLyric(\'' + lyricNumber + '\')">' + tabarray[i] + '</span>';
@@ -305,18 +329,34 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         //longestLine = longestLine + 1; //used to do this, pretty sure we don't anymore.
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber' + chordNumber + '" onclick="sendChord(\''  + chordNumber + '\')">&gt;&gt;end</span>';
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
-        parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
+        //parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         
         //audio player
-        parseChunk = parseChunk + '<audio id="demo" src="audio/test.mp3"></audio>';
-		parseChunk = parseChunk	+ '<div  id="image_fixed"><div class="timerinfo"> </div>';
+        parseChunk = parseChunk + '<audio id="audioplayer" src="audio/test.mp3"></audio>';
+
+		parseChunk = parseChunk	+ '<div id="image_fixed">';
+
+		parseChunk = parseChunk	+ '<button id="singalongbutton" style="font-weight:bold" onclick="singalongMode()">Singalong</button>';
+		parseChunk = parseChunk	+ '<button id="editorbutton" style="color:grey" onclick="editorMode()">Editor</button>';	
+
+				
+		parseChunk = parseChunk	+ '<span style="display:none" class="editor">&nbsp;&nbsp;&nbsp;&nbsp;';
+		parseChunk = parseChunk	+ '<button onclick="armChords()"><span style="color:maroon">&#9679;</span> <span id="armchordsbutton">Chords</span></button>';	
+		parseChunk = parseChunk	+ '<button onclick="armLyrics()"><span style="color:maroon">&#9679;</span> <span id="armlyricsbutton">Lyrics</span></button>';
 		parseChunk = parseChunk	+ '<button onclick="playAudio()">&#9654;</button>';
-		parseChunk = parseChunk	+ '<button onclick="pauseAudio()">||</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').currentTime=0">&#9664;&#9664;</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume+=0.1">Increase Volume</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'demo\').volume-=0.1">Decrease Volume</button>';
+		parseChunk = parseChunk	+ '<button onclick="pauseAudio()">&#10073; &#10073;</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').currentTime=0">|&#9664;&#9664;</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume+=0.1">Vol ^</button>';
+		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume-=0.1">Vol v</button>';
+		//parseChunk = parseChunk	+ '<button class="editor" style="display:none" onclick="settingsWindow()">Settings</button>'; //some day, perhaps a metadata approach is warranted.
 		parseChunk = parseChunk	+ '<button onclick="sendJSON()">Save</button>';
-		
+
+
+		parseChunk = parseChunk	+ '</span>';
+		parseChunk = parseChunk	+ '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';	
+	
+		parseChunk = parseChunk + '</div>';
+
 
         callback(parseChunk);
     });

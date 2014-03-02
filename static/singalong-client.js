@@ -28,7 +28,9 @@ var lyricTimings =new Array();
 var chordTimings =new Array();
 var lyricOffsets = new Array();
 var chordTimeouts = new Array();
-
+var playerMode="singalong";
+var lyricsArmed=false;
+var chordsArmed=false;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
@@ -48,25 +50,23 @@ $(document).on('keydown',function(event){
 	actualKey=(event.which);
 	if (hitOnce[actualKey]!= 1){
 		if (actualKey==65){ //A chord left
-		nudgeChord(-1)}
-		if (actualKey==68){ //D chord right
-		chordTimings[currentChord + 1] = document.getElementById('demo').currentTime;  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
-		whee();
-		nudgeChord(1)}
+		nudgeChord(-1);}
+		if (actualKey==68){ //D chord right			
+		if (chordsArmed==true){chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;}  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
+		nudgeChord(1);}
 		if (actualKey==66){ //B flat/sharp overrride
 			sendFlat();}
 
 		if (actualKey==87){ //W modulate key up
-		sendMod(1)}
+		sendMod(1);}
 		if (actualKey==83){ //S modulate key down
-		sendMod(-1)}
+		sendMod(-1);}
 
 		if (actualKey==74){ //J lyric left
-		nudgeLyric(-1)}
+		nudgeLyric(-1);}
 		if (actualKey==76){ //K lyric right
-		lyricTimings[currentLyric + 1] = document.getElementById('demo').currentTime;
-		nudgeLyric(1)
-		whee();
+		if (lyricsArmed==true){lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;}
+		nudgeLyric(1);
 		}
 
 	hitOnce[actualKey]=1;
@@ -114,9 +114,15 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 
 
 		$.getJSON( "/timings", function( data ) {
-        lyricOffsets=data.lyricOffsets;
-        chordTimings=data.chordTimings;
-        lyricTimings=data.lyricTimings;
+        if (data.lyricOffsets && data.chordTimings && data.lyricTimings ){
+        	lyricOffsets=data.lyricOffsets;
+        	chordTimings=data.chordTimings;
+        	lyricTimings=data.lyricTimings;
+        } else{
+        	lyricOffsets=[];
+        	chordTimings=[];
+        	lyricTimings=[];
+        }
 		});
 
 
@@ -224,10 +230,11 @@ function nudgeLyric(increment) {
 //***************** EMITTERS **********************
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
-    if (document.getElementById('demo').paused ==true && chordTimings[whichchord]!=null) {
-    	//$( ".timerinfo" ).append('<br><font color=green>' +chordTimings[whichchord] + '</font><BR>')
-    	if (document.getElementById('demo').ended=true){document.getElementById('demo').currentTime = chordTimings[whichchord];} //rewind or fast forward
-    	}
+    if (document.getElementById('audioplayer').paused ==true && chordTimings[whichchord]!=null) {//rewind or fast forward
+    	//if (document.getElementById('audioplayer').ended=true){
+    		//alert(chordTimings[whichchord]);
+    		document.getElementById('audioplayer').currentTime = chordTimings[whichchord];} 
+    //	}
 }
 
 function sendLyric(whichLyric){
@@ -510,12 +517,6 @@ function detchordVal(chordname) {
     return chordNum;
 }
 
-function whee(){
-	//$( ".timerinfo" ).append(document.getElementById('demo').currentTime +'<BR>');
-	
-//lyricTimings.forEach(function(name){console.log(name);});
-}
-
 
 function compileTimings(){
 	var i;
@@ -547,12 +548,12 @@ function playAudio(){
 	
 	//read chord and lyrics timings out of arrays and auto-play the lyrics.
 	for (i = 0; i < chordTimings.length; i++) {
-		if ((chordTimings[i] != null) && (chordTimings[i] - document.getElementById('demo').currentTime>=-0.1)){
+		if ((chordTimings[i] != null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime>=-0.1)){
 			    (function(i){
 			    chordTimeouts[i] = setTimeout(function(){
-				jumpToChord(i);
+				if (chordsArmed==false){jumpToChord(i);}
 				triggerLyrics(i);
-				},(chordTimings[i]-document.getElementById('demo').currentTime)*1000);
+				},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
 				})(i);
 		}
 	}
@@ -560,12 +561,12 @@ function playAudio(){
 		
 
 
-	document.getElementById('demo').play();
+	document.getElementById('audioplayer').play();
 
 }
 
 function pauseAudio(){
-    document.getElementById('demo').pause()
+    document.getElementById('audioplayer').pause()
 	for (i = 0; i < chordTimings.length; i++) {
 	    clearTimeout(chordTimeouts[i]);
 	}
@@ -578,7 +579,7 @@ function triggerLyrics(m){
 //            console.log(lyricOffsets[m].length);	
 			lyricOffsets[m].forEach(function(name){
 				//$( ".timerinfo" ).append('' + name[1] + ' &nbsp;&nbsp;&nbsp;<font color=red>' + name[0] + '&nbsp;&nbsp;&nbsp;</font> ');
-				setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000);
+				if (lyricsArmed==false){setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000);}
 	
 				});
 }
@@ -592,3 +593,50 @@ var myList = [
 
 
 }
+
+
+
+function editorMode(){
+if (document.getElementById('audioplayer').error ==null){
+	$('#editorbutton').css( "fontWeight", "bold" );	
+	$('#singalongbutton').css( "fontWeight", "normal" );	
+	$('#editorbutton').css( "color", "black" );	
+	$('#singalongbutton').css( "color", "grey" );	
+	playerMode="editor";
+	$('.editor').show( "1000" );	
+}else{alert ('ERROR: Could not load ' + currentSong + '.mp3');}
+
+}
+
+function singalongMode(){
+	$('#editorbutton').css( "fontWeight", "normal" );	
+	$('#singalongbutton').css( "fontWeight", "bold" );	
+	$('#editorbutton').css( "color", "grey" );	
+	$('#singalongbutton').css( "color", "black" );	
+	playerMode="singalong";
+	$('.editor').hide( "1000" );	
+
+}
+
+function armLyrics(){
+	if (document.getElementById('audioplayer').paused ==true){
+		lyricsArmed ^=true;
+		if (lyricsArmed==true){
+			$('#armlyricsbutton').css( "color", "red" );
+		}else{$('#armlyricsbutton').css( "color", "black" );}
+	}
+}
+
+
+function armChords(){
+	if (document.getElementById('audioplayer').paused ==true){
+
+chordsArmed ^=true;
+if (chordsArmed==true){
+	$('#armchordsbutton').css( "color", "red" );
+	}else{$('#armchordsbutton').css( "color", "black" );}
+
+}
+
+}
+
