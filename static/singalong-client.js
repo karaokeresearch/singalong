@@ -28,6 +28,7 @@ var lyricTimings =new Array();
 var chordTimings =new Array();
 var lyricOffsets = new Array();
 var chordTimeouts = new Array();
+var lyricTimeouts = new Array();
 var playerMode="singalong";
 var lyricsArmed=false;
 var chordsArmed=false;
@@ -54,12 +55,20 @@ $(document).on('keydown',function(event){
 	actualKey=(event.which);
 	if (hitOnce[actualKey]!= 1){
 		if (actualKey==65){ //A chord left
+        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
+	    clearTimeout(lyricTimeouts[currentChord][i]);
+     	}
+
+		
+		
 		nudgeChord(-1);}
+		
 		if (actualKey==68){ //D chord right	
 		if (playerMode=="singalong"){
 			var currentChordTimeStamp = new Date();
 			speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
-			if (speedMultiplier>0 && speedMultiplier<5){
+			//console.log(speedMultiplier);
+			if (speedMultiplier>0.33 && speedMultiplier<3){
 				triggerLyrics(currentChord+1,speedMultiplier);	
 			}else{
 				triggerLyrics(currentChord+1,1);
@@ -187,9 +196,10 @@ function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down t
     //if ($("#" + toid).offset().top < $("#lyricNumber" + currentLyric).offset().top){console.log("bigger");} 
     //console.log (currentLyric);
     //if ( $("#" + toid).offset().top >$("#lyricNumber" + (currentLyric+1)).offset().top ) { //check to see if they are different otherwise you are wasting cycles
-      if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
-
-      //console.log($("#" + toid).offset().top + " " + currentScroll);
+      //if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+      if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5 ))>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
+           
+      //console.log(Math.abs(($("#" + toid).offset().top) - $(document).scrollTop()));
       //if ($("#" + toid).offset().top >currentScroll) { //check to see if they are different otherwise you are wasting cycles
         currentScroll=$("#" + toid).offset().top;
         $('html,body').animate({
@@ -227,8 +237,10 @@ function moveLyricHighlight(fromid, toid, callback) {
 	    //document.getElementById(toid).style.color = "#000000";
 			    $("#" + toidString).addClass("highlightedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
-		        if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
                 
+                //console.log ($(document).scrollTop());
+				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -(fontSizepx *1.25) - $(document).scrollTop())>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
+		        //if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
                 //console.log($("#lyricNumber" + (toid)).offset().top + " " + currentScroll);
 		        //if ($("#lyricNumber" + (toid)).offset().top > currentScroll) { //check to see if they are different otherwise you are wasting cycles
 					currentScroll=$("#lyricNumber" + (toid)).offset().top;
@@ -627,8 +639,14 @@ function pauseAudio(){
 
 
 function triggerLyrics(chordnum,multiplier){
+var i=0;
+lyricTimeouts[chordnum]=[];
 			lyricOffsets[chordnum].forEach(function(name){
-				if (lyricsArmed==false){setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);}
+				if (lyricsArmed==false)
+				{i++;
+				lyricTimeouts[chordnum][i]=	setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);
+				
+			    }
 				});
 }
 
