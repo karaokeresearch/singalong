@@ -86,7 +86,7 @@
 .highlightedchord{
 	color: #000000;                                              
 	font-family: Bitstream Vera Sans Mono Bold, Courier New Bold; 
-	background-color: #8CF2FF;                                    
+	background-color: #8CF2FF !important;                                    
 	border-bottom-style: solid;                                    
 	border-bottom-width: 0.1em;                                    
 	border-bottom-color: #0000AA;                                  
@@ -114,4 +114,8 @@ right: 0;
 
 .parenthesis{
 color:black;
+}
+
+.recorded{
+	background-color: #FFAAAA !important;
 }

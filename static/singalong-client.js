@@ -31,6 +31,9 @@ var chordTimeouts = new Array();
 var playerMode="singalong";
 var lyricsArmed=false;
 var chordsArmed=false;
+var prevChordTimeStamp;
+var speedMultiplier=1;
+var currentScroll=0;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
@@ -51,8 +54,25 @@ $(document).on('keydown',function(event){
 	if (hitOnce[actualKey]!= 1){
 		if (actualKey==65){ //A chord left
 		nudgeChord(-1);}
-		if (actualKey==68){ //D chord right			
-		if (chordsArmed==true){chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;}  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
+		if (actualKey==68){ //D chord right	
+		if (playerMode=="singalong"){
+			var currentChordTimeStamp = new Date();
+			speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
+			if (speedMultiplier>0 && speedMultiplier<5){
+				triggerLyrics(currentChord+1,speedMultiplier);	
+			}else{
+				triggerLyrics(currentChord+1,1);
+			}	
+	
+			prevChordTimeStamp = new Date();
+
+			}
+		else{if (chordsArmed==true && (document.getElementById('audioplayer').paused ==false)){
+			chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;
+		    $("#chordNumber" + (currentChord +1)).addClass("recorded");
+
+			}  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
+        }
 		nudgeChord(1);}
 		if (actualKey==66){ //B flat/sharp overrride
 			sendFlat();}
@@ -65,7 +85,11 @@ $(document).on('keydown',function(event){
 		if (actualKey==74){ //J lyric left
 		nudgeLyric(-1);}
 		if (actualKey==76){ //K lyric right
-		if (lyricsArmed==true){lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;}
+		if (lyricsArmed==true && (document.getElementById('audioplayer').paused ==false)){
+			lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;
+			$("#lyricNumber" + (currentLyric+1)).addClass("recorded");
+
+			}
 		nudgeLyric(1);
 		}
 
@@ -157,12 +181,21 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 }
 
 function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down the screen to the currently selected chord
-    var charWidth = (($(window).width() - 15) / (longestLine + 2));
-    if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+    //var charWidth = (($(window).width() - 15) / (longestLine + 2));
+    
+    //if ($("#" + toid).offset().top < $("#lyricNumber" + currentLyric).offset().top){console.log("bigger");} 
+    //console.log (currentLyric);
+    //if ( $("#" + toid).offset().top >$("#lyricNumber" + (currentLyric+1)).offset().top ) { //check to see if they are different otherwise you are wasting cycles
+      
+//      if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+
+console.log($("#" + toid).offset().top + " " + currentScroll);
+      if ($("#" + toid).offset().top >currentScroll) { //check to see if they are different otherwise you are wasting cycles
+        currentScroll=$("#" + toid).offset().top;
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
         }, 600); //this value is how many ms it takes for transitions
-
+     
     }
 }
 
@@ -182,7 +215,7 @@ function moveLyricHighlight(fromid, toid, callback) {
 	    
 	    //clean up the old one
 	    if ((fromid>toid) || (Math.abs(fromid-toid)>1)){//going backwards
-			    $("#" + fromidString).removeClass("highlightedlyric");
+			//    $("#" + fromidString).removeClass("highlightedlyric");
                 $("#" + fromidString).removeClass("underlinedlyric");
 
 	    	}
@@ -194,6 +227,26 @@ function moveLyricHighlight(fromid, toid, callback) {
 	    //document.getElementById(toid).style.color = "#000000";
 			    $("#" + toidString).addClass("highlightedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
+		        //if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+                
+                //console.log($("#lyricNumber" + (toid+1)).offset().top + " " + currentScroll);
+		        if ($("#lyricNumber" + (toid+1)).offset().top > currentScroll) { //check to see if they are different otherwise you are wasting cycles
+					currentScroll=$("#lyricNumber" + (toid)).offset().top;
+			        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
+			        if (scrollnext<0){scrollnext=0;}
+			        setTimeout(function(){
+
+			        $('html,body').animate({
+			            scrollTop: $("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 3
+			        }, 600); //this value is how many ms it takes for transitions
+			        	
+		        	},scrollnext);
+			    
+			    }
+					        
+		        
+		        
+	
 	}
     callback();
 }
@@ -230,11 +283,9 @@ function nudgeLyric(increment) {
 //***************** EMITTERS **********************
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
-    if (document.getElementById('audioplayer').paused ==true && chordTimings[whichchord]!=null) {//rewind or fast forward
-    	//if (document.getElementById('audioplayer').ended=true){
-    		//alert(chordTimings[whichchord]);
+    if (playerMode=="editor" && document.getElementById('audioplayer').paused ==true && chordTimings[whichchord]!=null) {//rewind or fast forward
     		document.getElementById('audioplayer').currentTime = chordTimings[whichchord];} 
-    //	}
+
 }
 
 function sendLyric(whichLyric){
@@ -552,7 +603,7 @@ function playAudio(){
 			    (function(i){
 			    chordTimeouts[i] = setTimeout(function(){
 				if (chordsArmed==false){jumpToChord(i);}
-				triggerLyrics(i);
+				triggerLyrics(i,1);
 				},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
 				})(i);
 		}
@@ -575,12 +626,9 @@ function pauseAudio(){
 }
 
 
-function triggerLyrics(m){
-//            console.log(lyricOffsets[m].length);	
-			lyricOffsets[m].forEach(function(name){
-				//$( ".timerinfo" ).append('' + name[1] + ' &nbsp;&nbsp;&nbsp;<font color=red>' + name[0] + '&nbsp;&nbsp;&nbsp;</font> ');
-				if (lyricsArmed==false){setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000);}
-	
+function triggerLyrics(chordnum,multiplier){
+			lyricOffsets[chordnum].forEach(function(name){
+				if (lyricsArmed==false){setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);}
 				});
 }
 
@@ -603,18 +651,45 @@ if (document.getElementById('audioplayer').error ==null){
 	$('#editorbutton').css( "color", "black" );	
 	$('#singalongbutton').css( "color", "grey" );	
 	playerMode="editor";
-	$('.editor').show( "1000" );	
+	$('.editor').show( "1000" );
+     for (i = 0; i < chordTimings.length; i++) {
+		if (chordTimings[i] != null){
+		    $("#chordNumber" + i).addClass("recorded");
+		 }  
+	 }
+     for (i = 0; i < lyricTimings.length; i++) {
+		if (lyricTimings[i] != null){
+		    $("#lyricNumber" + i).addClass("recorded");
+		 }  
+	 }
+
+
+
+
 }else{alert ('ERROR: Could not load ' + currentSong + '.mp3');}
 
 }
 
 function singalongMode(){
+	pauseAudio();
 	$('#editorbutton').css( "fontWeight", "normal" );	
 	$('#singalongbutton').css( "fontWeight", "bold" );	
 	$('#editorbutton').css( "color", "grey" );	
 	$('#singalongbutton').css( "color", "black" );	
 	playerMode="singalong";
 	$('.editor').hide( "1000" );	
+     for (i = 0; i < chordTimings.length; i++) {
+		if (chordTimings[i] != null){
+		    $("#chordNumber" + i).removeClass("recorded");
+		 }  
+	 }
+     for (i = 0; i < lyricTimings.length; i++) {
+		if (lyricTimings[i] != null){
+		    $("#lyricNumber" + i).removeClass("recorded");
+		 }  
+	 }
+
+
 
 }
 
@@ -631,12 +706,13 @@ function armLyrics(){
 function armChords(){
 	if (document.getElementById('audioplayer').paused ==true){
 
-chordsArmed ^=true;
-if (chordsArmed==true){
-	$('#armchordsbutton').css( "color", "red" );
-	}else{$('#armchordsbutton').css( "color", "black" );}
+		chordsArmed ^=true;
+		if (chordsArmed==true){
+			$('#armchordsbutton').css( "color", "red" );
+		}else{$('#armchordsbutton').css( "color", "black" );
+		}
 
-}
+	}
 
 }
 
