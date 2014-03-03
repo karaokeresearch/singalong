@@ -34,6 +34,7 @@ var chordsArmed=false;
 var prevChordTimeStamp;
 var speedMultiplier=1;
 var currentScroll=0;
+var fontSizepx;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
@@ -169,7 +170,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 //**************HELPER FUNCTIONS
 function textSizer(callback) { //resize the text on the page.  The 0.6 has to do with the font ratio for both Vera and Courier New.
     var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
-    var fontSizepx =(charWidth * (1 / 0.60));
+    fontSizepx =(charWidth * (1 / 0.60));
     $(".indexhead").css("font-size", Math.round(fontSizepx*1.5) + "px")
     $(".songlink").css("font-size", Math.round(fontSizepx) + "px")
     $(".chords").css("font-size", Math.round(fontSizepx) + "px");
@@ -186,11 +187,10 @@ function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down t
     //if ($("#" + toid).offset().top < $("#lyricNumber" + currentLyric).offset().top){console.log("bigger");} 
     //console.log (currentLyric);
     //if ( $("#" + toid).offset().top >$("#lyricNumber" + (currentLyric+1)).offset().top ) { //check to see if they are different otherwise you are wasting cycles
-      
-//      if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+      if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
 
-console.log($("#" + toid).offset().top + " " + currentScroll);
-      if ($("#" + toid).offset().top >currentScroll) { //check to see if they are different otherwise you are wasting cycles
+      //console.log($("#" + toid).offset().top + " " + currentScroll);
+      //if ($("#" + toid).offset().top >currentScroll) { //check to see if they are different otherwise you are wasting cycles
         currentScroll=$("#" + toid).offset().top;
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
@@ -227,17 +227,17 @@ function moveLyricHighlight(fromid, toid, callback) {
 	    //document.getElementById(toid).style.color = "#000000";
 			    $("#" + toidString).addClass("highlightedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
-		        //if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
+		        if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
                 
-                //console.log($("#lyricNumber" + (toid+1)).offset().top + " " + currentScroll);
-		        if ($("#lyricNumber" + (toid+1)).offset().top > currentScroll) { //check to see if they are different otherwise you are wasting cycles
+                //console.log($("#lyricNumber" + (toid)).offset().top + " " + currentScroll);
+		        //if ($("#lyricNumber" + (toid)).offset().top > currentScroll) { //check to see if they are different otherwise you are wasting cycles
 					currentScroll=$("#lyricNumber" + (toid)).offset().top;
 			        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
 			        if (scrollnext<0){scrollnext=0;}
 			        setTimeout(function(){
 
 			        $('html,body').animate({
-			            scrollTop: $("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 3
+			            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -(fontSizepx *1.25) 
 			        }, 600); //this value is how many ms it takes for transitions
 			        	
 		        	},scrollnext);
