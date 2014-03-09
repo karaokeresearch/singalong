@@ -69,11 +69,26 @@ io.sockets.on('connection', function(socket) {
     // Welcome messages on connection to just the connecting client
     socket.emit('bTotMod', { message: totalMod});
     socket.emit('bFlat', { message: swapFlat});
+    
+
     socket.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});  //This is both the song and the current chord.  Must be processed at same time.
 
     socket.on('id', function (data){  //user is switching chords.
         if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
             currentChord = data.data;
+
+		    if (typeof timings !="undefined"){
+		    	if (typeof timings.lyricOffsets !="undefined"){
+					if (typeof timings.lyricOffsets[currentChord] !="undefined"){
+						if (typeof timings.lyricOffsets[currentChord][0] !="undefined"){
+
+		    	    currentLyric=timings.lyricOffsets[currentChord][0][1];
+		    		console.log("TIMINGS: " +timings.lyricOffsets[currentChord][0][1]);
+			    		}
+			    	}
+			    }
+			 }
+
             io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord}); //Sent out with every chord change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next chord change.
             console.log(data);
         }
@@ -82,6 +97,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('lid', function (data){  //user is switching lyrics.
         if (securityCheck(socket.handshake.address.address)){//checks to see if the requester is on the approved list
             currentLyric = data.data;
+    
             io.sockets.emit('bcurrentSong', { song: currentSong,  blid: currentLyric}); //Sent out with every lyric change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next lyric change.
             console.log(data);
         }

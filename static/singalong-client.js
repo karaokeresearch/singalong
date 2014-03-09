@@ -36,78 +36,80 @@ var prevChordTimeStamp;
 var speedMultiplier=1;
 var currentScroll=0;
 var fontSizepx;
+var karaokeMode=false;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
 
-    //Possible events
-    $(window).resize(function() {//detect if the window is resized, if so, resize the text
-        textSizer(function(){});
-});
-
-//detect keystrokes.
-//do it this complicated way so that holding down a key does not send multiple
-//keystrokes to the engine.  Too much input is bad.  We use an array so that this is
-//only applied on a per-key basis to allow multiple users on the same keyboard while
-//simultaneously preventing accidental multiple-sends of any given key
-
-$(document).on('keydown',function(event){
-	actualKey=(event.which);
-	if (hitOnce[actualKey]!= 1){
-		if (actualKey==65){ //A chord left
-        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
-	    clearTimeout(lyricTimeouts[currentChord][i]);
-     	}
-
-		
-		
-		nudgeChord(-1);}
-		
-		if (actualKey==68){ //D chord right	
-		if (playerMode=="singalong"){
-			var currentChordTimeStamp = new Date();
-			speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
-			//console.log(speedMultiplier);
-			if (speedMultiplier>0.33 && speedMultiplier<3){
-				triggerLyrics(currentChord+1,speedMultiplier);	
-			}else{
-				triggerLyrics(currentChord+1,1);
-			}	
 	
-			prevChordTimeStamp = new Date();
 
+	//Possible events
+	$(window).resize(function() { //detect if the window is resized, if so, resize the text
+		textSizer(function(){});
+	});
+
+
+	$( "body" ).click(function() {
+
+
+           if (karaokeMode==false){
+           	$('link').attr('href','singalong-client-karaokemode.css');
+            karaokeMode=true;
+        }else{$('link').attr('href','singalong-client.css');
+			karaokeMode=false;
+        	}
+			textSizer(function(){});
+
+	});
+
+
+	//detect keystrokes.
+	//do it this complicated way so that holding down a key does not send multiple
+	//keystrokes to the engine.  Too much input is bad.  We use an array so that this is
+	//only applied on a per-key basis to allow multiple users on the same keyboard while
+	//simultaneously preventing accidental multiple-sends of any given key
+
+	$(document).on('keydown',function(event){
+		actualKey=(event.which);
+		if (hitOnce[actualKey]!= 1){
+			if (actualKey==65){ //A chord left
+				
+			nudgeChord(-1);}
+
+			if (actualKey==68){ //D chord right
+
+				if (playerMode=="editor" && chordsArmed==true && (document.getElementById('audioplayer').paused ==false)){//we are actively recording chord timings
+					chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;
+					$("#chordNumber" + (currentChord +1)).addClass("recorded");
+
+					//set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
+				}
+				nudgeChord(1);
 			}
-		else{if (chordsArmed==true && (document.getElementById('audioplayer').paused ==false)){
-			chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;
-		    $("#chordNumber" + (currentChord +1)).addClass("recorded");
-
-			}  //set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
-        }
-		nudgeChord(1);}
-		if (actualKey==66){ //B flat/sharp overrride
+			if (actualKey==66){ //B flat/sharp overrride
 			sendFlat();}
 
-		if (actualKey==87){ //W modulate key up
-		sendMod(1);}
-		if (actualKey==83){ //S modulate key down
-		sendMod(-1);}
+			if (actualKey==87){ //W modulate key up
+			sendMod(1);}
+			if (actualKey==83){ //S modulate key down
+			sendMod(-1);}
 
-		if (actualKey==74){ //J lyric left
-		nudgeLyric(-1);}
-		if (actualKey==76){ //K lyric right
-		if (lyricsArmed==true && (document.getElementById('audioplayer').paused ==false)){
-			lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;
-			$("#lyricNumber" + (currentLyric+1)).addClass("recorded");
+			if (actualKey==74){ //J lyric left
+			nudgeLyric(-1);}
+			if (actualKey==76){ //K lyric right
+				if (lyricsArmed==true && (document.getElementById('audioplayer').paused ==false)){//we are active recording lyrics timings
+					lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;
+					$("#lyricNumber" + (currentLyric+1)).addClass("recorded");
 
+				}
+				nudgeLyric(1);
 			}
-		nudgeLyric(1);
-		}
 
-	hitOnce[actualKey]=1;
-	}
-});
-
-$(document).keyup(function(){
+			hitOnce[actualKey]=1;
+		}//end keydown area
+	});//end document ready JQuery area
+ 
+    $(document).on('keyup',function(event){
         hitOnce[event.which]=0;
     });
 });
@@ -159,15 +161,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
         }
 		});
 
-
-
-
-
-
-
-
-
-	}else{
+	}else{//if the song is the same, it's just updates
 		if(data.bid!=null){jumpToChord(data.bid)}
 		if(data.blid!=null){jumpToLyric(data.blid)}
 
@@ -178,8 +172,10 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 
 //**************HELPER FUNCTIONS
 function textSizer(callback) { //resize the text on the page.  The 0.6 has to do with the font ratio for both Vera and Courier New.
+	
     var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
     fontSizepx =(charWidth * (1 / 0.60));
+    if (karaokeMode==true){fontSizepx = fontSizepx*2;}
     $(".indexhead").css("font-size", Math.round(fontSizepx*1.5) + "px")
     $(".songlink").css("font-size", Math.round(fontSizepx) + "px")
     $(".chords").css("font-size", Math.round(fontSizepx) + "px");
@@ -191,16 +187,7 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 }
 
 function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down the screen to the currently selected chord
-    //var charWidth = (($(window).width() - 15) / (longestLine + 2));
-    
-    //if ($("#" + toid).offset().top < $("#lyricNumber" + currentLyric).offset().top){console.log("bigger");} 
-    //console.log (currentLyric);
-    //if ( $("#" + toid).offset().top >$("#lyricNumber" + (currentLyric+1)).offset().top ) { //check to see if they are different otherwise you are wasting cycles
-      //if (Math.abs(($("#" + toid).offset().top) - ($("#" + fromid).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
       if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5 ))>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
-           
-      //console.log(Math.abs(($("#" + toid).offset().top) - $(document).scrollTop()));
-      //if ($("#" + toid).offset().top >currentScroll) { //check to see if they are different otherwise you are wasting cycles
         currentScroll=$("#" + toid).offset().top;
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
@@ -219,6 +206,9 @@ function moveHighlight(fromid, toid, callback) {
 
 
 function moveLyricHighlight(fromid, toid, callback) {
+toid=parseInt(toid);
+fromid=parseInt(fromid);
+
     if (currentSong != 'index'){
 	    fromidString = "lyricNumber" + fromid;
 	    toidString= "lyricNumber" + toid;
@@ -233,16 +223,10 @@ function moveLyricHighlight(fromid, toid, callback) {
 			    $("#" + fromidString).removeClass("underlinedlyric");
     	} 
 
-	    //then, move it to the new one
-	    //document.getElementById(toid).style.color = "#000000";
 			    $("#" + toidString).addClass("highlightedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
-                
-                //console.log ($(document).scrollTop());
-				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -(fontSizepx *1.25) - $(document).scrollTop())>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
-		        //if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) - ($("#lyricNumber" + (fromid+1)).offset().top))>3) { //check to see if they are different otherwise you are wasting cycles
-                //console.log($("#lyricNumber" + (toid)).offset().top + " " + currentScroll);
-		        //if ($("#lyricNumber" + (toid)).offset().top > currentScroll) { //check to see if they are different otherwise you are wasting cycles
+               
+				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -(fontSizepx *1.25) - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
 					currentScroll=$("#lyricNumber" + (toid)).offset().top;
 			        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
 			        if (scrollnext<0){scrollnext=0;}
@@ -310,8 +294,29 @@ function changeSong(whichsong){
 }
 
 function jumpToChord(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
+	if (playerMode=="singalong"){//playback mode.  This chunk of code triggers lyrics
+
+        if (whichchord<currentChord){				        
+        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
+					clearTimeout(lyricTimeouts[currentChord][i]);
+				}
+		}
+				
+        else{
+					var currentChordTimeStamp = new Date();
+					speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
+					//console.log(speedMultiplier);
+					if (speedMultiplier>0.33 && speedMultiplier<3){
+						triggerLyrics(whichchord,speedMultiplier);
+					}else{
+						triggerLyrics(whichchord,1);//reset the speed multiplier to 1 since there's bad data, for a variety of reasons
+					}
+					prevChordTimeStamp = new Date();
+				}
+        }
+ 
     moveHighlight(currentChord, whichchord, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-        goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);
+        if (karaokeMode==false){goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);}
         currentChord = parseInt(whichchord);
     });
   
@@ -366,7 +371,7 @@ function modulateChord(increment) {
         It does so by looking at each of the chords in the new key, and pretends for a moment
         each one is the key the song has been transposed to.  If a majority of the candidate key signatures require
         are flat key signatures, the program guesses and assumes it's a flat key.  It usually works for Western
-        compositions.
+        compositions.  Assuming I haven't deluded myself.
         */
         if (cellSaid.match(minChord)) {
             chordType = "minor";
@@ -641,13 +646,12 @@ function pauseAudio(){
 function triggerLyrics(chordnum,multiplier){
 var i=0;
 lyricTimeouts[chordnum]=[];
-			lyricOffsets[chordnum].forEach(function(name){
-				if (lyricsArmed==false)
-				{i++;
-				lyricTimeouts[chordnum][i]=	setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);
-				
-			    }
+            if (lyricOffsets[chordnum]!=null){
+				lyricOffsets[chordnum].forEach(function(name){
+					i++;
+					lyricTimeouts[chordnum][i]=	setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);
 				});
+			}
 }
 
 

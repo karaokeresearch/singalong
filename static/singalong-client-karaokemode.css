@@ -48,11 +48,12 @@
     font-weight: bold;
     padding: 0;
     margin-top: 0;
-    margin-right: 0;
-    margin-left: 1em;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
     margin-bottom:1em;
     letter-spacing:0;
     white-space: pre-wrap;
+    word-wrap: break-word;
     cursor: pointer; 
 }
 
@@ -88,10 +89,10 @@
 .highlightedchord{
 	color: #000000;                                              
 	font-family: Bitstream Vera Sans Mono Bold, Courier New Bold; 
-	background-color: #8CF2FF;                                    
+	background-color: #000000;                                    
 	border-bottom-style: solid;                                    
 	border-bottom-width: 0.1em;                                    
-	border-bottom-color: #0000AA;                                  
+	border-bottom-color: #000000;                                  
 }
 .highlightedlyric{
 	color: #FFFF00;
@@ -106,4 +107,5 @@
 body {
     -webkit-text-size-adjust: 100%;
     background-color: #000000;
+    overflow:hidden;
 }
