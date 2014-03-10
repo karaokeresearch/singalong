@@ -34,7 +34,6 @@ var lyricsArmed=false;
 var chordsArmed=false;
 var prevChordTimeStamp;
 var speedMultiplier=1;
-var currentScroll=0;
 var fontSizepx;
 var karaokeMode=false;
 
@@ -48,20 +47,14 @@ $(document).ready(function(){ //
 		textSizer(function(){});
 	});
 
-
-	$( "body" ).click(function() {
-
-
-           if (karaokeMode==false){
-           	$('link').attr('href','singalong-client-karaokemode.css');
-            karaokeMode=true;
-        }else{$('link').attr('href','singalong-client.css');
-			karaokeMode=false;
-        	}
-			textSizer(function(){});
-
-	});
-
+//    $(window).dblclick(function(){
+//         	        $('html,body').animate({
+//					            scrollTop: $("#chordNumber" + currentChord).offset().top - $(window).height() / 5
+//        						}, 600); //this value is how many ms it takes for transitions
+//				 
+//
+//   });
+//
 
 	//detect keystrokes.
 	//do it this complicated way so that holding down a key does not send multiple
@@ -141,12 +134,14 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
 			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
-			textSizer(function(){
-				jumpToChord(data.bid);
-				jumpToLyric(data.blid);
+//			textSizer(function(){
+//				jumpToChord(data.bid);
+//				jumpToLyric(data.blid);
+//				});
+				currentLyric=(data.blid);
 				modulateChord(totalModulation);
+			if ($('#editorbutton').length) {activateAdminMode(data.bid);}else{activateKaraokeMode(data.bid);}  //a terrible test to see if we're in Admin mode.  cookie solution is better.
 			});
-		});
 
 
 		$.getJSON( "/timings", function( data ) {
@@ -175,7 +170,7 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 	
     var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
     fontSizepx =(charWidth * (1 / 0.60));
-    if (karaokeMode==true){fontSizepx = fontSizepx*2;}
+    if (karaokeMode==true && currentSong!="index"){fontSizepx = fontSizepx*1.75;}
     $(".indexhead").css("font-size", Math.round(fontSizepx*1.5) + "px")
     $(".songlink").css("font-size", Math.round(fontSizepx) + "px")
     $(".chords").css("font-size", Math.round(fontSizepx) + "px");
@@ -188,7 +183,7 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 
 function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down the screen to the currently selected chord
       if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5 ))>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
-        currentScroll=$("#" + toid).offset().top;
+        
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
         }, 600); //this value is how many ms it takes for transitions
@@ -226,15 +221,21 @@ fromid=parseInt(fromid);
 			    $("#" + toidString).addClass("highlightedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
                
-				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -(fontSizepx *1.25) - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
-					currentScroll=$("#lyricNumber" + (toid)).offset().top;
+                var scrolloffset=(fontSizepx *1.25);
+                if (karaokeMode==true){scrolloffset=0;}
+				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
+					
 			        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
+			        var scrolltime=800;
 			        if (scrollnext<0){scrollnext=0;}
+			        if (scrollnext>5000 && karaokeMode==true){
+                        scrolltime=800;
+			        	scrollnext=5000;
+			        	}
 			        setTimeout(function(){
-
 			        $('html,body').animate({
-			            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -(fontSizepx *1.25) 
-			        }, 600); //this value is how many ms it takes for transitions
+			            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset 
+			        }, scrolltime); //this value is how many ms it takes for transitions
 			        	
 		        	},scrollnext);
 			    
@@ -296,13 +297,16 @@ function changeSong(whichsong){
 function jumpToChord(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	if (playerMode=="singalong"){//playback mode.  This chunk of code triggers lyrics
 
-        if (whichchord<currentChord){				        
-        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
-					clearTimeout(lyricTimeouts[currentChord][i]);
+        if (whichchord<currentChord){
+	        if (typeof lyricTimeouts[currentChord] !="undefined"){				        
+		        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
+							clearTimeout(lyricTimeouts[currentChord][i]);
 				}
-		}
+			}
+	    }
 				
-        else{
+				
+        if (whichchord-currentChord==1){
 					var currentChordTimeStamp = new Date();
 					speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
 					//console.log(speedMultiplier);
@@ -316,7 +320,9 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
         }
  
     moveHighlight(currentChord, whichchord, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-        if (karaokeMode==false){goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);}
+        //
+        	goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);
+        	//if (lyricOffsets[whichchord]==null){}
         currentChord = parseInt(whichchord);
     });
   
@@ -325,7 +331,6 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
 
 function jumpToLyric(whichLyric) { //jump a lyric given an integer value that corresponds with a lyric's div id
     moveLyricHighlight(currentLyric, whichLyric, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-        //goToByScroll(fromcolorname, toColorName);
     currentLyric = parseInt(whichLyric);
 
     });
@@ -619,9 +624,9 @@ function playAudio(){
 		if ((chordTimings[i] != null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime>=-0.1)){
 			    (function(i){
 			    chordTimeouts[i] = setTimeout(function(){
-				if (chordsArmed==false){jumpToChord(i);}
-				triggerLyrics(i,1);
-				},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
+					if (chordsArmed==false){jumpToChord(i);}
+					triggerLyrics(i,1);
+					},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
 				})(i);
 		}
 	}
@@ -649,7 +654,10 @@ lyricTimeouts[chordnum]=[];
             if (lyricOffsets[chordnum]!=null){
 				lyricOffsets[chordnum].forEach(function(name){
 					i++;
-					lyricTimeouts[chordnum][i]=	setTimeout(function(){jumpToLyric(name[1]);},name[0]*1000*multiplier);
+					lyricTimeouts[chordnum][i]=	setTimeout(function(){
+						if (currentChord == chordnum){jumpToLyric(name[1]);}  //if we check to see if these two variables match, animations outside of the current chord won't play.  Less zany scrolling this way.
+						
+						},name[0]*1000*multiplier);
 				});
 			}
 }
@@ -738,3 +746,33 @@ function armChords(){
 
 }
 
+function switchKaraoke(){
+	if (karaokeMode==false){
+		activateKaraokeMode(currentChord);
+	}else{activateAdminMode(currentChord);
+	}
+}
+
+
+function activateKaraokeMode(bid){
+	           	$('link').attr('href','singalong-client-karaokemode.css');           	
+			karaokeMode=true;
+	  		textSizer(function(){});
+              //the following is a horrible hack that exists because there's no way I can find to tell when the new CSS is loaded.  This just waits a half second and then tries to scroll to the right place.  I know, I know.
+
+
+			setTimeout(function(){
+			jumpToChord(bid);
+			},500);
+
+}
+
+function activateAdminMode(bid){
+            $('link').attr('href','singalong-client.css');
+			karaokeMode=false;
+	  		textSizer(function(){});
+			setTimeout(function(){
+			jumpToChord(bid);
+			},500);
+	
+}

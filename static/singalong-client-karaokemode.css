@@ -107,5 +107,21 @@
 body {
     -webkit-text-size-adjust: 100%;
     background-color: #000000;
-    overflow:hidden;
+    //overflow:hidden;
+}
+
+.parenthesis{
+color: #009900;
+}
+
+div#image_fixed { 
+position: fixed; 
+bottom: 0; 
+right: 0; 
+} 
+
+
+button {
+   background-color: black;
+   color:white;
 }

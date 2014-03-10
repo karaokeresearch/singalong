@@ -25,6 +25,7 @@ var songsDirectory= './songs/';
 var tabline =0;
 var longestLine=0;
 var parsedHTML='';
+var parsedAdminHTML='';
 var currentChord=0;
 var currentLyric=1;
 var currentMod=0;
@@ -50,10 +51,14 @@ returnIndexHTML(function(HTML){  //generate the initial index, cache it
 });
 
 
-//************** LISTENERS ********************
+//************** URL handlers ********************
+
 app.get('/load', function(req, res){ //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
-    res.send(parsedHTML);
-    res.end;
+	if (currentSong=="index"){res.end(parsedHTML);}
+	else{
+		if (securityCheck(req.ip)){res.end(parsedAdminHTML);
+			}else{res.end(parsedHTML);}
+	}
 });
 app.get('/timings', function(req, res){ //JSON timings object
     res.setHeader('Content-Type', 'application/json');
@@ -65,6 +70,9 @@ app.get('/timings', function(req, res){ //JSON timings object
 app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
 app.use('/audio', express.static(__dirname + '/audio')); //Where the static files are loaded from
 
+
+
+//************** LISTENERS ********************
 io.sockets.on('connection', function(socket) {
     // Welcome messages on connection to just the connecting client
     socket.emit('bTotMod', { message: totalMod});
@@ -172,6 +180,7 @@ function loadNewSong(newsong){//loads the appropriate file (or the index) into p
     if (currentSong=="index"){
         returnIndexHTML(function(HTML){
             parsedHTML=HTML;
+            parsedAdminHTML=HTML;
             io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric}); //tell all clients to load new file
             io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
 
@@ -196,11 +205,13 @@ function loadNewSong(newsong){//loads the appropriate file (or the index) into p
 
 
 
-
-        returnChordHTML(newsong, function(HTML) {
+        returnChordHTML(newsong, false, function(HTML) { //make and cache the basic page
             parsedHTML=HTML;
-            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});
-            io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
+	        returnChordHTML(newsong, true, function(adminHTML) {//make and cache the admin page
+	            parsedAdminHTML=adminHTML;
+	            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});
+    	        io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
+	        });
         });
     }
 }
@@ -227,7 +238,7 @@ function returnIndexHTML(callback){//Spit out the index based on the list of fil
     });
 }
 
-function returnChordHTML(fileName, callback) {//open up a file from /songs and parse it into HTML to be loaded into the <BODY> area </BODY>
+function returnChordHTML(fileName, authorized, callback) {//open up a file from /songs and parse it into HTML to be loaded into the <BODY> area </BODY>
     //two passes: first, we collect all the chords in the song, then we create the summary at the top in the variable allChords
     //TODO: figure out a way to turn the duplicated code into a function.
     var chordNumber=0;//<DIV> number later.
@@ -351,25 +362,25 @@ function returnChordHTML(fileName, callback) {//open up a file from /songs and p
         parseChunk = parseChunk + '<audio id="audioplayer" src="audio/test.mp3"></audio>';
 
 		parseChunk = parseChunk	+ '<div id="image_fixed">';
-
-		parseChunk = parseChunk	+ '<button id="singalongbutton" style="font-weight:bold" onclick="singalongMode()">Singalong</button>';
-		parseChunk = parseChunk	+ '<button id="editorbutton" style="color:grey" onclick="editorMode()">Editor</button>';	
-
-				
-		parseChunk = parseChunk	+ '<span style="display:none" class="editor">&nbsp;&nbsp;&nbsp;&nbsp;';
-		parseChunk = parseChunk	+ '<button onclick="armChords()"><span style="color:maroon">&#9679;</span> <span id="armchordsbutton">Chords</span></button>';	
-		parseChunk = parseChunk	+ '<button onclick="armLyrics()"><span style="color:maroon">&#9679;</span> <span id="armlyricsbutton">Lyrics</span></button>';
-		parseChunk = parseChunk	+ '<button onclick="playAudio()">&#9654;</button>';
-		parseChunk = parseChunk	+ '<button onclick="pauseAudio()">&#10073; &#10073;</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').currentTime=0">|&#9664;&#9664;</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume+=0.1">Vol ^</button>';
-		parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume-=0.1">Vol v</button>';
-		//parseChunk = parseChunk	+ '<button class="editor" style="display:none" onclick="settingsWindow()">Settings</button>'; //some day, perhaps a metadata approach is warranted.
-		parseChunk = parseChunk	+ '<button onclick="sendJSON()">Save</button>';
-
-
-		parseChunk = parseChunk	+ '</span>';
-		parseChunk = parseChunk	+ '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';	
+        if (authorized==true){
+			parseChunk = parseChunk	+ '<button id="singalongbutton" style="font-weight:bold" onclick="singalongMode()">Singalong</button>';
+			parseChunk = parseChunk	+ '<button id="editorbutton" style="color:grey" onclick="editorMode()">Editor</button>';	
+	
+					
+			parseChunk = parseChunk	+ '<span style="display:none" class="editor">&nbsp;&nbsp;&nbsp;&nbsp;';
+			parseChunk = parseChunk	+ '<button onclick="armChords()"><span style="color:maroon">&#9679;</span> <span id="armchordsbutton">Chords</span></button>';	
+			parseChunk = parseChunk	+ '<button onclick="armLyrics()"><span style="color:maroon">&#9679;</span> <span id="armlyricsbutton">Lyrics</span></button>';
+			parseChunk = parseChunk	+ '<button onclick="playAudio()">&#9654;</button>';
+			parseChunk = parseChunk	+ '<button onclick="pauseAudio()">&#10073; &#10073;</button>';
+			parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').currentTime=0">|&#9664;&#9664;</button>';
+			parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume+=0.1">Vol ^</button>';
+			parseChunk = parseChunk	+ '<button onclick="document.getElementById(\'audioplayer\').volume-=0.1">Vol v</button>';
+			//parseChunk = parseChunk	+ '<button class="editor" style="display:none" onclick="settingsWindow()">Settings</button>'; //some day, perhaps a metadata approach is warranted.
+			parseChunk = parseChunk	+ '<button onclick="sendJSON()">Save</button>';
+			parseChunk = parseChunk	+ '</span>';
+			parseChunk = parseChunk	+ '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';	
+		}
+		parseChunk = parseChunk	+ '<button onclick="switchKaraoke()">&#9836;</button>';	
 	
 		parseChunk = parseChunk + '</div>';
 
