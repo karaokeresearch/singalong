@@ -134,11 +134,8 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
 			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
-//			textSizer(function(){
-//				jumpToChord(data.bid);
-//				jumpToLyric(data.blid);
-//				});
 				currentLyric=(data.blid);
+				moveLyricHighlight(currentLyric, data.blid, true, function(){});
 				modulateChord(totalModulation);
 			if ($('#editorbutton').length) {activateAdminMode(data.bid);}else{activateKaraokeMode(data.bid);}  //a terrible test to see if we're in Admin mode.  cookie solution is better.
 			});
@@ -158,7 +155,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 
 	}else{//if the song is the same, it's just updates
 		if(data.bid!=null){jumpToChord(data.bid)}
-		if(data.blid!=null){jumpToLyric(data.blid)}
+		if(data.blid!=null){moveLyricHighlight(currentLyric, data.blid, true, function(){});}
 
 	};
 });
@@ -200,51 +197,50 @@ function moveHighlight(fromid, toid, callback) {
 }
 
 
-function moveLyricHighlight(fromid, toid, callback) {
+function moveLyricHighlight(fromid, toid, shouldscroll, callback) {
 toid=parseInt(toid);
 fromid=parseInt(fromid);
 
     if (currentSong != 'index'){
 	    fromidString = "lyricNumber" + fromid;
 	    toidString= "lyricNumber" + toid;
-	    
-	    //clean up the old one
-	    if ((fromid>toid) || (Math.abs(fromid-toid)>1)){//going backwards
-			//    $("#" + fromidString).removeClass("highlightedlyric");
-                $("#" + fromidString).removeClass("underlinedlyric");
 
-	    	}
-	    else{
-			    $("#" + fromidString).removeClass("underlinedlyric");
-    	} 
 
 			    $("#" + toidString).addClass("highlightedlyric");
+
+
+					if(shouldscroll){//move the underline around, confusingly if in the wrong place.
+	            $("#" + fromidString).removeClass("underlinedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
+          	}
                
+	               
                 var scrolloffset=(fontSizepx *1.25);
                 if (karaokeMode==true){scrolloffset=0;}
-				if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
-					
-			        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
-			        var scrolltime=800;
-			        if (scrollnext<0){scrollnext=0;}
-			        if (scrollnext>5000 && karaokeMode==true){
-                        scrolltime=800;
-			        	scrollnext=5000;
-			        	}
-			        setTimeout(function(){
-			        $('html,body').animate({
-			            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset 
-			        }, scrolltime); //this value is how many ms it takes for transitions
-			        	
-		        	},scrollnext);
+					if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
+						
+				        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
+				        var scrolltime=600;
+				        if (scrollnext<0){scrollnext=0;}
+				        if (scrollnext>5000 && karaokeMode==true){
+	                        scrolltime=600;
+				        	scrollnext=5000;
+				        	}
+				        setTimeout(function(){
+						if(shouldscroll){
+			              //console.log((($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset));
+					        $('html,body').animate({
+					            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset 
+					        }, scrolltime); //this value is how many ms it takes for transitions
+					   	  }	
+			            },scrollnext);
+		    
+				    }
 			    
-			    }
-					        
-		        
 		        
 	
 	}
+						if(shouldscroll){currentLyric = parseInt(toid);}//don't change the active lyric in case we're not on the active chord
     callback();
 }
 
@@ -297,7 +293,7 @@ function changeSong(whichsong){
 function jumpToChord(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	if (playerMode=="singalong"){//playback mode.  This chunk of code triggers lyrics
 
-        if (whichchord<currentChord){
+        if (whichchord<currentChord){ //moving backwards
 	        if (typeof lyricTimeouts[currentChord] !="undefined"){				        
 		        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
 							clearTimeout(lyricTimeouts[currentChord][i]);
@@ -306,7 +302,7 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
 	    }
 				
 				
-        if (whichchord-currentChord==1){
+        if (whichchord-currentChord==1){//likely pushed the D key
 					var currentChordTimeStamp = new Date();
 					speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
 					//console.log(speedMultiplier);
@@ -328,13 +324,6 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
   
 }
 
-
-function jumpToLyric(whichLyric) { //jump a lyric given an integer value that corresponds with a lyric's div id
-    moveLyricHighlight(currentLyric, whichLyric, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-    currentLyric = parseInt(whichLyric);
-
-    });
-}
 
 
 
@@ -655,8 +644,11 @@ lyricTimeouts[chordnum]=[];
 				lyricOffsets[chordnum].forEach(function(name){
 					i++;
 					lyricTimeouts[chordnum][i]=	setTimeout(function(){
-						if (currentChord == chordnum){jumpToLyric(name[1]);}  //if we check to see if these two variables match, animations outside of the current chord won't play.  Less zany scrolling this way.
-						
+						//console.log (currentChord + " " +chordnum);
+						if (currentChord == chordnum){ //is this the currently-selected chord and if not, don't scroll 
+							    moveLyricHighlight(currentLyric, name[1], true, function(){});
+							}  
+						    else{moveLyricHighlight(currentLyric, name[1], false, function(){});}
 						},name[0]*1000*multiplier);
 				});
 			}
