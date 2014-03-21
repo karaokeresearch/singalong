@@ -13,7 +13,7 @@
 
 var socket = io.connect();
 var currentChord=0;
-var currentLyric=1;
+var currentLyric=0;
 var longestLine =0;
 var lastPos=0; //the final div number
 var lastLyric=0; //the final div number
@@ -36,6 +36,7 @@ var prevChordTimeStamp;
 var speedMultiplier=1;
 var fontSizepx;
 var karaokeMode=false;
+var firstChord;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function(){ //
@@ -72,7 +73,7 @@ $(document).ready(function(){ //
 			if (actualKey==68){ //D chord right
 
 				if (playerMode=="editor" && chordsArmed==true && (document.getElementById('audioplayer').paused ==false)){//we are actively recording chord timings
-					chordTimings[currentChord + 1] = document.getElementById('audioplayer').currentTime;
+					chordTimings[currentChord + 1-firstChord] = document.getElementById('audioplayer').currentTime;
 					$("#chordNumber" + (currentChord +1)).addClass("recorded");
 
 					//set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
@@ -91,7 +92,7 @@ $(document).ready(function(){ //
 			nudgeLyric(-1);}
 			if (actualKey==76){ //K lyric right
 				if (lyricsArmed==true && (document.getElementById('audioplayer').paused ==false)){//we are active recording lyrics timings
-					lyricTimings[currentLyric + 1] = document.getElementById('audioplayer').currentTime;
+					lyricTimings[currentLyric] = document.getElementById('audioplayer').currentTime; //not plus 1 because we add one to eliminate the "Ready" chord
 					$("#lyricNumber" + (currentLyric+1)).addClass("recorded");
 
 				}
@@ -125,7 +126,7 @@ socket.on('bFlat', function(data) {
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Sent every left or right movement.
 	if (data.song!=currentSong){ //if there's a new song, or it's the index
 		currentChord=0;
-		currentLyric=1;
+		currentLyric=0;
 		currentSong=data.song;
 
 
@@ -133,6 +134,8 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			longestLine =Number($('#longestLine').val());
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
+			firstChord=Number($('#firstChord').val())//
+console.log("firstchord="+firstChord);
 			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
 				currentLyric=(data.blid);
 				moveLyricHighlight(currentLyric, data.blid, true, function(){});
@@ -209,7 +212,7 @@ fromid=parseInt(fromid);
 			    $("#" + toidString).addClass("highlightedlyric");
 
 
-					if(shouldscroll){//move the underline around, confusingly if in the wrong place.
+				if(shouldscroll){//move the underline around, confusingly if in the wrong place.
 	            $("#" + fromidString).removeClass("underlinedlyric");
 			    $("#" + toidString).addClass("underlinedlyric");
           	}
@@ -217,9 +220,11 @@ fromid=parseInt(fromid);
 	               
                 var scrolloffset=(fontSizepx *1.25);
                 if (karaokeMode==true){scrolloffset=0;}
-					if (Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
-						
-				        var scrollnext=((lyricTimings[toid+1]-lyricTimings[toid])*1000*speedMultiplier)-900;
+	                //console.log(Math.abs(($("#lyricNumber" + (toid)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop()) + " " +(fontSizepx/2) );
+					if (toid+1>2 &&Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
+				        var scrollnext=((lyricTimings[toid]-lyricTimings[toid-1])*1000*speedMultiplier)-900;
+						//console.log((toid+1) + "scrolling" +scrollnext );
+
 				        var scrolltime=600;
 				        if (scrollnext<0){scrollnext=0;}
 				        if (scrollnext>5000 && karaokeMode==true){
@@ -263,8 +268,8 @@ function nudgeChord(increment) {
 function nudgeLyric(increment) {
     //move the active chord given a value relative to the current chord
     var newPos = currentLyric + increment;
-    if (newPos < 1) {
-        newPos = 1;
+    if (newPos < 0) {
+        newPos = 0;
     }
     if (newPos > lastLyric) {
         newPos = lastLyric;
@@ -276,8 +281,8 @@ function nudgeLyric(increment) {
 //***************** EMITTERS **********************
 function sendChord(whichchord){
     socket.emit('id', { data: whichchord }); //A or D key was tapped
-    if (playerMode=="editor" && document.getElementById('audioplayer').paused ==true && chordTimings[whichchord]!=null) {//rewind or fast forward
-    		document.getElementById('audioplayer').currentTime = chordTimings[whichchord];} 
+    if (playerMode=="editor" && document.getElementById('audioplayer').paused ==true && chordTimings[whichchord-firstChord]!=null) {//rewind or fast forward
+    		document.getElementById('audioplayer').currentTime = chordTimings[whichchord-firstChord];} 
 
 }
 
@@ -292,11 +297,10 @@ function changeSong(whichsong){
 
 function jumpToChord(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	if (playerMode=="singalong"){//playback mode.  This chunk of code triggers lyrics
-
-        if (whichchord<currentChord){ //moving backwards
-	        if (typeof lyricTimeouts[currentChord] !="undefined"){				        
-		        for (i = 0; i < lyricTimeouts[currentChord].length; i++) {
-							clearTimeout(lyricTimeouts[currentChord][i]);
+        if (whichchord<currentChord){ //moving backwards (user hit left, usually)
+	        if (typeof lyricTimeouts[currentChord-firstChord] !="undefined"){				        
+		        for (i = 0; i < lyricTimeouts[currentChord-firstChord].length; i++) {
+							clearTimeout(lyricTimeouts[currentChord-firstChord][i]);
 				}
 			}
 	    }
@@ -304,12 +308,12 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
 				
         if (whichchord-currentChord==1){//likely pushed the D key
 					var currentChordTimeStamp = new Date();
-					speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1] - chordTimings[currentChord])*1000));
+					speedMultiplier = ((currentChordTimeStamp-prevChordTimeStamp)/((chordTimings[currentChord + 1-firstChord] - chordTimings[currentChord-firstChord])*1000));
 					//console.log(speedMultiplier);
 					if (speedMultiplier>0.33 && speedMultiplier<3){
-						triggerLyrics(whichchord,speedMultiplier);
+						triggerLyrics(whichchord-firstChord,speedMultiplier);
 					}else{
-						triggerLyrics(whichchord,1);//reset the speed multiplier to 1 since there's bad data, for a variety of reasons
+						triggerLyrics(whichchord-firstChord,1);//reset the speed multiplier to 1 since there's bad data, for a variety of reasons
 					}
 					prevChordTimeStamp = new Date();
 				}
@@ -317,7 +321,10 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
  
     moveHighlight(currentChord, whichchord, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
         //
+        if (whichchord>firstChord-1 || currentChord>firstChord-1)//don't scroll until you're past the preview.
+        {
         	goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);
+        }
         	//if (lyricOffsets[whichchord]==null){}
         currentChord = parseInt(whichchord);
     });
@@ -471,75 +478,77 @@ function rewriteChord(increment) {
     for (chordNum = 1; chordNum <= lastPos - 1; chordNum = chordNum + 1) {
         toColorName = "chordNumber" + chordNum;
         cellSaid = $("#" + toColorName).html();
-        chordVal = detchordVal(cellSaid); //read the chords from the div cells and assign a numerical value to base tone
-        chordVal = (chordVal + increment)%12;
-        //if (chordVal == 13) {
-        //    chordVal = 1;
-        //}
-
-        if (chordVal == 0) {
-            chordVal = 12;
-        }
-        var secondPart = "";
-        cellSaid.match(/[A-G](#|b){0,1}(\w*)/); //
-        secondPart = (RegExp.$2); //
-        if (chordVal == 1) { //A
-            chordBase = "A";
-        }
-        if (chordVal == 2) { //Bb slas A#
-            if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
-                chordBase = "Bb";
-            } else {
-                chordBase = "A#";
-            }
-        }
-        if (chordVal == 3) { //B
-            chordBase = "B";
-        }
-        if (chordVal == 4) { //C
-            chordBase = "C";
-        }
-        if (chordVal == 5) { //Db slash C#
-            if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
-                chordBase = "Db";
-            } else {
-                chordBase = "C#";
-            }
-        }
-        if (chordVal == 6) { //D
-            chordBase = "D";
-        }
-        if (chordVal == 7) { //Eb slash D#
-            if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
-                chordBase = "Eb";
-            } else {
-                chordBase = "D#";
-            }
-        }
-        if (chordVal == 8) { //E
-            chordBase = "E";
-        }
-        if (chordVal == 9) { //F
-            chordBase = "F";
-        }
-        if (chordVal == 10) { //Gb slash F#
-            if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
-                chordBase = "Gb";
-            } else {
-                chordBase = "F#";
-            }
-        }
-        if (chordVal == 11) { //G
-            chordBase = "G";
-        }
-        if (chordVal == 12) { //Ab slash G#
-            if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
-                chordBase = "Ab";
-            } else {
-                chordBase = "G#";
-            }
-        }
-        $("#" + toColorName).html(chordBase + secondPart); //write
+        if (cellSaid.match(/^(([A-G](#|b)?(M|maj|m|min|\+|add|sus|mM|aug|dim|dom|flat)?[0-9]{0,2})|\s)+$/)){ //so that Ready/Go doesn't break
+        	chordVal = detchordVal(cellSaid); //read the chords from the div cells and assign a numerical value to base tone
+        	chordVal = (chordVal + increment)%12;
+        	//if (chordVal == 13) {
+        	//    chordVal = 1;
+        	//}
+        	
+        	if (chordVal == 0) {
+        	    chordVal = 12;
+        	}
+        	var secondPart = "";
+        	cellSaid.match(/[A-G](#|b){0,1}(\w*)/); //
+        	secondPart = (RegExp.$2); //
+        	if (chordVal == 1) { //A
+        	    chordBase = "A";
+        	}
+        	if (chordVal == 2) { //Bb slas A#
+        	    if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
+        	        chordBase = "Bb";
+        	    } else {
+        	        chordBase = "A#";
+        	    }
+        	}
+        	if (chordVal == 3) { //B
+        	    chordBase = "B";
+        	}
+        	if (chordVal == 4) { //C
+        	    chordBase = "C";
+        	}
+        	if (chordVal == 5) { //Db slash C#
+        	    if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
+        	        chordBase = "Db";
+        	    } else {
+        	        chordBase = "C#";
+        	    }
+        	}
+        	if (chordVal == 6) { //D
+        	    chordBase = "D";
+        	}
+        	if (chordVal == 7) { //Eb slash D#
+        	    if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
+        	        chordBase = "Eb";
+        	    } else {
+        	        chordBase = "D#";
+        	    }
+        	}
+        	if (chordVal == 8) { //E
+        	    chordBase = "E";
+        	}
+        	if (chordVal == 9) { //F
+        	    chordBase = "F";
+        	}
+        	if (chordVal == 10) { //Gb slash F#
+        	    if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
+        	        chordBase = "Gb";
+        	    } else {
+        	        chordBase = "F#";
+        	    }
+        	}
+        	if (chordVal == 11) { //G
+        	    chordBase = "G";
+        	}
+        	if (chordVal == 12) { //Ab slash G#
+        	    if ((SongInFlatKey == 1 &&  swapFlat==0) || (SongInFlatKey == 0 && swapFlat==1)) {
+        	        chordBase = "Ab";
+        	    } else {
+        	        chordBase = "G#";
+        	    }
+        	}
+        	$("#" + toColorName).html(chordBase + secondPart); //write
+    	}
     }
 }
 
@@ -613,8 +622,8 @@ function playAudio(){
 		if ((chordTimings[i] != null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime>=-0.1)){
 			    (function(i){
 			    chordTimeouts[i] = setTimeout(function(){
-					if (chordsArmed==false){jumpToChord(i);}
-					triggerLyrics(i,1);
+					if (chordsArmed==false){jumpToChord(i+firstChord);}
+					triggerLyrics(i,1); //1 is the multipliers, which should be 1 with pre-programmed playback
 					},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
 				})(i);
 		}
@@ -632,6 +641,15 @@ function pauseAudio(){
 	for (i = 0; i < chordTimings.length; i++) {
 	    clearTimeout(chordTimeouts[i]);
 	}
+
+    if (typeof lyricTimeouts[currentChord-firstChord] !="undefined"){				        
+        for (i = 0; i < lyricTimeouts[currentChord-firstChord].length; i++) {
+					clearTimeout(lyricTimeouts[currentChord-firstChord][i]);
+		}
+	}
+
+
+	
 	compileTimings();
 	
 }
@@ -644,11 +662,11 @@ lyricTimeouts[chordnum]=[];
 				lyricOffsets[chordnum].forEach(function(name){
 					i++;
 					lyricTimeouts[chordnum][i]=	setTimeout(function(){
-						//console.log (currentChord + " " +chordnum);
-						if (currentChord == chordnum){ //is this the currently-selected chord and if not, don't scroll 
-							    moveLyricHighlight(currentLyric, name[1], true, function(){});
+						//console.log (currentChord + " --- " + name[1]);
+						if (currentChord == chordnum+firstChord){ //is this the currently-selected chord and if not, don't scroll 
+							    moveLyricHighlight(currentLyric, name[1]+1, true, function(){});
 							}  
-						    else{moveLyricHighlight(currentLyric, name[1], false, function(){});}
+						    else{moveLyricHighlight(currentLyric, name[1]+1, false, function(){});}
 						},name[0]*1000*multiplier);
 				});
 			}
@@ -676,7 +694,7 @@ if (document.getElementById('audioplayer').error ==null){
 	$('.editor').show( "1000" );
      for (i = 0; i < chordTimings.length; i++) {
 		if (chordTimings[i] != null){
-		    $("#chordNumber" + i).addClass("recorded");
+		    $("#chordNumber" + (i+firstChord)).addClass("recorded");
 		 }  
 	 }
      for (i = 0; i < lyricTimings.length; i++) {
@@ -702,7 +720,7 @@ function singalongMode(){
 	$('.editor').hide( "1000" );	
      for (i = 0; i < chordTimings.length; i++) {
 		if (chordTimings[i] != null){
-		    $("#chordNumber" + i).removeClass("recorded");
+		    $("#chordNumber" + (i+firstChord)).removeClass("recorded");
 		 }  
 	 }
      for (i = 0; i < lyricTimings.length; i++) {

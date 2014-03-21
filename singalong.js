@@ -16,7 +16,7 @@ var express = require('express')
 , http = require('http')
 , app = express()
 , server = http.createServer(app).listen(80)
-, io = require('socket.io').listen(server)
+, io = require('socket.io').listen(server, { log: false })
 ;
 var fs = require("fs");
 var os=require('os');
@@ -27,7 +27,7 @@ var longestLine=0;
 var parsedHTML='';
 var parsedAdminHTML='';
 var currentChord=0;
-var currentLyric=1;
+var currentLyric=0;
 var currentMod=0;
 var totalMod=0;
 var swapFlat=0;
@@ -36,6 +36,8 @@ var listofIPs=new Array();
 var chordRegex=/^(([A-G](#|b)?(M|maj|m|min|\+|add|sus|mM|aug|dim|dom|flat)?[0-9]{0,2})|\s)+$/
 var disableSecurity=0;
 var timings;
+var firstChord;
+var firstLyric;
 
 if(!dirExistsSync(songsDirectory)){//some sync business up front. Create and populate a local songs directory if none exists.
 	console.log(songsDirectory+" doesn't exist. Creating.");
@@ -87,11 +89,11 @@ io.sockets.on('connection', function(socket) {
 
 		    if (typeof timings !="undefined"){
 		    	if (typeof timings.lyricOffsets !="undefined"){
-					if (typeof timings.lyricOffsets[currentChord] !="undefined"){
-						if (typeof timings.lyricOffsets[currentChord][0] !="undefined"){
+					if (typeof timings.lyricOffsets[currentChord-firstChord] !="undefined"){
+						if (typeof timings.lyricOffsets[currentChord-firstChord][0] !="undefined"){
 
-		    	    currentLyric=timings.lyricOffsets[currentChord][0][1];
-		    		console.log("TIMINGS: " +timings.lyricOffsets[currentChord][0][1]);
+		    	    currentLyric=(timings.lyricOffsets[currentChord-firstChord][0][1]+1);
+		    		console.log("TIMINGS: " +(timings.lyricOffsets[currentChord-firstChord][0][1]+1));
 			    		}
 			    	}
 			    }
@@ -173,7 +175,7 @@ io.sockets.on('connection', function(socket) {
 //************** HELPER FUNCTIONS ********************
 function loadNewSong(newsong){//loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
     currentChord=0;
-    currentLyric=1;
+    currentLyric=0;
     totalMod=0;
     currentSong=(newsong);
     swapFlat=0;
@@ -246,9 +248,12 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
     var parseChunk='';//The being-assembled HTML chunklets
     var k=0; //index of the chords summary displayed before the song title at the top
     var chordsInSongLine='';
-    var parseChunk = parseChunk + '<span class="startstop" id="chordNumber0" onclick="sendChord(\'0\')">&gt;&gt;start<br><br></span>';
     var allChords =new Array();
     longestLine=0;//How long is the longest line in the file being processed?
+    firstChord=0;
+    firstLyric=0;
+
+
     fs.readFile(songsDirectory + fileName, 'utf8', function(err, data) {
         if(err) {
             console.error("Could not open file: %s", err);
@@ -284,14 +289,60 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
             }//end is it a chord line
         }
 
+
+
+       var prettySongName= currentSong.replace(/.txt$/i,'').replace(/_/g,' ').replace(/-/g,' - ');//pretty up the output
+       parseChunk = parseChunk + '<div class="lyrics">'; 
+       parseChunk = parseChunk + '<span class="Parenthesis" >'+prettySongName.split(/\s*-\s*/)[0]+'	</span>'; 
+       parseChunk = parseChunk + '</div>'; 
+       parseChunk = parseChunk + '<div class="lyrics">'; 
+       parseChunk = parseChunk + '<span class="Parenthesis" >'+prettySongName.split(/\s*-\s*/)[1]+'	</span>'; 
+       parseChunk = parseChunk + '</div>'; 
+
+
+
+
+
+
+
+
+       
+        parseChunk = parseChunk + '<div class="chords"><span class="chordspan" style="position: absolute; left: 1em">';
         for (i = 0; i < allChords.length; i++) {
-            chordsInSongLine = chordsInSongLine + allChords[i] + "  "; //make all the chords in the song the first line parsed by the parser
-            if ((i+1)%Math.round(longestLine/5)==0){chordsInSongLine=chordsInSongLine +"\n";} //hack.  Will make font too small on a song with many complicated chords
+            parseChunk += '<span id="chordNumber' + i+ '" class="chordspan">' + allChords[i] +"</span>";
+            for (var j=0; j<(5-allChords[i].length); j++){parseChunk += ' ';} //
+            parseChunk += ' ';                                                //dumb hack because sprintf doesn't work
+
+            //chordsInSongLine = chordsInSongLine + allChords[i] + "  "; //make all the chords in the song the first line parsed by the parser
+            if ((i+1)%Math.round(longestLine/8)==0){parseChunk += '</span></div><div class="chords"><span class="chordspan" style="position: absolute; left: 1em">'} //hack.  Will make font too small on a song with many complicated chords
+            firstChord=i;
         }
-        data = chordsInSongLine +"\n\n"+ data;
+        firstChord++;	
+       parseChunk = parseChunk + '</span></div><br><br>';
+       
+
+       parseChunk = parseChunk + '<div class=chords><span class="chordspan" style="position: absolute; left: 1em">'; 
+       parseChunk = parseChunk + '<span class="chordspan" id="chordNumber'+firstChord +'" onclick="sendChord(\''+firstChord + '\')">&gt;&gt;Ready?</span>'; 
+       firstChord++;
+       parseChunk = parseChunk + ' <span class="chordspan" id="chordNumber'+firstChord +'" onclick="sendChord(\''+firstChord+'\')">&gt;&gt;GO!</span>';
+       parseChunk = parseChunk + '</span></div>'; 
+       parseChunk = parseChunk + '<div class="lyrics">'; 
+
+       parseChunk = parseChunk + '<span id="lyricNumber'+firstLyric+'" onclick="sendLyric(\''+firstLyric+'\')">&gt;&gt;Ready?</span>'; 
+       firstLyric++;
+       parseChunk = parseChunk +        ' <span id="lyricNumber'+firstLyric+'" onclick="sendLyric(\''+firstLyric+'\')">&gt;&gt;GO!</span>';
+       parseChunk = parseChunk + '</div>'; 
+
+	
+       lyricNumber=firstLyric;
+       chordNumber=firstChord;
+       //firstChord+=2;//first chord should be number of chords + 2 - 1  Nevermind, this is actually wrong.  firstChord should be "GO!"
+
+       
+        //data = chordsInSongLine +"\n\n"+ data;
 
         //**************** ENGINE *******************
-        //Now, we cycle back through and actually output the meat of the song to be injected into <BODY> via JQuery </BODY>
+        //Now, we cycle back through and actually output the HTML of the song to be injected into <BODY> via JQuery </BODY>
         var line = data.split(/\n/),i;
         for (var j=0; j<line.length; j++) {
             tabline=line[j];
@@ -355,7 +406,7 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
         chordNumber++;
         //longestLine = longestLine + 1; //used to do this, pretty sure we don't anymore.
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber' + chordNumber + '" onclick="sendChord(\''  + chordNumber + '\')">&gt;&gt;end</span>';
-        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
+        parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="firstChord" value="' + firstChord + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
         //parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         
         //audio player
