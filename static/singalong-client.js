@@ -183,7 +183,7 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 
 function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down the screen to the currently selected chord
       if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5 ))>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
-        
+        console.log ("scrolling " + fromid + " to " +toid);
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
         }, 600); //this value is how many ms it takes for transitions
@@ -222,13 +222,12 @@ fromid=parseInt(fromid);
                 if (karaokeMode==true){scrolloffset=0;}
 	                //console.log(Math.abs(($("#lyricNumber" + (toid)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop()) + " " +(fontSizepx/2) );
 					if (toid+1>2 &&Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
-				        var scrollnext=((lyricTimings[toid]-lyricTimings[toid-1])*1000*speedMultiplier)-900;
+				        var scrollnext=((lyricTimings[toid]-lyricTimings[toid-1])*1000*speedMultiplier)-600;
 						//console.log((toid+1) + "scrolling" +scrollnext );
 
 				        var scrolltime=600;
 				        if (scrollnext<0){scrollnext=0;}
 				        if (scrollnext>5000 && karaokeMode==true){
-	                        scrolltime=600;
 				        	scrollnext=5000;
 				        	}
 				        setTimeout(function(){
@@ -321,9 +320,11 @@ function jumpToChord(whichchord) { //jump a chord given an integer value that co
  
     moveHighlight(currentChord, whichchord, function(){ //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
         //
-        if (whichchord>firstChord-1 || currentChord>firstChord-1)//don't scroll until you're past the preview.
+        if (whichchord>firstChord || currentChord>firstChord)//don't scroll until you're past the preview.
         {
+   	      if (!(whichchord-currentChord == 1 && ($("#chordNumber" + whichchord).offset().top) - $(document).scrollTop() - ($(window).height() / 5 )<0)){
         	goToByScroll("chordNumber" + currentChord, "chordNumber" +whichchord);
+          }
         }
         	//if (lyricOffsets[whichchord]==null){}
         currentChord = parseInt(whichchord);
