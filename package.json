@@ -1,7 +1,7 @@
 {
   "name": "singalong",
   "preferGlobal": true,
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Application to facilitate casual musical singalongs and live band Karaoke",
   "contributors": [ 
     {
@@ -28,7 +28,8 @@
     "singalong",
     "chords",
     "tab",
-    "reader"
+    "live",
+    "live-band"
   ],
   "author": "Karaoke Research Council <krc@brassrocket.com>",
   "license": "GPL-2.0"

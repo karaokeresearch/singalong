@@ -410,7 +410,7 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
         //parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         
         //audio player
-        parseChunk = parseChunk + '<audio id="audioplayer" src="audio/test.mp3"></audio>';
+        parseChunk = parseChunk + '<audio id="audioplayer" src="audio/' + currentSong + '.mp3"></audio>';
 
 		parseChunk = parseChunk	+ '<div id="image_fixed">';
         if (authorized==true){

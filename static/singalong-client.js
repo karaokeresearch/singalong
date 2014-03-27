@@ -48,14 +48,6 @@ $(document).ready(function(){ //
 		textSizer(function(){});
 	});
 
-//    $(window).dblclick(function(){
-//         	        $('html,body').animate({
-//					            scrollTop: $("#chordNumber" + currentChord).offset().top - $(window).height() / 5
-//        						}, 600); //this value is how many ms it takes for transitions
-//				 
-//
-//   });
-//
 
 	//detect keystrokes.
 	//do it this complicated way so that holding down a key does not send multiple
@@ -71,6 +63,15 @@ $(document).ready(function(){ //
 			nudgeChord(-1);}
 
 			if (actualKey==68){ //D chord right
+
+				if (currentChord-firstChord==-1 && playerMode=="editor" && chordsArmed==true && (document.getElementById('audioplayer').paused ==true)){//we are actively recording chord timings
+				chordTimings[0] = 0; //Go button
+				sendLyric(1); //advance the lyric button to Go as well
+				lyricTimings[0] = 0; //Go button
+                document.getElementById('audioplayer').currentTime=0; //rewind 
+                playAudio(); //begin playback
+                }
+
 
 				if (playerMode=="editor" && chordsArmed==true && (document.getElementById('audioplayer').paused ==false)){//we are actively recording chord timings
 					chordTimings[currentChord + 1-firstChord] = document.getElementById('audioplayer').currentTime;
@@ -135,7 +136,6 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
 			firstChord=Number($('#firstChord').val())//
-console.log("firstchord="+firstChord);
 			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
 				currentLyric=(data.blid);
 				moveLyricHighlight(currentLyric, data.blid, true, function(){});
@@ -221,7 +221,7 @@ fromid=parseInt(fromid);
                 var scrolloffset=(fontSizepx *1.25);
                 if (karaokeMode==true){scrolloffset=0;}
 	                //console.log(Math.abs(($("#lyricNumber" + (toid)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop()) + " " +(fontSizepx/2) );
-					if (toid+1>2 &&Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
+					if (((playerMode=="editor" && chordsArmed==false)||playerMode=="singalong") && toid+1>2 &&Math.abs(($("#lyricNumber" + (toid+1)).offset().top) -($(window).height() / 5) -scrolloffset - $(document).scrollTop())>(fontSizepx/2)) { //if the next lyric is on a new line, pre-scroll it.
 				        var scrollnext=((lyricTimings[toid]-lyricTimings[toid-1])*1000*speedMultiplier)-600;
 						//console.log((toid+1) + "scrolling" +scrollnext );
 
@@ -368,13 +368,13 @@ function modulateChord(increment) {
         if (chordVal == 0) {
             chordVal = 12;
         }
-        /*!
-        Makes a guess at if chords should be represented as sharp or flat.
-        It does so by looking at each of the chords in the new key, and pretends for a moment
-        each one is the key the song has been transposed to.  If a majority of the candidate key signatures require
-        are flat key signatures, the program guesses and assumes it's a flat key.  It usually works for Western
-        compositions.  Assuming I haven't deluded myself.
-        */
+
+       // Makes a guess at if chords should be represented as sharp or flat.
+       // It does so by looking at each of the chords in the new key, and pretends for a moment
+       // each one is the key the song has been transposed to.  If a majority of the candidate key signatures require
+       // are flat key signatures, the program guesses and assumes it's a flat key.  It usually works for Western
+       // compositions.  Assuming I haven't deluded myself.
+
         if (cellSaid.match(minChord)) {
             chordType = "minor";
         } else {
@@ -601,7 +601,7 @@ function compileTimings(){
 		if (chordTimings[i] != null){
 
 			for (j = 0; j < lyricTimings.length; j++) { //inefficient.  cycle through all timings to find the ones after the current chord.
-				if (lyricTimings[j] != null &&  ( (lyricTimings[j] >= chordTimings[i])&& (lyricTimings[j] < chordTimings[i+1])) || (lyricTimings[j] >= chordTimings[i])&& (chordTimings[i+1]==null)){
+				if (lyricTimings[j] != null &&  ( (lyricTimings[j] >= chordTimings[i]-0.2)&& (lyricTimings[j] < chordTimings[i+1]-0.2)) || (lyricTimings[j] >= chordTimings[i])&& (chordTimings[i+1]==null)){ //the 0.2 is cheating.  It makes some entries have a negative offset in the JSON but it helps make up for impercise alignment of chords and lyrics.  Fix this later.
 					lyricOffsets[i].push([Math.round((parseFloat(lyricTimings[j]) - parseFloat(chordTimings[i]))*1000)/1000,j]); 
 				}
 			}
@@ -675,6 +675,7 @@ lyricTimeouts[chordnum]=[];
 
 
 function sendJSON(){
+compileTimings();
 var myList = [
     {lyricTimings:lyricTimings, chordTimings:chordTimings}
 ];
@@ -700,7 +701,7 @@ if (document.getElementById('audioplayer').error ==null){
 	 }
      for (i = 0; i < lyricTimings.length; i++) {
 		if (lyricTimings[i] != null){
-		    $("#lyricNumber" + i).addClass("recorded");
+		    $("#lyricNumber" + (i+1)).addClass("recorded");
 		 }  
 	 }
 
@@ -726,7 +727,7 @@ function singalongMode(){
 	 }
      for (i = 0; i < lyricTimings.length; i++) {
 		if (lyricTimings[i] != null){
-		    $("#lyricNumber" + i).removeClass("recorded");
+		    $("#lyricNumber" + (i+1)).removeClass("recorded");
 		 }  
 	 }
 
