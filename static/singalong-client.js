@@ -132,6 +132,8 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 
 
 		jQuery("body").load("/load",function(){
+			lyricsArmed=false;
+			chordsArmed=false;			
 			longestLine =Number($('#longestLine').val());
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
@@ -230,14 +232,17 @@ fromid=parseInt(fromid);
 				        if (scrollnext>5000 && karaokeMode==true){
 				        	scrollnext=5000;
 				        	}
+				        	
+				        if ( $("#lyricNumber" + (toid+1)).offset().top- $("#lyricNumber" + (toid)).offset().top !=0){
 				        setTimeout(function(){
 						if(shouldscroll){
-			              //console.log((($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset));
+			              console.log((($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset));
 					        $('html,body').animate({
 					            scrollTop: ($("#lyricNumber" + (toid+1)).offset().top - $(window).height() / 5) -scrolloffset 
 					        }, scrolltime); //this value is how many ms it takes for transitions
 					   	  }	
 			            },scrollnext);
+			           }
 		    
 				    }
 			    
@@ -601,7 +606,7 @@ function compileTimings(){
 		if (chordTimings[i] != null){
 
 			for (j = 0; j < lyricTimings.length; j++) { //inefficient.  cycle through all timings to find the ones after the current chord.
-				if (lyricTimings[j] != null &&  ( (lyricTimings[j] >= chordTimings[i]-0.2)&& (lyricTimings[j] < chordTimings[i+1]-0.2)) || (lyricTimings[j] >= chordTimings[i])&& (chordTimings[i+1]==null)){ //the 0.2 is cheating.  It makes some entries have a negative offset in the JSON but it helps make up for impercise alignment of chords and lyrics.  Fix this later.
+				if (lyricTimings[j] != null &&  ( (lyricTimings[j] >= chordTimings[i]-0.1)&& (lyricTimings[j] < chordTimings[i+1]-0.1)) || (lyricTimings[j] >= chordTimings[i])&& (chordTimings[i+1]==null)){ //the 0.2 is cheating.  It makes some entries have a negative offset in the JSON but it helps make up for impercise alignment of chords and lyrics.  Fix this later.
 					lyricOffsets[i].push([Math.round((parseFloat(lyricTimings[j]) - parseFloat(chordTimings[i]))*1000)/1000,j]); 
 				}
 			}
@@ -624,12 +629,12 @@ function playAudio(){
 			    (function(i){
 			    chordTimeouts[i] = setTimeout(function(){
 					if (chordsArmed==false){jumpToChord(i+firstChord);}
-					triggerLyrics(i,1); //1 is the multipliers, which should be 1 with pre-programmed playback
+
+						if (lyricsArmed==false){triggerLyrics(i,1);} //1 is the multipliers, which should be 1 with pre-programmed playback
 					},(chordTimings[i]-document.getElementById('audioplayer').currentTime)*1000);
 				})(i);
 		}
 	}
-		
 		
 
 
@@ -639,7 +644,7 @@ function playAudio(){
 
 function pauseAudio(){
     document.getElementById('audioplayer').pause()
-	for (i = 0; i < chordTimings.length; i++) {
+	for (i = 0; i < chordTimeouts.length; i++) {
 	    clearTimeout(chordTimeouts[i]);
 	}
 
@@ -688,6 +693,7 @@ var myList = [
 
 function editorMode(){
 if (document.getElementById('audioplayer').error ==null){
+	document.getElementById('audioplayer').oncanplaythrough=console.log("ready to play");
 	$('#editorbutton').css( "fontWeight", "bold" );	
 	$('#singalongbutton').css( "fontWeight", "normal" );	
 	$('#editorbutton').css( "color", "black" );	

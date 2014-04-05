@@ -104,6 +104,13 @@
 	border-bottom-color: #FF9900;
 }
 
+.readygo{
+	font-size: 50% !important;
+}
+
+
+
+
 body {
     -webkit-text-size-adjust: 100%;
     background-color: #000000;

@@ -293,10 +293,10 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
 
        var prettySongName= currentSong.replace(/.txt$/i,'').replace(/_/g,' ').replace(/-/g,' - ');//pretty up the output
        parseChunk = parseChunk + '<div class="lyrics">'; 
-       parseChunk = parseChunk + '<span class="Parenthesis" >'+prettySongName.split(/\s*-\s*/)[0]+'	</span>'; 
+       parseChunk = parseChunk + '<span class="Parenthesis">'+prettySongName.split(/\s*-\s*/)[0]+'</span>'; 
        parseChunk = parseChunk + '</div>'; 
        parseChunk = parseChunk + '<div class="lyrics">'; 
-       parseChunk = parseChunk + '<span class="Parenthesis" >'+prettySongName.split(/\s*-\s*/)[1]+'	</span>'; 
+       parseChunk = parseChunk + '<span class="Parenthesis">'+prettySongName.split(/\s*-\s*/)[1]+'</span>'; 
        parseChunk = parseChunk + '</div>'; 
 
 
@@ -321,12 +321,12 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
        parseChunk = parseChunk + '</span></div><br><br>';
        
 
-       parseChunk = parseChunk + '<div class=chords><span class="chordspan" style="position: absolute; left: 1em">'; 
+       parseChunk = parseChunk + '<div class="chords"><span class="chordspan" style="position: absolute; left: 1em">'; 
        parseChunk = parseChunk + '<span class="chordspan" id="chordNumber'+firstChord +'" onclick="sendChord(\''+firstChord + '\')">&gt;&gt;Ready?</span>'; 
        firstChord++;
        parseChunk = parseChunk + ' <span class="chordspan" id="chordNumber'+firstChord +'" onclick="sendChord(\''+firstChord+'\')">&gt;&gt;GO!</span>';
        parseChunk = parseChunk + '</span></div>'; 
-       parseChunk = parseChunk + '<div class="lyrics">'; 
+       parseChunk = parseChunk + '<div class="readygo lyrics">'; 
 
        parseChunk = parseChunk + '<span id="lyricNumber'+firstLyric+'" onclick="sendLyric(\''+firstLyric+'\')">&gt;&gt;Ready?</span>'; 
        firstLyric++;
@@ -409,11 +409,11 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="firstChord" value="' + firstChord + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
         //parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         
+       	parseChunk = parseChunk	+ '<div id="image_fixed">';
         //audio player
-        parseChunk = parseChunk + '<audio id="audioplayer" src="audio/' + currentSong + '.mp3"></audio>';
-
-		parseChunk = parseChunk	+ '<div id="image_fixed">';
         if (authorized==true){
+            parseChunk = parseChunk + '<audio id="audioplayer" src="audio/' + currentSong + '.mp3"></audio>';
+    	
 			parseChunk = parseChunk	+ '<button id="singalongbutton" style="font-weight:bold" onclick="singalongMode()">Singalong</button>';
 			parseChunk = parseChunk	+ '<button id="editorbutton" style="color:grey" onclick="editorMode()">Editor</button>';	
 	
