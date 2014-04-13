@@ -404,15 +404,17 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
             parseChunk=parseChunk +('</div>'); //space before the div used to be important
         }
         chordNumber++;
+        lyricNumber++;
         //longestLine = longestLine + 1; //used to do this, pretty sure we don't anymore.
         parseChunk = parseChunk + '<span class="startstop" id="chordNumber' + chordNumber + '" onclick="sendChord(\''  + chordNumber + '\')">&gt;&gt;end</span>';
+        parseChunk = parseChunk + '<span class="startstop" id="lyricNumber' + (lyricNumber)+ '" onclick="sendLyric(\''  + (lyricNumber) + '\')">&gt;&gt;end</span>';
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="' + chordNumber + '"><input type="hidden" id="firstChord" value="' + firstChord + '"><input type="hidden" id="lastLyric" value="' + lyricNumber + '"></form>'
         //parseChunk = parseChunk + '<div class="songlink" onclick="changeSong(\'index\')">Return to Index</div>';
         
        	parseChunk = parseChunk	+ '<div id="image_fixed">';
         //audio player
         if (authorized==true){
-            parseChunk = parseChunk + '<audio id="audioplayer" src="audio/' + currentSong + '.mp3"></audio>';
+            parseChunk = parseChunk + '<audio preload="auto" id="audioplayer" src="audio/' + currentSong + '.ogg"></audio>';
     	
 			parseChunk = parseChunk	+ '<button id="singalongbutton" style="font-weight:bold" onclick="singalongMode()">Singalong</button>';
 			parseChunk = parseChunk	+ '<button id="editorbutton" style="color:grey" onclick="editorMode()">Editor</button>';	

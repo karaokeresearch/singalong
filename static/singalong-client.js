@@ -138,7 +138,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
 			firstChord=Number($('#firstChord').val())//
-			$('html,body').animate({scrollTop: 0},0); //just makes it more professional
+			$('html,body').animate({scrollTop: 0},0); //scroll to top at new load. Just makes it more professional
 				currentLyric=(data.blid);
 				moveLyricHighlight(currentLyric, data.blid, true, function(){});
 				modulateChord(totalModulation);
@@ -714,7 +714,7 @@ if (document.getElementById('audioplayer').error ==null){
 
 
 
-}else{alert ('ERROR: Could not load ' + currentSong + '.mp3');}
+}else{alert ('ERROR: Could not load ' + currentSong + '.ogg');}
 
 }
 
