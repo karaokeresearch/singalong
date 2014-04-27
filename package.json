@@ -20,8 +20,8 @@
     "url": "https://github.com/karaokeresearch/singalong.git"
   },
     "dependencies": {
-    "socket.io":  "0.9.16",
-    "express":  "3.4.7"
+    "socket.io":  "0.9.x",
+    "express":  "3.4.x"
   },  
   "keywords": [
     "karaoke",
