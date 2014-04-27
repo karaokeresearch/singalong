@@ -21,7 +21,6 @@ var hitOnce =new Array();//determines if a user has hit a key or not
 var SongInFlatKey=0;
 var actualKey;
 var totalModulation=0;
-var loadedModulation=0;
 var currentSong;
 var swapFlat=0;
 var lyricTimings =new Array();
@@ -35,7 +34,7 @@ var chordsArmed=false;
 var prevChordTimeStamp;
 var speedMultiplier=1;
 var fontSizepx;
-var karaokeMode=false;
+var karaokeMode=true;
 var firstChord;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
@@ -133,18 +132,21 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 
 		jQuery("body").load("/load",function(){
 			lyricsArmed=false;
-			chordsArmed=false;			
+			chordsArmed=false;
+			playerMode="singalong";
 			longestLine =Number($('#longestLine').val());
 			lastPos=Number($('#lastPos').val())//the final chord div number
 			lastLyric=Number($('#lastLyric').val())//the final lyric div number
 			firstChord=Number($('#firstChord').val())//
+			//console.log("firstchord=" + firstChord);
 			$('html,body').animate({scrollTop: 0},0); //scroll to top at new load. Just makes it more professional
 				currentLyric=(data.blid);
 				moveLyricHighlight(currentLyric, data.blid, true, function(){});
 				modulateChord(totalModulation);
-			if ($('#editorbutton').length) {activateAdminMode(data.bid);}else{activateKaraokeMode(data.bid);}  //a terrible test to see if we're in Admin mode.  cookie solution is better.
+				
+			if (karaokeMode==false) {activateChordChartMode(data.bid);}else{activateKaraokeMode(data.bid);}  //previous test: if ($('#editorbutton').length)
+			//$('#editorbutton').length
 			});
-
 
 		$.getJSON( "/timings", function( data ) {
         if (data.lyricOffsets && data.chordTimings && data.lyricTimings ){
@@ -185,7 +187,7 @@ function textSizer(callback) { //resize the text on the page.  The 0.6 has to do
 
 function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down the screen to the currently selected chord
       if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5 ))>(fontSizepx/2)) { //check to see if they are different otherwise you are wasting cycles
-        console.log ("scrolling " + fromid + " to " +toid);
+        //console.log ("scrolling " + fromid + " to " +toid);
         $('html,body').animate({
             scrollTop: $("#" + toid).offset().top - $(window).height() / 5
         }, 600); //this value is how many ms it takes for transitions
@@ -195,7 +197,7 @@ function goToByScroll(fromid, toid) {//moves a scroll spot 1/5 of the way down t
 
 function moveHighlight(fromid, toid, callback) {
     //first, erase the highlight from the previous chord
-
+    
     $("#chordNumber" + fromid).removeClass("highlightedchord");
     $("#chordNumber" + toid).addClass("highlightedchord");
     callback();
@@ -205,7 +207,7 @@ function moveHighlight(fromid, toid, callback) {
 function moveLyricHighlight(fromid, toid, shouldscroll, callback) {
 toid=parseInt(toid);
 fromid=parseInt(fromid);
-
+//console.log("Movehightlight - " +fromid + " - " +toid);
     if (currentSong != 'index'){
 	    fromidString = "lyricNumber" + fromid;
 	    toidString= "lyricNumber" + toid;
@@ -362,7 +364,7 @@ function modulateChord(increment) {
     var chordVal = 0;
     var minChord = /[A-G](#|b)*(m(?!aj))/;
 
-    for (chordNum = 1; chordNum <= lastPos - 1; chordNum = chordNum + 1) {//run through all the chords
+    for (chordNum = 0; chordNum <= lastPos - 1; chordNum = chordNum + 1) {//run through all the chords
         toColorName = "chordNumber" + chordNum;
         cellSaid = $("#" + toColorName).html();
         chordVal = detchordVal(cellSaid); //read the chords from the div cells and assign a numerical value to base tone
@@ -481,7 +483,7 @@ function rewriteChord(increment) {
     var chordVal;
     var chordBase;
 
-    for (chordNum = 1; chordNum <= lastPos - 1; chordNum = chordNum + 1) {
+    for (chordNum = 0; chordNum <= lastPos - 1; chordNum = chordNum + 1) {
         toColorName = "chordNumber" + chordNum;
         cellSaid = $("#" + toColorName).html();
         if (cellSaid.match(/^(([A-G](#|b)?(M|maj|m|min|\+|add|sus|mM|aug|dim|dom|flat)?[0-9]{0,2})|\s)+$/)){ //so that Ready/Go doesn't break
@@ -662,6 +664,7 @@ function pauseAudio(){
 
 
 function triggerLyrics(chordnum,multiplier){
+//console.log ("triggerLyrics - " + chordnum);
 var i=0;
 lyricTimeouts[chordnum]=[];
             if (lyricOffsets[chordnum]!=null){
@@ -692,6 +695,7 @@ var myList = [
 
 
 function editorMode(){
+activateChordChartMode(currentChord);
 if (document.getElementById('audioplayer').error ==null){
 	document.getElementById('audioplayer').oncanplaythrough=console.log("ready to play");
 	$('#editorbutton').css( "fontWeight", "bold" );	
@@ -767,7 +771,7 @@ function armChords(){
 function switchKaraoke(){
 	if (karaokeMode==false){
 		activateKaraokeMode(currentChord);
-	}else{activateAdminMode(currentChord);
+	}else{activateChordChartMode(currentChord);
 	}
 }
 
@@ -785,7 +789,7 @@ function activateKaraokeMode(bid){
 
 }
 
-function activateAdminMode(bid){
+function activateChordChartMode(bid){ 
             $('link').attr('href','singalong-client.css');
 			karaokeMode=false;
 	  		textSizer(function(){});

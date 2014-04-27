@@ -22,6 +22,10 @@ var fs = require("fs");
 var os=require('os');
 var installedSongsDirectory=__dirname + '/songs/';
 var songsDirectory= './songs/';
+var installedAudioDirectory=__dirname + '/audio/';
+var audioDirectory= './audio/';
+var installedTimingsDirectory=__dirname + '/timings/';
+var timingsDirectory= './timings/';
 var tabline =0;
 var longestLine=0;
 var parsedHTML='';
@@ -45,6 +49,25 @@ if(!dirExistsSync(songsDirectory)){//some sync business up front. Create and pop
 	console.log("\nInstalling " + installedSongsDirectory + "Ive_Been_Workin_On_The_Railroad.txt into ./songs");
 	if(fs.createReadStream(installedSongsDirectory + "Ive_Been_Workin_On_The_Railroad.txt").pipe(fs.createWriteStream(songsDirectory + "Ive_Been_Workin_On_The_Railroad.txt"))){console.log("File copied.");}else{console.log("ERROR:File did not copy.");}
 }
+
+
+if(!dirExistsSync(audioDirectory)){//some sync business up front. Create and populate a local audio directory if none exists.
+	console.log(audioDirectory+" doesn't exist. Creating.");
+	fs.mkdirSync(audioDirectory);
+	console.log("\nInstalling " + installedAudioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg into ./audio");
+	if(fs.createReadStream(installedAudioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg").pipe(fs.createWriteStream(audioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg"))){console.log("File copied.");}else{console.log("ERROR:File did not copy.");}
+}
+
+
+if(!dirExistsSync(timingsDirectory)){//some sync business up front. Create and populate a local timings directory if none exists.
+	console.log(timingsDirectory+" doesn't exist. Creating.");
+	fs.mkdirSync(timingsDirectory);
+	console.log("\nInstalling " + installedTimingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON into ./timings");
+	if(fs.createReadStream(installedTimingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON").pipe(fs.createWriteStream(timingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON"))){console.log("File copied.");}else{console.log("ERROR:File did not copy.");}
+}
+
+
+
 
 //***tasks to do at startup.  I'm guessing there's a better way to do this.***
 localIPs();//determine list of local IP addresses, cache it.  Still async because it doesn't really matter if it takes a few seconds, which it won't even
@@ -70,7 +93,7 @@ app.get('/timings', function(req, res){ //JSON timings object
 });
 
 app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
-app.use('/audio', express.static(__dirname + '/audio')); //Where the static files are loaded from
+app.use('/audio', express.static(audioDirectory)); //Where the static files are loaded from
 
 
 
@@ -199,22 +222,19 @@ function loadNewSong(newsong){//loads the appropriate file (or the index) into p
 	 
 	  //data = JSON.parse(data);
 	 timings=JSON.parse(data);
-	});
-
-
-
-
-
-
-
-        returnChordHTML(newsong, false, function(HTML) { //make and cache the basic page
+	 returnChordHTML(newsong, false, function(HTML) { //make and cache the basic page
             parsedHTML=HTML;
 	        returnChordHTML(newsong, true, function(adminHTML) {//make and cache the admin page
 	            parsedAdminHTML=adminHTML;
 	            io.sockets.emit('bcurrentSong', { song: currentSong, bid: currentChord, blid:currentLyric});
     	        io.sockets.emit('bFlat', { message: swapFlat}); //reset the flat/sharp override
+			    io.sockets.emit('bTotMod', { message: totalMod});
 	        });
         });
+	 
+	});
+
+        
     }
 }
 
@@ -296,7 +316,7 @@ function returnChordHTML(fileName, authorized, callback) {//open up a file from 
        parseChunk = parseChunk + '<span class="Parenthesis">'+prettySongName.split(/\s*-\s*/)[0]+'</span>'; 
        parseChunk = parseChunk + '</div>'; 
        parseChunk = parseChunk + '<div class="lyrics">'; 
-       parseChunk = parseChunk + '<span class="Parenthesis">'+prettySongName.split(/\s*-\s*/)[1]+'</span>'; 
+       if (prettySongName.split(/\s*-\s*/)[1]){parseChunk = parseChunk + '<span class="Parenthesis">'+prettySongName.split(/\s*-\s*/)[1]+'</span>';} 
        parseChunk = parseChunk + '</div>'; 
 
 

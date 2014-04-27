@@ -1,15 +1,20 @@
 # singalong.js
 A product of the Karaoke Research Council
 
-Singalong is a node.js application for displayijng simultaneously scrolling chord 
-charts (or "tab") in browser windows on multiple devices at once over a wireless 
-LAN. Songs are advanced one chord change at a time using an inexpensive USB foot 
-pedal or via the help of an assistant.
+Singalong is a node.js application for presenting live-band Karaoke or 
+singalongs in a browser window.
+
+Chord charts (or "tab") are scrolled and/or lyrics are presented on a Karaoke-
+like screen on multiple devices at once over a wireless LAN. Songs are advanced 
+one chord change at a time using an inexpensive USB foot pedal or via the help 
+of an assistant.
 
 ## Key Controls
 * D - Advance to the next chord (I assign the right foot pedal to this key) 
 * A - Go back to the previous chord (I assign the left foot pedal to this key) 
-* W - Module song up 1/2 step 
+* L - Advance to the next lyric
+* J - Go back to the previous lyric 
+* W - Modulate song up 1/2 step 
 * S - Modulate song down 1/2 step 
 * B - Sharp/flat notation override 
 
@@ -24,7 +29,7 @@ Once complete, open a command prompt, console, or shell and type:
 ```$ npm install -g singalong```
 
 Keep your console open and change the current directory to a directory you 
-would like to use are your location for storing files related to singalong.
+would like to use as a location for storing your songs.
 
 Then, type:
  
@@ -34,8 +39,8 @@ At startup, singalong looks for a subdirectory called "songs" under the folder y
 are calling it from. If that directory doesn't exist, singalong creates it and 
 copies "I've Been Workin' On The Railroad" as a starter song.
 
-To add additional songs, place text files containing chord charts in 
-the ./songs subdirectory.
+To add additional songs, place a text file containing a chord chart in 
+the ./songs subdirectory, and a .ogg file to sync it to in ./audio
 
 ### User experience
 Once singalong is running, open a browser window to your computer's IP address 
@@ -47,16 +52,16 @@ Click a song in your browser to load it.  Loaded songs begin with a list of all
 chords represented in the song. This is useful for an initial review of the 
 chords if desired.
 
-Active chords are highlighted and the song automatically scrolled
-based on input given from a central controlling user or users.  Hit 
-the 'A' or 'D' key to recede or advance the current chord, respectively.  
+The active chord is highlighted and lyrics automatically scrolled and 
+highlighted based on input given from a central controlling user or users.  
+Hit the 'A' or 'D' key to recede or advance the current chord, respectively.  
 To use with a two-pedal USB foot pedal, program the left pedal to emit the 
 'A' keystroke and the right pedal to emit the 'D' keystroke. Text is 
 formatted to fit to the browser window width for maximum readability, 
 and the song's key can be altered on-the-fly with the 'W' and 'S' keys. 
 
 ### Applications
-Use in lieu of printed song sheets / fakebooks for :
+Use in lieu of printed song sheets / fakebooks for:
 * Casual singalongs at parties
 * Live band karaoke
 * Music classes
@@ -112,7 +117,7 @@ change
 ```var disableSecurity=0;```
 to
 ```var disableSecurity=1;```
-... but that turns off everything.
+... in singalong.js but that turns off everything.
 Eventually, it would be great to have a real authentication system allowing
 multiple private sessions to be happening at once.
 
@@ -124,11 +129,7 @@ efficiently.
 with the changes intact.
 
 * Force refresh mode, for when you're actively editing a chord chart and don't
-want to have to return to the main menu.
-
-* Karaoke Mode: the ability to record and play back lyrics progress triggered 
-by chord changes. Displayed on a special black screen, larger lyric format and 
-no chords for singers at live-band Karaoke shows.
+want to have to return to the main menu to reload the current chart.
 
 * "Client-only" option for standalone use where all server-side logic is moved to
 the client and files are loaded via copy-paste
@@ -137,6 +138,9 @@ the client and files are loaded via copy-paste
 basis in music theory whatsoever (it seems to work most of the time, though.)
 
 ## Changelog 
+v0.5.0 - Karaoke mode implemented, including complete editor implemented.  
+Most unacceptable bugs fixed.
+
 v0.4.2 - eliminated "apostrophes in file names" bug
 
 v0.4.1 - actually working as advertised version
