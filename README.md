@@ -138,6 +138,8 @@ the client and files are loaded via copy-paste
 basis in music theory whatsoever (it seems to work most of the time, though.)
 
 ## Changelog 
+v0.5.1 - Bug fixes, including one that un-breaks the application.
+
 v0.5.0 - Karaoke mode implemented, including complete editor implemented.  
 Most unacceptable bugs fixed.
 
