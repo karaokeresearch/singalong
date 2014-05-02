@@ -176,7 +176,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('timings', function (data){ 
         if (securityCheck(socket.handshake.address.address)){
            timings=data; 
-            var outputFilename = 'timings/' +currentSong + '.JSON';
+            var outputFilename = timingsDirectory +currentSong + '.JSON';
 
 			fs.writeFile(outputFilename, JSON.stringify(data, null, 4), function(err) {
 			    if(err) {
@@ -212,16 +212,16 @@ function loadNewSong(newsong){//loads the appropriate file (or the index) into p
         });
     }else{
     
-    var inputFilename = 'timings/' +currentSong + '.JSON';
+    var inputFilename = timingsDirectory +currentSong + '.JSON';
 	fs.readFile(inputFilename, 'utf8', function (err, data) {
 	  if (err) {
 	    timings=[];
 	    console.log('Error: ' + err);
-	    return;
 	  }
-	 
+	 else{
 	  //data = JSON.parse(data);
 	 timings=JSON.parse(data);
+	}
 	 returnChordHTML(newsong, false, function(HTML) { //make and cache the basic page
             parsedHTML=HTML;
 	        returnChordHTML(newsong, true, function(adminHTML) {//make and cache the admin page
