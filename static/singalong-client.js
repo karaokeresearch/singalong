@@ -673,21 +673,23 @@ function playAudio() {
                     }
 
                     if (lyricsArmed == false) {
-                        triggerLyrics(i, 1);
+                        triggerLyrics(i, 1/ document.getElementById('audioplayer').playbackRate);
                     } //1 is the multipliers, which should be 1 with pre-programmed playback
-                }, (chordTimings[i] - document.getElementById('audioplayer').currentTime) * 1000);
+                }, ((chordTimings[i] - document.getElementById('audioplayer').currentTime) * 1000) / document.getElementById('audioplayer').playbackRate);
             })(i);
         }
     }
 
 
-
+    document.getElementById('speedslider').disabled=true;
     document.getElementById('audioplayer').play();
 
 }
 
 function pauseAudio() {
     document.getElementById('audioplayer').pause()
+    document.getElementById('speedslider').disabled=false;
+
     for (i = 0; i < chordTimeouts.length; i++) {
         clearTimeout(chordTimeouts[i]);
     }
@@ -851,4 +853,9 @@ function activateChordChartMode(bid) {
         jumpToChord(bid);
     }, 500);
 
+}
+
+function changePlaybackRate(rate) {
+document.getElementById('audioplayer').playbackRate=rate	
+$("#playbackrate").html(rate);
 }

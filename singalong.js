@@ -519,6 +519,7 @@ function returnChordHTML(fileName, authorized, callback) { //open up a file from
             parseChunk = parseChunk + '<button onclick="document.getElementById(\'audioplayer\').volume-=0.1">Vol v</button>';
             //parseChunk = parseChunk	+ '<button class="editor" style="display:none" onclick="settingsWindow()">Settings</button>'; //some day, perhaps a metadata approach is warranted.
             parseChunk = parseChunk + '<button onclick="sendJSON()">Save</button>';
+            parseChunk = parseChunk + '<span style="background-color:white; display: inline-block; width:1.5em; text-align:right" id="playbackrate">1</span>x<input type="range" id="speedslider" step="0.1" value="1" min="0.3" max="1" onchange="changePlaybackRate(this.value)">';
             parseChunk = parseChunk + '</span>';
             parseChunk = parseChunk + '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';
         }
