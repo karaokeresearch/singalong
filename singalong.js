@@ -44,6 +44,7 @@ var disableSecurity = 0;
 var timings;
 var firstChord;
 var firstLyric;
+var highlighting = 1;
 
 if (!dirExistsSync(songsDirectory)) { //some sync business up front. Create and populate a local songs directory if none exists.
     console.log(songsDirectory + " doesn't exist. Creating.");
@@ -123,6 +124,9 @@ io.sockets.on('connection', function (socket) {
     });
     socket.emit('bFlat', {
         message: swapFlat
+    });
+    socket.emit('bHighlighting', {
+        message: highlighting
     });
 
 
@@ -210,6 +214,21 @@ io.sockets.on('connection', function (socket) {
             console.log(data);
         }
     });
+
+    socket.on('highlighting', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
+        if (securityCheck(socket.handshake.address.address)) {
+            if (highlighting == 1) {
+                highlighting = 0;
+            } else {
+                highlighting = 1;
+            }
+            io.sockets.emit('bHighlighting', {
+                message: highlighting
+            });
+            console.log(data);
+        }
+    });
+
 
     socket.on('timings', function (data) {
         if (securityCheck(socket.handshake.address.address)) {

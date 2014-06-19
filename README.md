@@ -17,6 +17,7 @@ of an assistant.
 * W - Modulate song up 1/2 step 
 * S - Modulate song down 1/2 step 
 * B - Sharp/flat notation override 
+* H - Turn off/on lyric highlighting for all devices
 
 ## Usage 
 To install:

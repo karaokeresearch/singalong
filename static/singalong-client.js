@@ -35,6 +35,7 @@ var speedMultiplier = 1;
 var fontSizepx;
 var karaokeMode = true;
 var firstChord;
+var highlighting = 1;
 
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function () { //
@@ -80,6 +81,10 @@ $(document).ready(function () { //
             }
             if (actualKey == 66) { //B flat/sharp overrride
                 sendFlat();
+            }
+
+            if (actualKey == 72) { //H flat/sharp overrride
+                sendHighlighting();
             }
 
             if (actualKey == 87) { //W modulate key up
@@ -128,6 +133,15 @@ socket.on('bFlat', function (data) {
     } //flat override
     rewriteChord(0);
 });
+
+socket.on('bHighlighting', function (data) {
+    if (data.message == 1) {
+        highlighting = 1;
+    } else {
+        highlighting= 0;
+    } //flat override
+});
+
 
 socket.on('bcurrentSong', function (data) { //what is the current song and where are we in it?  Sent every left or right movement.
     if (data.song != currentSong) { //if there's a new song, or it's the index
@@ -223,6 +237,7 @@ function moveHighlight(fromid, toid, callback) {
 
 
 function moveLyricHighlight(fromid, toid, shouldscroll, callback) {
+
     toid = parseInt(toid);
     fromid = parseInt(fromid);
     //console.log("Movehightlight - " +fromid + " - " +toid);
@@ -230,11 +245,11 @@ function moveLyricHighlight(fromid, toid, shouldscroll, callback) {
         fromidString = "lyricNumber" + fromid;
         toidString = "lyricNumber" + toid;
 
+     
+        if (highlighting){$("#" + toidString).addClass("highlightedlyric");}
 
-        $("#" + toidString).addClass("highlightedlyric");
 
-
-        if (shouldscroll) { //move the underline around, confusingly if in the wrong place.
+        if (shouldscroll && highlighting) { //move the underline around, confusingly if in the wrong place.
             $("#" + fromidString).removeClass("underlinedlyric");
             $("#" + toidString).addClass("underlinedlyric");
         }
@@ -388,6 +403,15 @@ function sendFlat() {
         data: "swap"
     });
 }
+
+
+function sendHighlighting() {
+    if (highlighting){highlighting=0;}else{highlighting=1;}
+    socket.emit('highlighting', {
+        data: highlighting
+    });
+}
+
 
 function modulateChord(increment) {
     //Modulate all of the chords up or down a half step depending on variable stepdirection.  Guesses if the notation should be sharp or flat as well
