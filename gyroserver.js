@@ -13,8 +13,6 @@
  *
  */
 
-(function() {
-
 var express = require('express'),
     http = require('http'),
     app = express(),
@@ -48,8 +46,175 @@ var firstChord;
 var firstLyric;
 var highlighting = 1;
 
+
+
+//************** URL handlers ********************
+
+app.get('/load', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
+    if (currentSong == "index") {
+        res.end(parsedHTML);
+    } else {
+        if (securityCheck(req.ip)) {
+            res.end(parsedAdminHTML);
+        } else {
+            res.end(parsedHTML);
+        }
+    }
+});
+app.get('/timings', function (req, res) { //JSON timings object
+    res.setHeader('Content-Type', 'application/json');
+
+    res.end(JSON.stringify(timings));
+
+});
+
+app.use(express.static(__dirname + '/demo')); //Where the static files are loaded from
+app.use('/audio', express.static(audioDirectory)); //Where the static files are loaded from
+
+
+
+//************** LISTENERS ********************
+io.sockets.on('connection', function (socket) {
+    // Welcome messages on connection to just the connecting client
+    socket.emit('bTotMod', {
+        message: totalMod
+    });
+    socket.emit('bFlat', {
+        message: swapFlat
+    });
+    socket.emit('bHighlighting', {
+        message: highlighting
+    });
+
+
+    socket.emit('bcurrentSong', {
+        song: currentSong,
+        bid: currentChord,
+        blid: currentLyric
+    }); //This is both the song and the current chord.  Must be processed at same time.
+
+    socket.on('id', function (data) { //user is switching chords.
+        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
+            currentChord = data.data;
+
+            if (typeof timings != "undefined") {
+                if (typeof timings.lyricOffsets != "undefined") {
+                    if (typeof timings.lyricOffsets[currentChord - firstChord] != "undefined") {
+                        if (typeof timings.lyricOffsets[currentChord - firstChord][0] != "undefined") {
+
+                            currentLyric = (timings.lyricOffsets[currentChord - firstChord][0][1] + 1);
+                            console.log("TIMINGS: " + (timings.lyricOffsets[currentChord - firstChord][0][1] + 1));
+                        }
+                    }
+                }
+            }
+
+            io.sockets.emit('bcurrentSong', {
+                song: currentSong,
+                bid: currentChord
+            }); //Sent out with every chord change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next chord change.
+            console.log(data);
+        }
+    });
+
+    socket.on('lid', function (data) { //user is switching lyrics.
+        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
+            currentLyric = data.data;
+
+            io.sockets.emit('bcurrentSong', {
+                song: currentSong,
+                blid: currentLyric
+            }); //Sent out with every lyric change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next lyric change.
+            console.log(data);
+        }
+    });
+    socket.on('x', function (data) { //user is switching lyrics.
+            console.log(data.data);
+
+    });
+
+    socket.on('currentSong', function (data) { //user has sent a "change song" request or has requested the index
+        if (securityCheck(socket.handshake.address.address)) {
+            loadNewSong(data.data);
+            console.log(data);
+        }
+    });
+
+    socket.on('mod', function (data) { //situational modulation.  If a user misses this, they would need to refresh to get caught up.
+        swapFlat = 0;
+        if (securityCheck(socket.handshake.address.address)) {
+            currentMod = data.data;
+            io.sockets.emit('bmod', {
+                message: currentMod
+            });
+            io.sockets.emit('bFlat', {
+                message: swapFlat
+            }); //reset the flat/sharp override
+            console.log(data);
+        }
+    });
+
+    socket.on('totmod', function (data) { //probably could be eliminated.  Totmod could be kept track of completely on the server side instead of simultaneously in all the clients at once.
+        if (securityCheck(socket.handshake.address.address)) {
+            totalMod = data.data;
+            //io.sockets.emit('bTotMod', { message: totalMod});
+            console.log(data);
+        }
+    });
+
+    socket.on('flat', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
+        if (securityCheck(socket.handshake.address.address)) {
+            if (swapFlat == 1) {
+                swapFlat = 0;
+            } else {
+                swapFlat = 1;
+            }
+            io.sockets.emit('bFlat', {
+                message: swapFlat
+            });
+            console.log(data);
+        }
+    });
+
+    socket.on('highlighting', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
+        if (securityCheck(socket.handshake.address.address)) {
+            if (highlighting == 1) {
+                highlighting = 0;
+            } else {
+                highlighting = 1;
+            }
+            io.sockets.emit('bHighlighting', {
+                message: highlighting
+            });
+            console.log(data);
+        }
+    });
+
+
+    socket.on('timings', function (data) {
+        if (securityCheck(socket.handshake.address.address)) {
+            timings = data;
+            var outputFilename = timingsDirectory + currentSong + '.JSON';
+
+            fs.writeFile(outputFilename, JSON.stringify(data, null, 4), function (err) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("JSON saved to " + outputFilename);
+                }
+            });
+
+            //          console.log(lyricOffsets);
+        }
+    });
+
+
+
+});
+
+
 //************** HELPER FUNCTIONS ********************
-var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
+function loadNewSong(newsong) { //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
     currentChord = 0;
     currentLyric = 0;
     totalMod = 0;
@@ -104,7 +269,7 @@ var loadNewSong=function(newsong){ //loads the appropriate file (or the index) i
     }
 }
 
-var returnIndexHTML=function(callback){ //Spit out the index based on the list of files in the /songs subfolder
+function returnIndexHTML(callback) { //Spit out the index based on the list of files in the /songs subfolder
     console.log("---------------------\nReading files from: \n" + songsDirectory + "\n");
     fs.readdir(songsDirectory, function (err, data) { //open up the songs directory for a listing of all files
         longestLine = 0;
@@ -130,7 +295,7 @@ var returnIndexHTML=function(callback){ //Spit out the index based on the list o
     });
 }
 
-var returnChordHTML=function(fileName, authorized, callback){ //open up a file from /songs and parse it into HTML to be loaded into the <BODY> area </BODY>
+function returnChordHTML(fileName, authorized, callback) { //open up a file from /songs and parse it into HTML to be loaded into the <BODY> area </BODY>
     //two passes: first, we collect all the chords in the song, then we create the summary at the top in the variable allChords
     //TODO: figure out a way to turn the duplicated code into a function.
     var chordNumber = 0; //<DIV> number later.
@@ -348,7 +513,7 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
 
 }
 
-var localIPs=function(){ //generate a list of IP addresses
+function localIPs() { //generate a list of IP addresses
     var interfaces = os.networkInterfaces();
     var j = 0;
     console.log("Permitted IP addresses for send:");
@@ -365,7 +530,7 @@ var localIPs=function(){ //generate a list of IP addresses
     }
 }
 
-var securityCheck=function(comparisonIP){ //check to see if the local IP addresses are the one sending the signals. Used to ignore signals from clients.  Eventually, clients should not accidentally send to avoid "asleep on the D key" syndrome
+function securityCheck(comparisonIP) { //check to see if the local IP addresses are the one sending the signals. Used to ignore signals from clients.  Eventually, clients should not accidentally send to avoid "asleep on the D key" syndrome
     for (j = 0; j < listofIPs.length; j++) {
         if ((listofIPs[j] == comparisonIP) || (disableSecurity == 1)) {
             return true;
@@ -375,7 +540,7 @@ var securityCheck=function(comparisonIP){ //check to see if the local IP address
     return false;
 }
 
-var dirExistsSync=function(d){
+function dirExistsSync(d) {
     try {
         fs.statSync(d).isDirectory()
     } catch (er) {
@@ -383,211 +548,3 @@ var dirExistsSync=function(d){
     }
     return true;
 }
-
-
-
-
-//************** BEGIN PROGRAM ********************
-if (dirExistsSync(songsDirectory)===false) { //some sync business up front. Create and populate a local songs directory if none exists.
-    console.log(songsDirectory + " doesn't exist. Creating.");
-    fs.mkdirSync(songsDirectory);
-    console.log("\nInstalling " + installedSongsDirectory + "Ive_Been_Workin_On_The_Railroad.txt into ./songs");
-    if (fs.createReadStream(installedSongsDirectory + "Ive_Been_Workin_On_The_Railroad.txt").pipe(fs.createWriteStream(songsDirectory + "Ive_Been_Workin_On_The_Railroad.txt"))) {
-        console.log("File copied.");
-    } else {
-        console.log("ERROR:File did not copy.");
-    }
-}
-
-
-if (dirExistsSync(audioDirectory)===false) { //some sync business up front. Create and populate a local audio directory if none exists.
-    console.log(audioDirectory + " doesn't exist. Creating.");
-    fs.mkdirSync(audioDirectory);
-    console.log("\nInstalling " + installedAudioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg into ./audio");
-    if (fs.createReadStream(installedAudioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg").pipe(fs.createWriteStream(audioDirectory + "Ive_Been_Workin_On_The_Railroad.txt.ogg"))) {
-        console.log("File copied.");
-    } else {
-        console.log("ERROR:File did not copy.");
-    }
-}
-
-
-if (dirExistsSync(timingsDirectory)===false) { //some sync business up front. Create and populate a local timings directory if none exists.
-    console.log(timingsDirectory + " doesn't exist. Creating.");
-    fs.mkdirSync(timingsDirectory);
-    console.log("\nInstalling " + installedTimingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON into ./timings");
-    if (fs.createReadStream(installedTimingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON").pipe(fs.createWriteStream(timingsDirectory + "Ive_Been_Workin_On_The_Railroad.txt.JSON"))) {
-        console.log("File copied.");
-    } else {
-        console.log("ERROR:File did not copy.");
-    }
-}
-
-
-localIPs(); //determine list of local IP addresses, cache it.  Still async because it doesn't really matter if it takes a few seconds, which it won't even
-returnIndexHTML(function (HTML) { //generate the initial index, cache it
-    parsedHTML = HTML;
-});
-
-
-//************** URL handlers ********************
-
-app.get('/load', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
-    if (currentSong == "index") {
-        res.end(parsedHTML);
-    } else {
-        if (securityCheck(req.ip)) {
-            res.end(parsedAdminHTML);
-        } else {
-            res.end(parsedHTML);
-        }
-    }
-});
-app.get('/timings', function (req, res) { //JSON timings object
-    res.setHeader('Content-Type', 'application/json');
-
-    res.end(JSON.stringify(timings));
-
-});
-
-app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
-app.use('/audio', express.static(audioDirectory)); //Where the static files are loaded from
-
-
-
-//************** LISTENERS ********************
-io.sockets.on('connection', function (socket) {
-    // Welcome messages on connection to just the connecting client
-    socket.emit('bTotMod', {
-        message: totalMod
-    });
-    socket.emit('bFlat', {
-        message: swapFlat
-    });
-    socket.emit('bHighlighting', {
-        message: highlighting
-    });
-
-
-    socket.emit('bcurrentSong', {
-        song: currentSong,
-        bid: currentChord,
-        blid: currentLyric
-    }); //This is both the song and the current chord.  Must be processed at same time.
-
-    socket.on('id', function (data) { //user is switching chords.
-        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
-            currentChord = data.data;
-
-            if (typeof timings != "undefined") {
-                if (typeof timings.lyricOffsets != "undefined") {
-                    if (typeof timings.lyricOffsets[currentChord - firstChord] != "undefined") {
-                        if (typeof timings.lyricOffsets[currentChord - firstChord][0] != "undefined") {
-
-                            currentLyric = (timings.lyricOffsets[currentChord - firstChord][0][1] + 1);
-                            console.log("TIMINGS: " + (timings.lyricOffsets[currentChord - firstChord][0][1] + 1));
-                        }
-                    }
-                }
-            }
-
-            io.sockets.emit('bcurrentSong', {
-                song: currentSong,
-                bid: currentChord
-            }); //Sent out with every chord change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next chord change.
-            console.log(data);
-        }
-    });
-
-    socket.on('lid', function (data) { //user is switching lyrics.
-        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
-            currentLyric = data.data;
-
-            io.sockets.emit('bcurrentSong', {
-                song: currentSong,
-                blid: currentLyric
-            }); //Sent out with every lyric change, too.  This way, off chance the client doesn't get the "load" message, they'll get it next lyric change.
-            console.log(data);
-        }
-    });
-
-    socket.on('currentSong', function (data) { //user has sent a "change song" request or has requested the index
-        if (securityCheck(socket.handshake.address.address)) {
-            loadNewSong(data.data);
-            console.log(data);
-        }
-    });
-
-    socket.on('mod', function (data) { //situational modulation.  If a user misses this, they would need to refresh to get caught up.
-        swapFlat = 0;
-        if (securityCheck(socket.handshake.address.address)) {
-            currentMod = data.data;
-            io.sockets.emit('bmod', {
-                message: currentMod
-            });
-            io.sockets.emit('bFlat', {
-                message: swapFlat
-            }); //reset the flat/sharp override
-            console.log(data);
-        }
-    });
-
-    socket.on('totmod', function (data) { //probably could be eliminated.  Totmod could be kept track of completely on the server side instead of simultaneously in all the clients at once.
-        if (securityCheck(socket.handshake.address.address)) {
-            totalMod = data.data;
-            //io.sockets.emit('bTotMod', { message: totalMod});
-            console.log(data);
-        }
-    });
-
-    socket.on('flat', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.handshake.address.address)) {
-            if (swapFlat == 1) {
-                swapFlat = 0;
-            } else {
-                swapFlat = 1;
-            }
-            io.sockets.emit('bFlat', {
-                message: swapFlat
-            });
-            console.log(data);
-        }
-    });
-
-    socket.on('highlighting', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.handshake.address.address)) {
-            if (highlighting == 1) {
-                highlighting = 0;
-            } else {
-                highlighting = 1;
-            }
-            io.sockets.emit('bHighlighting', {
-                message: highlighting
-            });
-            console.log(data);
-        }
-    });
-
-
-    socket.on('timings', function (data) {
-        if (securityCheck(socket.handshake.address.address)) {
-            timings = data;
-            var outputFilename = timingsDirectory + currentSong + '.JSON';
-
-            fs.writeFile(outputFilename, JSON.stringify(data, null, 4), function (err) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    console.log("JSON saved to " + outputFilename);
-                }
-            });
-
-            //          console.log(lyricOffsets);
-        }
-    });
-
-
-
-});
-
-}());
