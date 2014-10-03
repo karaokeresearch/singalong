@@ -32,6 +32,7 @@
 	var lyricsArmed = false;
 	var chordsArmed = false;
 	var prevChordTimeStamp;
+	var currentChordTimeStamp;
 	var speedMultiplier = 1;
 	var fontSizepx;
 	var karaokeMode = true;
@@ -326,9 +327,26 @@
 	
 	//***************** EMITTERS **********************
 	var sendChord = function(whichchord) {
+
+	if (whichchord - currentChord == 1) { //likely pushed the D key
+		  currentChordTimeStamp = Date.now();
+	    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
+	    if (speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
+      prevChordTimeStamp = Date.now();
+			var nextChange = (chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier;
+			var nextChord = $("#chordNumber" + (currentChord +2)).html();
+      console.log(speedMultiplier);
+      console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
+	    socket.emit('next', {
+	        nextChord:	nextChord,
+	        nextChange:	nextChange
+	    }); 
+
+	}
+			
 	    socket.emit('id', {
 	        data: whichchord
-	    }); //A or D key was tapped
+	    }); 
 	    if (playerMode == "editor" && document.getElementById('audioplayer').paused == true && chordTimings[whichchord - firstChord] != null) { //rewind or fast forward
 	        document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
 	    }
@@ -360,15 +378,8 @@
 	
 	
 	        if (whichchord - currentChord == 1) { //likely pushed the D key
-	            var currentChordTimeStamp = new Date();
-	            speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
-	            console.log(speedMultiplier);
-	            if (speedMultiplier > 0.33 && speedMultiplier < 3) {
+           
 	                triggerLyrics(whichchord - firstChord, speedMultiplier);
-	            } else {
-	                triggerLyrics(whichchord - firstChord, 1); //reset the speed multiplier to 1 since there's bad data, for a variety of reasons
-	            }
-	            prevChordTimeStamp = new Date();
 	        }
 	    }
 	

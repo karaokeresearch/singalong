@@ -586,6 +586,16 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+    socket.on('next', function (data) { // which chord is next?  And when?
+        if (securityCheck(socket.handshake.address.address)) {
+            io.sockets.emit('bnext', {
+            													nextChord: data.nextChord,
+            												  nextChange: data.nextChange + Date.now()
+            												});
+
+        }
+    });
+
 
 
 });
