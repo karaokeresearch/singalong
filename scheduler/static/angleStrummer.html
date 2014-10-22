@@ -1,0 +1,76 @@
+<html>
+</html><head>
+
+
+	<title>Sort-of strumming instrument</title>
+</head>
+<body bgcolor=red>
+	<script src="gyro.js"></script>
+	<script src="howler.js"></script>
+	<script>
+
+		var prevx=0;
+		var prevy=0;
+		var prevz=0;
+		var waitedLongEnough=true;
+		gyro.frequency=50;
+
+		var loudness;
+		var trueLoudness;
+
+
+
+		var chord = new Howl({
+			urls: ['pianochord1.wav'],
+			autoplay: false,
+			loop: false,
+			volume: 1
+		});
+
+
+
+
+		var decreaseInterval=0.035;
+		var previousAngle;
+
+		gyro.startTracking(function(o) {
+			combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+			combinedXYZnoABS=(o.x + o.y + o.z);
+			trueLoudness = (combinedXYZ/12)-0.1;
+			if (trueLoudness<loudness){
+				loudness=loudness-decreaseInterval;
+			}else{
+				loudness=trueLoudness;
+			}
+			//loudness = 0.5;
+			loudness=(combinedXYZ/12)-0.1;
+
+			if (loudness <0) {loudness=0}
+			if (loudness >1) {loudness=1}
+
+			var whichLoud;
+
+
+
+			if ((o.beta >=0 && previousAngle<0) || (o.beta <=0 && previousAngle>0)){
+				chord.volume((1+loudness)/2);
+				chord.play()
+
+			}
+
+			previousAngle=o.beta;
+
+			//Alpha is compass direction, beta is front to back (-180 to 180), gamma is side to side (-90 to 90)
+
+
+			prevx=o.x;
+			prevy=o.y;
+			prevz=o.z;
+		});
+
+
+	</script>
+	<input type="text" onkeydown="sound.play();">
+	<span id="foobar"></span>
+</body>
+</html>

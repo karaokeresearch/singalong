@@ -1,17 +1,5 @@
-VeraMoBd.ttf
-VeraMono.ttf
-VeraMoBd.eot
-VeraMono.eot
-are Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream
-Vera is a trademark of Bitstream, Inc.
-See LICENSE_BITSTREAM_VERA_FONT.TXT for more details
-
-jquery-2.0.3.min.js
-is Copyright 2013 jQuery Foundation and other contributors
-http://jquery.com/
-see LICENSE_JQUERY.TXT for more details
-
-All other files are a collective work of Ross Brackett
+All files not covered by a license in this directory 
+are a collective work of Ross Brackett,
 Copyright (C) 2014 Ross Brackett and are provided under the
 GPL Version 2 license:
 

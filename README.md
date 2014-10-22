@@ -2,9 +2,9 @@
 A product of the Karaoke Research Council
 
 Singalong is a node.js application for presenting live-band Karaoke or 
-singalongs in a browser window.
+singalongs in a browser window on one or multiple computers at once. Synced-like.
 
-Chord charts (or "tab") are scrolled and/or lyrics are presented on a Karaoke-
+Chord charts (aka "tab") are scrolled and/or lyrics are presented on a Karaoke-
 like screen on multiple devices at once over a wireless LAN. Songs are advanced 
 one chord change at a time using an inexpensive USB foot pedal or via the help 
 of an assistant.
@@ -40,10 +40,16 @@ At startup, singalong looks for a subdirectory called "songs" under the folder y
 are calling it from. If that directory doesn't exist, singalong creates it and 
 copies "I've Been Workin' On The Railroad" as a starter song.
 
-To add additional songs, place a text file containing a chord chart in 
-the ./songs subdirectory, and a .ogg file to sync it to in ./audio
+To add additional songs, place text files containing chord charts in 
+the ./songs subdirectory, and an optional .ogg file to sync it to in ./audio if you
+want automatic lyrics highlighting for performances.
+
 
 ### User experience
+At its most basic level, Singalong is a way to auto-scroll chord charts using a USB foot
+pedal or the "D" key of your keyboard.  The chord charts are displayed as large as
+possible on the screen.
+
 Once singalong is running, open a browser window to your computer's IP address 
 or domain name.  Typically something like http://localhost or http://192.168.1.5
 or http://mycomputername.  Have users connect to the same address. They should see 
@@ -60,6 +66,9 @@ To use with a two-pedal USB foot pedal, program the left pedal to emit the
 'A' keystroke and the right pedal to emit the 'D' keystroke. Text is 
 formatted to fit to the browser window width for maximum readability, 
 and the song's key can be altered on-the-fly with the 'W' and 'S' keys. 
+
+There's a basic karaoke editor that you can get to if accessing the server 
+from the same PC the server's running from.
 
 ### Applications
 Use in lieu of printed song sheets / fakebooks for:
@@ -102,9 +111,9 @@ people new songs, live performances in front of audiences, and casual singalongs
 ## Requirements 
 A modern compliant browser with Javascript support is required to view and 
 control its output. Singalong has been tested in Chrome, Firefox, Opera, and 
-the mobile browsers for Android and iPhone. Internet Explorer 6, 7, and 8 
-are not supported due to use of JQuery 2.0 and also I was having trouble with
-it. 
+the mobile browsers for Android and iPhone. Internet Explorer 6-8
+are not supported due to use of JQuery 2.0 and also I was having trouble maintaining
+it. IE9's probably wonky, too.
 
 ## Todo 
 This is my basic effort to make some software to do live-band karaoke and 

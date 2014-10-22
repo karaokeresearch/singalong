@@ -1,0 +1,6 @@
+VeraMoBd.ttf
+VeraMono.ttf
+VeraMoBd.eot
+VeraMono.eot
+are Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream
+Vera is a trademark of Bitstream, Inc.

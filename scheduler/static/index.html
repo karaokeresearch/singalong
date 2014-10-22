@@ -3,55 +3,33 @@
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="ntpclient.js"></script>
 		<script src="howler.js"></script>
-
-		<script>
-			var playQueue=[];
-			var one = new Howl({
-				urls: ['/one.wav']
-			});
-			var two = new Howl({
-				urls: ['/two.wav']
-			});
-			var three = new Howl({
-				urls: ['/three.wav']
-			});
-			var four = new Howl({
-				urls: ['/four.wav']
-			});
-
-			var socket = io.connect();
-			ntp.init(socket);
+		<script src="hammer.js"></script>
+		<script src="gyro.js"></script>
+		<script src="cookies.js"></script>
+		<script src="jquery-2.1.1.min.js"></script>
+		<script src="playalongclient.js"></script>
 
 
-			setInterval(function () { //demo: add items to the queue once a second
-				playQueue.push([ntp.serverTime() + 1000-(ntp.serverTime()%1000) +1000,1])
-				playQueue.push([ntp.serverTime() + 1000-(ntp.serverTime()%1000) +1500,1])
+		<style type="text/css">
+			.jsAction {
+				cursor: pointer;
+				color: #00f;
+				text-decoration: underline;
+			}
+		</style>
 
-			},1000);
-
-
-			setInterval(function () { //the queue
-				document.getElementById("report").innerHTML=  "Server time: " + ntp.serverTime(); //what time the server thinks it is
-				document.getElementById("report").innerHTML+= "<p>" + document.getElementById("latency").value;
-
-				while ((playQueue.length>0) && (playQueue[0][0]>ntp.serverTime()===false)){ //clear up any cruft or past entries
-					playQueue.shift();
-				}
-
-				while ((playQueue.length>0) &&(playQueue[0][0] - ntp.serverTime() <500)){//although it's tested every 500 ms, we can schedule up to 1000 away.
-					setTimeout(function (){
-						console.log(ntp.serverTime())
-					}, playQueue[0][0] - ntp.serverTime());
-					playQueue.shift();
-				}
-			},250);
-
-		</script>
-	</head>
-	<body>
-		<form>
-			<input type="range" name="latency" value=0 id="latency" min="-200" max="200" style="width:100%">
-		</form>
-		<span id="report"></span>
-	</body>
-</html>
+		<body>
+			<div id="content">
+				<center>
+					<h1>
+						<p>
+							<span class="jsAction" onclick="playalong.fingerStrum()">Finger Strumming</span>
+							<p>
+								<span class="jsAction" onclick="playalong.tiltStrum()">Tilt Strumming</span>
+								<p>
+									<span class="jsAction" onclick="playalong.dance()">Dancing Instrument</span>
+								</h1>
+							</center>
+						</div>
+					</body>
+				</html>

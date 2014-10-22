@@ -1,0 +1,153 @@
+<html>
+	<head>
+
+		<title>Motion Instrument</title>
+	</head>
+	<body bgcolor=red>
+		<script src="gyro.js"></script>
+		<script src="howler.js"></script>
+		<script>
+			var prevx=0;
+			var prevy=0;
+			var prevz=0;
+			var waitedLongEnough=true;
+			gyro.frequency=50;
+
+			var loudness;
+			var trueLoudness;
+
+
+
+			var tone1 = new Howl({
+				urls: ['tone1.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone2 = new Howl({
+				urls: ['tone2.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone3 = new Howl({
+				urls: ['tone3.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone4 = new Howl({
+				urls: ['tone4.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone5= new Howl({
+				urls: ['tone5.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone6 = new Howl({
+				urls: ['tone6.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone7 = new Howl({
+				urls: ['tone7.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var tone8 = new Howl({
+				urls: ['tone8.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+
+
+
+
+			var decreaseInterval=0.035;
+
+			gyro.startTracking(function(o) {
+				combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+				combinedXYZnoABS=(o.x + o.y + o.z);
+				trueLoudness = (combinedXYZ/12)-0.1;
+				if (trueLoudness<loudness){
+					loudness=loudness-decreaseInterval;
+				}else{
+					loudness=trueLoudness;
+				}
+				//loudness = 0.5;
+				loudness=(combinedXYZ/12)-0.1;
+
+				if (loudness <0) {loudness=0}
+				var whichLoud;
+
+
+				if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
+					if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
+						tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
+						}else{tone4.volume(tone4.volume()-decreaseInterval)}
+					}else{
+						tone4.volume(tone4.volume()-decreaseInterval)
+					}
+
+					if (o.beta>0 && o.beta<180){ //90 center point
+						if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
+							tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
+							}else{tone1.volume(tone1.volume()-decreaseInterval)}
+
+						}else{
+							tone1.volume(tone1.volume()-decreaseInterval)
+						}
+
+						if (o.beta>-90 && o.beta<90){ //0 center point
+							if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
+								tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
+								}else{tone2.volume(tone2.volume()-decreaseInterval)}
+
+							}else{
+								tone2.volume(tone2.volume()-decreaseInterval)
+							}
+
+							if (o.beta>-180 && o.beta<-0){ // -90 center point
+								if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
+									tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
+									}else{tone3.volume(tone3.volume()-decreaseInterval)}
+
+								}else{
+									tone3.volume(tone3.volume()-decreaseInterval)
+								}
+
+
+								if (tone8.volume() <decreaseInterval){tone8.volume(0);}
+								if (tone7.volume() <decreaseInterval){tone7.volume(0);}
+								if (tone6.volume() <decreaseInterval){tone6.volume(0);}
+								if (tone5.volume() <decreaseInterval){tone5.volume(0);}
+								if (tone4.volume() <decreaseInterval){tone4.volume(0);}
+								if (tone3.volume() <decreaseInterval){tone3.volume(0);}
+								if (tone2.volume() <decreaseInterval){tone2.volume(0);}
+								if (tone1.volume() <decreaseInterval){tone1.volume(0);}
+
+								prevx=o.x;
+								prevy=o.y;
+								prevz=o.z;
+							});
+
+		</script>
+		<div id="foobar"></div>
+		<input type="text" onkeydown="tone1.volume(1);">
+	</body>
+</html>
