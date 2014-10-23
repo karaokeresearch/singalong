@@ -6,23 +6,25 @@
 	</head>
 	<body style="padding: 0; margin: 0;">
 
-			<div id="hit" style="font-size: 0; background: #42d692; padding: 0px;">
-				<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
-				<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
-				<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
-				<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
-				<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
-			</div>
-			<p></p>
-			<div style="font-size:2em; font-face: Arial; text-align:center;">Use your finger or mouse to strum across the blue and black squares above.</div>
+		<div id="hit" style="font-size: 0; background: #42d692; padding: 0px;">
+			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
+			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
+			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
+			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
+			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
+		</div>
+		<p></p>
+		<div style="font-size: 2em; text-align:center;">Use your finger or mouse to strum across the blue and black squares above.</div>
 		<script src="hammer.js"></script>
 		<script type="text/javascript" src="howler.js" ></script>
+		<script type="text/javascript" src="teoria.js" ></script>
+
 		<script>
 			var xPrev=0;
 
 
 			var el = document.querySelector("#hit");
-		
+
 
 			var mc = new Hammer(el);
 			mc.on("panmove", logGesture);
@@ -30,39 +32,29 @@
 
 			//mc.on("swipe pan panstart panmove panend pancancel multipan press pressup pinch rotate tap doubletap",
 
-
-			i=0;
-			minor=false;
-			stringIDs=[];
-			chordnotes=[];
-
-			chordnotes[0] = i%24;
-
-			if (minor==true){
-				chordnotes[1] =(i+3)%24;
+				var stringIDs=[];
+				var chordNotes=[];
+      
+      var changeChord = function (whichChord){
+				var tempChordNotes =[];
+				var chord=teoria.chord(whichChord);
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push((chord.notes()[i].key()+4)%24);
+				}
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push(((chord.notes()[i].key()+16)%24));
+				}
+				tempChordNotes.sort(function(a, b){return a-b});
+				return tempChordNotes;
 			}
-			else{
-				chordnotes[1] =(i+4)%24;
-			}
-
-			chordnotes[2] =(i+7)%24;
-			chordnotes[3] = (i+12)%24;
-
-			if (minor==true){
-				chordnotes[4] =(i+15)%24;
-			}
-			else{
-				chordnotes[4] =(i+16)%24;
-			}
-			chordnotes[5] =(i+19)%24;
-
-			chordnotes.sort(function(a, b){return a-b});
-
+			
+			chordNotes=changeChord('G');
+      
+			
 			noteLength=4000;
-
-
 			var sound = new Howl({
 				urls: ['strumAscendAmono.ogg' ],
+				volume: 0.65,
 				sprite: {
 					1 : [ 0*noteLength, 3800],
 					2 : [ 1*noteLength, 3800],
@@ -90,15 +82,8 @@
 					24 : [23*noteLength, 3800]
 				}
 			});
-
-
-
-
-
-
-
 			function playNote(ev) {
-				sound.play(chordnotes[1]);
+				//sound.play(chordNotes[1]);
 			}
 
 			function logGesture(ev) {
@@ -108,7 +93,7 @@
 					stringPos=j*(window.innerWidth/5);
 
 					if((ev.center.x >stringPos && xPrev<stringPos) || (ev.center.x <stringPos && xPrev>stringPos)) {
-						sound.play(chordnotes[j-1]+1,function(soundID){
+						sound.play(chordNotes[j-1]+1,function(soundID){
 							stringIDs[j-1]=soundID;
 						});
 					}
