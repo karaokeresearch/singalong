@@ -1,76 +1,102 @@
 <html>
-</html><head>
+	<head>
+		<title>Sort-of strumming instrument</title>
+	</head>
+	<body bgcolor="blue">
+		<script src="gyro.js"></script>
+		<script src="howler.js"></script>
+		<script type="text/javascript" src="teoria.js" ></script>
+		<script>
+
+			var stringIDs=[];
+			var chordNotes=[];
+
+			var changeChord = function (whichChord){
+				var tempChordNotes =[];
+				var chord=teoria.chord(whichChord);
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push((chord.notes()[i].key()+4)%24);
+				}
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push(((chord.notes()[i].key()+16)%24));
+				}
+				tempChordNotes.sort(function(a, b){return a-b});
+				return tempChordNotes;
+			}
+
+			chordNotes=changeChord('C');
 
 
-	<title>Sort-of strumming instrument</title>
-</head>
-<body bgcolor=red>
-	<script src="gyro.js"></script>
-	<script src="howler.js"></script>
-	<script>
+			noteLength=4000;
+			var sound = new Howl({
+				urls: ['strumAscendAmono.ogg' ],
+				volume: 0.65,
+				sprite: {
+					1 : [ 0*noteLength, 3800],
+					2 : [ 1*noteLength, 3800],
+					3 : [ 2*noteLength, 3800],
+					4 : [ 3*noteLength, 3800],
+					5 : [ 4*noteLength, 3800],
+					6 : [ 5*noteLength, 3800],
+					7 : [ 6*noteLength, 3800],
+					8 : [ 7*noteLength, 3800],
+					9 : [ 8*noteLength, 3800],
+					10 : [ 9*noteLength, 3800],
+					11 : [10*noteLength, 3800],
+					12 : [11*noteLength, 3800],
+					13 : [12*noteLength, 3800],
+					14 : [13*noteLength, 3800],
+					15 : [14*noteLength, 3800],
+					16 : [15*noteLength, 3800],
+					17 : [16*noteLength, 3800],
+					18 : [17*noteLength, 3800],
+					19 : [18*noteLength, 3800],
+					20 : [19*noteLength, 3800],
+					21 : [20*noteLength, 3800],
+					22 : [21*noteLength, 3800],
+					23 : [22*noteLength, 3800],
+					24 : [23*noteLength, 3800]
+				}
+			});
 
-		var prevx=0;
-		var prevy=0;
-		var prevz=0;
-		var waitedLongEnough=true;
-		gyro.frequency=50;
-
-		var loudness;
-		var trueLoudness;
-
-
-
-		var chord = new Howl({
-			urls: ['pianochord1.wav'],
-			autoplay: false,
-			loop: false,
-			volume: 1
-		});
 
 
 
 
-		var decreaseInterval=0.035;
-		var previousAngle;
+
+
+
+
+			gyro.frequency=50;
+
+
+
+	var previousAngle;
 
 		gyro.startTracking(function(o) {
-			combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
-			combinedXYZnoABS=(o.x + o.y + o.z);
-			trueLoudness = (combinedXYZ/12)-0.1;
-			if (trueLoudness<loudness){
-				loudness=loudness-decreaseInterval;
-			}else{
-				loudness=trueLoudness;
+
+			if ((o.beta >=-15 && previousAngle<-15) || (o.beta <=-15 && previousAngle>-15)){
+				sound.play(chordNotes[1]+1);
 			}
-			//loudness = 0.5;
-			loudness=(combinedXYZ/12)-0.1;
 
-			if (loudness <0) {loudness=0}
-			if (loudness >1) {loudness=1}
-
-			var whichLoud;
-
-
-
-			if ((o.beta >=0 && previousAngle<0) || (o.beta <=0 && previousAngle>0)){
-				chord.volume((1+loudness)/2);
-				chord.play()
-
+			if ((o.beta >=-5 && previousAngle<-5) || (o.beta <=-5 && previousAngle>-5)){
+				sound.play(chordNotes[2]+1);
 			}
+
+			if ((o.beta >=5 && previousAngle<5) || (o.beta <=5 && previousAngle>5)){
+				sound.play(chordNotes[3]+1);
+			}
+
+			if ((o.beta >=15 && previousAngle<15) || (o.beta <=15 && previousAngle>15)){
+				sound.play(chordNotes[4]+1);
+			}
+
 
 			previousAngle=o.beta;
 
-			//Alpha is compass direction, beta is front to back (-180 to 180), gamma is side to side (-90 to 90)
-
-
-			prevx=o.x;
-			prevy=o.y;
-			prevz=o.z;
 		});
 
 
-	</script>
-	<input type="text" onkeydown="sound.play();">
-	<span id="foobar"></span>
-</body>
+		</script>
+	</body>
 </html>
