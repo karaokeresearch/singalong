@@ -2,12 +2,13 @@
 	<head>
 		<title>Sort-of strumming instrument</title>
 	</head>
-	<body bgcolor="blue">
+	<body bgcolor="pink">
+		<div id="loading" style="font-size:4em">Loading...</div>
 		<script src="gyro.js"></script>
 		<script src="howler.js"></script>
 		<script type="text/javascript" src="teoria.js" ></script>
 		<script>
-
+			var hasLoaded=false;
 			var stringIDs=[];
 			var chordNotes=[];
 
@@ -24,13 +25,16 @@
 				return tempChordNotes;
 			}
 
-			chordNotes=changeChord('C');
+			chordNotes=changeChord('C#');
 
 
 			noteLength=4000;
 			var sound = new Howl({
 				urls: ['strumAscendAmono.ogg' ],
 				volume: 0.65,
+				onload: function(){document.getElementById("loading").innerHTML = "Strum your phone like it was a pretend guitar!";
+					hasLoaded=true;
+				},
 				sprite: {
 					1 : [ 0*noteLength, 3800],
 					2 : [ 1*noteLength, 3800],
@@ -71,30 +75,30 @@
 
 
 
-	var previousAngle;
+			var previousAngle;
 
-		gyro.startTracking(function(o) {
+			gyro.startTracking(function(o) {
+				if (hasLoaded){
+					if ((o.beta >=-15 && previousAngle<-15) || (o.beta <=-15 && previousAngle>-15)){
+						sound.play(chordNotes[1]+1);
+					}
 
-			if ((o.beta >=-15 && previousAngle<-15) || (o.beta <=-15 && previousAngle>-15)){
-				sound.play(chordNotes[1]+1);
-			}
+					if ((o.beta >=-5 && previousAngle<-5) || (o.beta <=-5 && previousAngle>-5)){
+						sound.play(chordNotes[2]+1);
+					}
 
-			if ((o.beta >=-5 && previousAngle<-5) || (o.beta <=-5 && previousAngle>-5)){
-				sound.play(chordNotes[2]+1);
-			}
+					if ((o.beta >=5 && previousAngle<5) || (o.beta <=5 && previousAngle>5)){
+						sound.play(chordNotes[3]+1);
+					}
 
-			if ((o.beta >=5 && previousAngle<5) || (o.beta <=5 && previousAngle>5)){
-				sound.play(chordNotes[3]+1);
-			}
+					if ((o.beta >=15 && previousAngle<15) || (o.beta <=15 && previousAngle>15)){
+						sound.play(chordNotes[4]+1);
+					}
+				}
 
-			if ((o.beta >=15 && previousAngle<15) || (o.beta <=15 && previousAngle>15)){
-				sound.play(chordNotes[4]+1);
-			}
+				previousAngle=o.beta;
 
-
-			previousAngle=o.beta;
-
-		});
+			});
 
 
 		</script>

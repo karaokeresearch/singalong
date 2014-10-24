@@ -6,6 +6,7 @@
 	<body bgcolor=red>
 		<script src="gyro.js"></script>
 		<script src="howler.js"></script>
+		<script type="text/javascript" src="teoria.js" ></script>
 		<script>
 			var prevx=0;
 			var prevy=0;
@@ -15,64 +16,258 @@
 
 			var loudness;
 			var trueLoudness;
+			var tone1;
+			var tone2;
+			var tone3;
+			var tone4;
+			
 
 
-
-			var tone1 = new Howl({
-				urls: ['tone1.wav'],
+			var baseTone1 = new Howl({
+				urls: ['1.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone2 = new Howl({
-				urls: ['tone2.wav'],
+			var baseTone2 = new Howl({
+				urls: ['2.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone3 = new Howl({
-				urls: ['tone3.wav'],
+			var baseTone3 = new Howl({
+				urls: ['3.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone4 = new Howl({
-				urls: ['tone4.wav'],
+			var baseTone4 = new Howl({
+				urls: ['4.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone5= new Howl({
-				urls: ['tone5.wav'],
+			var baseTone5 = new Howl({
+				urls: ['5.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone6 = new Howl({
-				urls: ['tone6.wav'],
+			var baseTone6 = new Howl({
+				urls: ['6.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone7 = new Howl({
-				urls: ['tone7.wav'],
+			var baseTone7 = new Howl({
+				urls: ['7.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
 
-			var tone8 = new Howl({
-				urls: ['tone8.wav'],
+			var baseTone8 = new Howl({
+				urls: ['8.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
 			});
+
+			var baseTone9 = new Howl({
+				urls: ['9.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone10 = new Howl({
+				urls: ['10.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone11 = new Howl({
+				urls: ['11.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone12 = new Howl({
+				urls: ['12.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone13 = new Howl({
+				urls: ['13.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone14 = new Howl({
+				urls: ['14.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone15 = new Howl({
+				urls: ['15.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone16 = new Howl({
+				urls: ['16.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone17 = new Howl({
+				urls: ['17.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone18 = new Howl({
+				urls: ['18.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone19 = new Howl({
+				urls: ['19.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+
+			var baseTone20 = new Howl({
+				urls: ['20.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone21 = new Howl({
+				urls: ['21.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone22 = new Howl({
+				urls: ['22.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone23 = new Howl({
+				urls: ['23.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+			var baseTone24 = new Howl({
+				urls: ['24.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+
+
+
+
+
+
+
+
+			var chordNotes=[];
+
+			var changeChord = function (whichChord){
+				var tempChordNotes =[];
+				var chord=teoria.chord(whichChord);
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push((chord.notes()[i].key()+4)%24);
+				}
+				for (i=0; i< chord.notes().length; i++) {
+					tempChordNotes.push(((chord.notes()[i].key()+16)%24));
+				}
+				tempChordNotes.sort(function(a, b){return a-b});
+				return tempChordNotes;
+			}
+
+	var doD= function() {
+			chordNotes=changeChord('D');
+			switchChords();
+	
+	}
+
+
+	var doA= function() {
+			chordNotes=changeChord('A');
+			switchChords();
+	
+	}
+	
+
+		var switchChords= function()
+			{
+		var tempVol1=0;
+		var tempVol2=0;
+		var tempVol3=0;
+		var tempVol4=0;
+			
+			
+			if (tone1){
+				tempVol1=tone1.volume();
+				tone1.volume(0);}
+			if (tone2){
+				tempVol2=tone2.volume();
+				tone2.volume(0);}
+			if (tone3){
+				tempVol3=tone3.volume();
+				tone3.volume(0);}
+			if (tone4){
+				tempVol4=tone4.volume();
+				tone4.volume(0);}
+			
+  	  eval("tone1 = baseTone" +(chordNotes[0]+1)+";");
+    	eval("tone2 = baseTone" +(chordNotes[1]+1)+";");
+    	eval("tone3 = baseTone" +(chordNotes[2]+1)+";");
+    	eval("tone4 = baseTone" +(chordNotes[3]+1)+";");
+			
+			tone1.volume(tempVol1);
+			tone2.volume(tempVol2);
+			tone3.volume(tempVol3);
+			tone4.volume(tempVol4);
+
+
+    };
+
+		doD();
+			
+
+
+
+
 
 
 
@@ -131,11 +326,31 @@
 									tone3.volume(tone3.volume()-decreaseInterval)
 								}
 
-
-								if (tone8.volume() <decreaseInterval){tone8.volume(0);}
-								if (tone7.volume() <decreaseInterval){tone7.volume(0);}
-								if (tone6.volume() <decreaseInterval){tone6.volume(0);}
-								if (tone5.volume() <decreaseInterval){tone5.volume(0);}
+//								if (tone24.volume() <decreaseInterval){tone24.volume(0);}
+//								if (tone23.volume() <decreaseInterval){tone23.volume(0);}
+//								if (tone22.volume() <decreaseInterval){tone22.volume(0);}
+//								if (tone21.volume() <decreaseInterval){tone21.volume(0);}
+//
+//
+//
+//								if (tone20.volume() <decreaseInterval){tone20.volume(0);}
+//								if (tone19.volume() <decreaseInterval){tone19.volume(0);}
+//								if (tone18.volume() <decreaseInterval){tone18.volume(0);}
+//								if (tone17.volume() <decreaseInterval){tone17.volume(0);}
+//								if (tone16.volume() <decreaseInterval){tone16.volume(0);}
+//								if (tone15.volume() <decreaseInterval){tone15.volume(0);}
+//								if (tone14.volume() <decreaseInterval){tone14.volume(0);}
+//								if (tone13.volume() <decreaseInterval){tone13.volume(0);}
+//								if (tone12.volume() <decreaseInterval){tone12.volume(0);}
+//								if (tone11.volume() <decreaseInterval){tone11.volume(0);}
+//
+//
+//								if (tone10.volume()<decreaseInterval){tone10.volume(0);}
+//								if (tone9.volume() <decreaseInterval){tone9.volume(0);}
+//								if (tone8.volume() <decreaseInterval){tone8.volume(0);}
+//								if (tone7.volume() <decreaseInterval){tone7.volume(0);}
+//								if (tone6.volume() <decreaseInterval){tone6.volume(0);}
+//								if (tone5.volume() <decreaseInterval){tone5.volume(0);}
 								if (tone4.volume() <decreaseInterval){tone4.volume(0);}
 								if (tone3.volume() <decreaseInterval){tone3.volume(0);}
 								if (tone2.volume() <decreaseInterval){tone2.volume(0);}
@@ -147,7 +362,11 @@
 							});
 
 		</script>
-		<div id="foobar"></div>
+		<div id="foobar" style="font-size:20" onclick="doD()">D</div>
+		<BR><BR><BR><BR><BR><BR><BR>
+		
+		<div id="foobar" style="font-size:20" onclick="doA()">A</div>
+<BR>
 		<input type="text" onkeydown="tone1.volume(1);">
 	</body>
 </html>
