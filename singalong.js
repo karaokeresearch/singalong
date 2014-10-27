@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*!
- * singalong.js v0.5.0
+ * singalong.js v0.6.0
  * server for the Karaoke Research Council engine
  *
  * Karaoke Research Council
@@ -19,9 +19,11 @@ var express = require('express'),
     http = require('http'),
     app = express(),
     server = http.createServer(app).listen(80),
+    ntp = require('socket-ntp-krcmod'),
     io = require('socket.io').listen(server, {
         log: false
     });
+io.sockets.on('connection', ntp.sync); //ntp server
 var fs = require("fs");
 var os = require('os');
 var installedSongsDirectory = __dirname + '/songs/';
@@ -338,7 +340,8 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
             parseChunk = parseChunk + '</span>';
             parseChunk = parseChunk + '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';
         }
-        parseChunk = parseChunk + '<button onclick="switchKaraoke()">&#9836;</button>';
+        parseChunk = parseChunk + ' <button style="background-color:#DDDDDD;"><a href="menu.html"><img src="hamburger.png" style="width:2em; padding-top:0.3em"></a></button>';
+        
 
         parseChunk = parseChunk + '</div>';
 
@@ -588,6 +591,8 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('next', function (data) { // which chord is next?  And when?
         if (securityCheck(socket.handshake.address.address)) {
+            	    console.log(data.nextChord + ", " + data.nextChange);
+
             io.sockets.emit('bnext', {
             													nextChord: data.nextChord,
             												  nextChange: data.nextChange + Date.now()

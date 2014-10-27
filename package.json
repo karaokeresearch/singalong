@@ -25,6 +25,7 @@
     "socket.io": "0.9.x",
     "ua-parser-js": "*",
     "levenshtein": "*",
+    "socket-ntp-krcmod": "*"
   },
   "keywords": [
     "karaoke",

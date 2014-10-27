@@ -126,6 +126,7 @@
 	socket.on('bTotMod', function (data) { //total amount of modulation
 	    totalModulation = data.message;
 	});
+
 	
 	socket.on('bFlat', function (data) {
 	    if (data.message == 1) {
@@ -168,7 +169,7 @@
 	            moveLyricHighlight(currentLyric, data.blid, true, function () {});
 	            modulateChord(totalModulation);
 	
-	            if (karaokeMode == false) {
+	            if (getQueryVariable("mode") === "chordchart"){
 	                activateChordChartMode(data.bid);
 	            } else {
 	                activateKaraokeMode(data.bid);
@@ -333,7 +334,9 @@
 	    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
 	    if (speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
       prevChordTimeStamp = Date.now();
-			var nextChange = (chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier;
+			var nextChange = ((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier)*1000;
+			
+			//Predict next chord time and send
 			var nextChord = $("#chordNumber" + (currentChord +2)).html();
       console.log(speedMultiplier);
       console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
@@ -895,3 +898,16 @@
 	document.getElementById('audioplayer').playbackRate=rate	
 	$("#playbackrate").html(rate);
 	}
+
+function getQueryVariable(variable)
+{
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
+}
+
+
