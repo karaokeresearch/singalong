@@ -13,6 +13,15 @@
 
 		<script type="text/javascript" src="../playalong.js"></script>
 
+						<div id="actual" style="font-size:20"></div>
+
+						<div id="queue" style="font-size:20"></div>
+						<div id="play" style="font-size:20"></div>
+						<div id="loadarea" style="font-size:7em; font-family=Sans;">LOADING</div>
+
+						
+						<BR>
+
 
 		<script>
 			
@@ -22,19 +31,37 @@
 			
 			gyro.frequency=50;
 
-			var lagOverride=-200;
+			var lagOverride=300;
 			var playQueue=[];
-			var loudness;
-			var trueLoudness;
+			var maxMotion=10;
+			var averageMotion=15;
+
 			var tone1;
 			var tone2;
 			var tone3;
 			var tone4;
 
 			var baseTone=[];
+
+			var loadIOS= function(){
+			blipSound.play();
+		}
+
+
+			var soundsLoaded= function(){
+			document.getElementById("loadarea").innerHTML ='<span onclick="loadIOS()">LOADED.<br>Tap here if sounds do not play.</span>';
+				blipSound= new Howl({
+					urls: ['1.wav'],
+					autoplay: false,
+					loop: false,
+					volume: 0.1,
+				});
+
+		}
+		
 			
 			//load WAV samples
-			for (i=1; i<=24; i++){
+			for (i=1; i<=23; i++){
 			var wavurl=i+ '.wav';
 				baseTone[i] = new Howl({
 					urls: [wavurl],
@@ -44,7 +71,13 @@
 				});
 			}
 
-
+				baseTone[24] = new Howl({
+					urls: ['24.wav'],
+					autoplay: true,
+					loop: true,
+					volume: 0,
+					onload: soundsLoaded()
+				});
 
 
 
@@ -90,29 +123,21 @@
 
 			}
 
-			changeChord('D');
 
 
 
-
-
-
-
-
-
-			var decreaseInterval=0.035;
+			var decreaseInterval=0.025;
 
 			gyro.startTracking(function(o) {
+				
 				combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
-				combinedXYZnoABS=(o.x + o.y + o.z);
-				trueLoudness = (combinedXYZ/12)-0.1;
-				if (trueLoudness<loudness){
-					loudness=loudness-decreaseInterval;
-				}else{
-					loudness=trueLoudness;
-				}
-				//loudness = 0.5;
-				loudness=(combinedXYZ/12)-0.1;
+				
+				if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
+	//			if (combinedXYZ > maxMotion){maxMotion=combinedXYZ;}
+//				if (maxMotion>10){maxMotion=maxMotion-0.1}
+				//combinedXYZnoABS=(o.x + o.y + o.z);
+
+				loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
 
 				if (loudness <0) {loudness=0}
 				var whichLoud;
@@ -164,10 +189,9 @@
 
 
 	socket.on('bnext', function (data) { //what's the next chord and when
-	    //console.log(data.nextChord + ", " + data.nextChange);
 	    
-			playQueue.push([parseInt(data.nextChange)+lagOverride,data.nextChord])
-					document.getElementById("queue").innerHTML = "queuing " + data.nextChord + " in " + ((data.nextChange-ntp.serverTime()) +lagOverride);
+			playQueue.push([parseInt(data.nextChange)-lagOverride,data.nextChord])
+					document.getElementById("queue").innerHTML = "queuing " + data.nextChord + " in " + ((data.nextChange-ntp.serverTime()) -lagOverride);
 
 		document.getElementById("queue").innerHTML += "<br>offset=" +ntp.offset();
 
@@ -177,17 +201,9 @@
 
 			setInterval(function () { //the queue
 
-		//		console.log("queue: " + playQueue[0][0]);
-		//		console.log("stime: " + ntp.serverTime());
-			
-				while ((playQueue.length>0) && (playQueue[0][0]>ntp.serverTime()===false)){ //clear up any cruft or past entries
-					playQueue.shift();
-				}
 				
 
 				while ((playQueue.length>0) &&(playQueue[0][0] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
-					//console.log(playQueue[0][0] + "--- "  + playQueue[0][1]);
-					//document.getElementById("play").innerHTML = "<br>playing " +whatsnext + " in " + (playQueue[0][0] - ntp.serverTime()) + "ms";
 					
 					(function (){							
 						var whatsnext=playQueue[0][1];
@@ -216,12 +232,6 @@
 
 
 						</script>
-						<div id="actual" style="font-size:20"></div>
-
-						<div id="queue" style="font-size:20"></div>
-						<div id="play" style="font-size:20"></div>
-						
-						<BR>
 
 					</body>
 				</html>

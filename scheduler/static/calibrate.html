@@ -37,8 +37,8 @@
 
 
 			setInterval(function () { //the queue
-				document.getElementById("report").innerHTML=  "Server time: <br>" + ntp.serverTime(); //what time the server thinks it is
-
+				document.getElementById("report").innerHTML=  "Server time: <br>" + ntp.serverTime() + "<br>Offset:" +ntp.offset();//what time the server thinks it is
+				
 				while ((playQueue.length>0) && (playQueue[0][0]>ntp.serverTime()===false)){ //clear up any cruft or past entries
 					playQueue.shift();
 				}
