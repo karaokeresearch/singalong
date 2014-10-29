@@ -1,19 +1,21 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
-		<title>Strum test</title>
+		<title>Finger Strummer</title>
 	</head>
-	<body style="padding: 0; margin: 0;">
+	<body bgcolor="#DDFFDD" style="padding: 0; margin: 0;">
 
 		<div id="hit" style="font-size: 0; background: #42d692; padding: 0px;">
-			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
-			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
-			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
-			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 75%;"></span>
-			<span id="target" style="background: #9fe1e7; display: inline-block; width: 20%; height: 75%;"></span>
+			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
+			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 60%;"></span>
+			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
+			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 60%;"></span>
+			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
 		</div>
 		<p></p>
-		<div style="font-size: 2em; text-align:center;">Use your finger or mouse to strum across the blue and black squares above.</div>
+		<div id="whee" style="text-align:center;"> </div>
+
+		<div id="instructions" style="font-size: 2em; text-align:center;">Use your finger or mouse to swipe across the ersatz keyboard.</div>
 
 		<script type="text/javascript" src="../cookies.js"></script>
 		<script type="text/javascript" src="../howler.js"></script>
@@ -40,8 +42,8 @@
 
 
 			var mc = new Hammer(el);
-			mc.on("panmove", playNote);
-			mc.on("tap", playNote);
+			mc.on("panmove", checkStrum);
+			mc.on("tap", checkStrum);
 
 			//mc.on("swipe pan panstart panmove panend pancancel multipan press pressup pinch rotate tap doubletap",
 
@@ -94,18 +96,24 @@
 				}
 			});
 
-			function playNote(ev) {//play the note
+			function checkStrum(finger) {//play the note
 				for (j = 1; j < 5; j++) {
-					stringPos=j*(window.innerWidth/5);
-
-					if((ev.center.x >stringPos && xPrev<stringPos) || (ev.center.x <stringPos && xPrev>stringPos)) {
+					var stringPos=j*(window.innerWidth/5);
+       //your finger right of line  and   previously left of line   and previously rightof the string minus 1/5 the screen
+       //         
+					if((finger.center.x >stringPos && finger.center.x < stringPos + window.innerWidth/5 && xPrev<=stringPos && xPrev>stringPos-window.innerWidth/5) || (finger.center.x <stringPos && finger.center.x > stringPos - window.innerWidth/5 && xPrev>=stringPos && xPrev<stringPos+window.innerWidth/5)) {
+             
 						sound.play(chordNotes[j-1]+1,function(soundID){
-							stringIDs[j-1]=soundID;
+						stringIDs[j-1]=soundID;
+						//document.getElementById("whee").innerHTML = j +" was "  + xPrev + ", is " + finger.center.x + ", and 1/5=" + (window.innerWidth/5);
 						});
 					}
 
 				}
-				xPrev=ev.center.x;
+				//document.getElementById("instructions").innerHTML = "was "  + xPrev + ", is " + finger.center.x;
+
+				xPrev=finger.center.x;
+
 			}
 
 		</script>
