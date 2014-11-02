@@ -24,7 +24,7 @@
     "nedb": "^0.11.1",
     "socket.io": "0.9.x",
     "ua-parser-js": "*",
-    "levenshtein": "*",
+    "sortzzy": "*",
     "socket-ntp-krcmod": "*"
   },
   "keywords": [
