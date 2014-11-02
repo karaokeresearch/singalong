@@ -22,7 +22,7 @@
   "dependencies": {
     "express": "3.4.x",
     "nedb": "^0.11.1",
-    "socket.io": "0.9.x",
+    "socket.io": "1.x",
     "ua-parser-js": "*",
     "sortzzy": "*",
     "socket-ntp-krcmod": "*"
@@ -33,7 +33,9 @@
     "chords",
     "tab",
     "live",
-    "live-band"
+    "live-band",
+    "virtual instrument",
+    "distributed soundcard"
   ],
   "author": "Karaoke Research Council <krc@brassrocket.com>",
   "license": "GPL-2.0"

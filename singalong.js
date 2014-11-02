@@ -685,7 +685,7 @@ io.sockets.on('connection', function (socket) {
     }); //This is both the song and the current chord.  Must be processed at same time.
 
     socket.on('id', function (data) { //user is switching chords.
-        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
+        if (securityCheck(socket.request.connection.remoteAddress)) { //checks to see if the requester is on the approved list
             currentChord = data.data;
 
             if (typeof timings != "undefined") {
@@ -709,7 +709,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('lid', function (data) { //user is switching lyrics.
-        if (securityCheck(socket.handshake.address.address)) { //checks to see if the requester is on the approved list
+        if (securityCheck(socket.request.connection.remoteAddress)) { //checks to see if the requester is on the approved list
             currentLyric = data.data;
 
             io.sockets.emit('bcurrentSong', {
@@ -721,7 +721,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('currentSong', function (data) { //user has sent a "change song" request or has requested the index
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             loadNewSong(data.data);
             console.log(data);
         }
@@ -729,7 +729,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('mod', function (data) { //situational modulation.  If a user misses this, they would need to refresh to get caught up.
         swapFlat = 0;
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             currentMod = data.data;
             io.sockets.emit('bmod', {
                 message: currentMod
@@ -742,7 +742,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('totmod', function (data) { //probably could be eliminated.  Totmod could be kept track of completely on the server side instead of simultaneously in all the clients at once.
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             totalMod = data.data;
             //io.sockets.emit('bTotMod', { message: totalMod});
             console.log(data);
@@ -750,7 +750,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('flat', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             if (swapFlat == 1) {
                 swapFlat = 0;
             } else {
@@ -764,7 +764,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('highlighting', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             if (highlighting == 1) {
                 highlighting = 0;
             } else {
@@ -779,7 +779,7 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on('timings', function (data) {
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             timings = data;
             var outputFilename = timingsDirectory + currentSong + '.JSON';
 
@@ -796,7 +796,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('next', function (data) { // which chord is next?  And when?
-        if (securityCheck(socket.handshake.address.address)) {
+        if (securityCheck(socket.request.connection.remoteAddress)) {
             	    console.log(data.nextChord + ", " + data.nextChange);
 
             io.sockets.emit('bnext', {
