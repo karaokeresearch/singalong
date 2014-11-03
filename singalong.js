@@ -64,6 +64,7 @@ var timings;
 var firstChord;
 var firstLyric;
 var highlighting = 1;
+var calibrationClients=[];
 
 //************** HELPER FUNCTIONS ********************
 var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
@@ -649,12 +650,12 @@ app.get('/timings', function (req, res) { //JSON timings object
 
 });
 app.use(cookieParser());
-app.use('/ua/', function(req, res, next){
+app.use('/ua', function(req, res, next){
 	var ua = req.headers['user-agent'];
 	
 	//res.clearCookie('uuid');  
 	if (req.cookies.uuid){
-		console.log(req.cookies);
+		//console.log(req.cookies);
 	}	else{
 		var uuid='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -668,6 +669,30 @@ app.use('/ua/', function(req, res, next){
 			if (bestResult){var score=bestResult.score;}else{var score=0;}
  			res.end(JSON.stringify({lag:lag, score:score}));
 		});
+});
+
+
+
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+}
+
+
+app.get('/clientlist', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
+	var clients = sortByKey(calibrationClients, 'score');
+	var table='<table border=1>';
+	table+='<tr><td>UUID</td><td>Lag</td><td>Score</td><td>Vendor</td><td>Model</td><td>OS</td><td>Version</td><td>Socket ID:</td></tr>';
+	
+	for (var i=clients.length-1; i>=0; i--){
+	table+= "<tr><td>" +clients[i].uuid + "</td><td>" + clients[i].lag + "</td><td>" +  clients[i].score.toFixed(4)+ "</td><td>" +clients[i].vendor+ "</td><td>" + clients[i].model + "</td><td>" + clients[i].osName + "</td><td>" +   clients[i].osVersion+ "</td><td>" + clients[i].socketID + "</td></tr>";	
+	
+	}
+	table+="</table>";
+	res.end(table)
+
 });
 
 
@@ -820,6 +845,37 @@ io.sockets.on('connection', function (socket) {
 
         }
     });
+
+	  socket.on('calibration', function (data) { //Calibration conrol
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+
+				if (data.data==='start'){
+					calibrationClients=[];
+			    io.sockets.emit('bCalibrate', {
+			        message: 'start'
+			    });
+		   	}
+
+				if (data.data==='stop'){
+			    io.sockets.emit('bCalibrate', {
+			        message: 'stop'
+			    });
+		   	}		   			   	
+			}
+		});
+
+	  socket.on('calibrationRegistry', function (data) { //Calibration conrol
+			var ua =parser.setUA(data.ua).getResult();			
+			calibrationClients.push({uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
+			console.log ("\n\n-------------\n\n");
+			console.log(calibrationClients);
+			 socket.emit('bCalibrate', {
+        message: 'startCount',
+        number: calibrationClients.length
+    	 });
+
+		});
+
 
 
 

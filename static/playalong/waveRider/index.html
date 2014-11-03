@@ -32,8 +32,7 @@
 		
 			
 			gyro.frequency=50;
-			var playQueue=[];
-			var maxMotion=10;
+			//var maxMotion=10;
 			var averageMotion=15;
 
 			var tone1;
@@ -44,8 +43,8 @@
 			var baseTone=[];
 
 			var loadIOS= function(){
-			blipSound.play();
-		}
+				blipSound.play();
+			}
 	
 
 			var soundsLoaded= function(){
@@ -133,9 +132,6 @@
 				combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
 				
 				if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
-	//			if (combinedXYZ > maxMotion){maxMotion=combinedXYZ;}
-//				if (maxMotion>10){maxMotion=maxMotion-0.1}
-				//combinedXYZnoABS=(o.x + o.y + o.z);
 
 				loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
 
