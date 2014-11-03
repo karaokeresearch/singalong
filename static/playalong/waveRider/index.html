@@ -10,6 +10,7 @@
 		<script type="text/javascript" src="../ntpclient.js"></script>
 		<script type="text/javascript" src="../teoria.js"></script>
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
 
 		<script type="text/javascript" src="../playalong.js"></script>
 
@@ -27,11 +28,10 @@
 			
 			var socket = io.connect();
 			ntp.init(socket);      
-			
+			playalong.init(socket);
+		
 			
 			gyro.frequency=50;
-
-			var lagOverride=300;
 			var playQueue=[];
 			var maxMotion=10;
 			var averageMotion=15;
@@ -46,7 +46,7 @@
 			var loadIOS= function(){
 			blipSound.play();
 		}
-
+	
 
 			var soundsLoaded= function(){
 			document.getElementById("loadarea").innerHTML ='<span onclick="loadIOS()">LOADED.<br>Tap here if sounds do not play.</span>';
@@ -126,7 +126,7 @@
 
 
 
-			var decreaseInterval=0.025;
+			var decreaseInterval=0.020;
 
 			gyro.startTracking(function(o) {
 				
@@ -186,35 +186,6 @@
 
 							});
 
-
-
-	socket.on('bnext', function (data) { //what's the next chord and when
-	    
-			playQueue.push([parseInt(data.nextChange)-lagOverride,data.nextChord])
-					document.getElementById("queue").innerHTML = "queuing " + data.nextChord + " in " + ((data.nextChange-ntp.serverTime()) -lagOverride);
-
-		document.getElementById("queue").innerHTML += "<br>offset=" +ntp.offset();
-
-	});
-
-
-
-			setInterval(function () { //the queue
-
-				
-
-				while ((playQueue.length>0) &&(playQueue[0][0] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
-					
-					(function (){							
-						var whatsnext=playQueue[0][1];
-						setTimeout(function (){
-							changeChord(whatsnext);
-							document.getElementById("actual").innerHTML = "Actual: " + whatsnext;
-						}, (playQueue[0][0] - ntp.serverTime()));
-					}());
-			playQueue.shift();
-				}
-			},250);
 
 
 

@@ -22,6 +22,7 @@ var express = require('express'),
     ntp = require('socket-ntp-krcmod'),
     Datastore = require('nedb'),
     UAParser  = require('ua-parser-js'),
+		cookieParser = require('cookie-parser'),
 	  sortzzy = require('sortzzy');
 
     io = require('socket.io').listen(server, {
@@ -537,8 +538,8 @@ var determineLag=function(model, callback){
 		db.find({ $and: queryLiteral }, function (err, docs) {
 			if (docs.length){//we found one or more matches for exact device model
 				//console.log("exact match");
-				sortExtractLagData(docs, model, function(lag,bestresult){
-					callback(lag);
+				sortExtractLagData(docs, model, function(lag,bestResult){
+					callback(lag, bestResult);
 				});
 			}else{//look for any results from the vendor
 	      //console.log('looking for vendor ' + model.device.vendor);
@@ -546,9 +547,9 @@ var determineLag=function(model, callback){
 				db.find(queryLiteral, function (err, docs) {
 					if (docs.length){//we found one or more matches for vendor
 						//console.log("vendor match");
-						sortExtractLagData(docs, model, function(lag,bestresult){
-							callback(lag);
-							//consol	e.log(bestresult);
+						sortExtractLagData(docs, model, function(lag,bestResult){
+							callback(lag, bestResult);
+							//consol	e.log(bestResult);
 						});
 					}else{
 						callback(200);
@@ -565,10 +566,10 @@ var determineLag=function(model, callback){
 		db.find(queryLiteral, function (err, docs) {
 			if (docs.length){//we found one or more matches for exact device model
 			
-				sortExtractLagData(docs, model, function(lag,bestresult){
+				sortExtractLagData(docs, model, function(lag,bestResult){
 					//console.log("it's a PC!");
-					callback(lag);
-					//console.log(bestresult);
+					callback(lag, bestResult);
+					//console.log(bestResult);
 				});
 			}else{
 				 callback(200)
@@ -647,13 +648,25 @@ app.get('/timings', function (req, res) { //JSON timings object
     res.end(JSON.stringify(timings));
 
 });
-
-
+app.use(cookieParser());
 app.use('/ua/', function(req, res, next){
-  var ua = req.headers['user-agent'];
+	var ua = req.headers['user-agent'];
+	
+	//res.clearCookie('uuid');  
+	if (req.cookies.uuid){
+		console.log(req.cookies);
+	}	else{
+		var uuid='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+	    return v.toString(16);
+		});
+		res.cookie('uuid', uuid);
+		}
+	
 	var model= parser.setUA(ua).getResult();
-	  determineLag(model, function(lag){
- 			res.end(JSON.stringify({lag:lag}));
+	  determineLag(model, function(lag,bestResult){
+			if (bestResult){var score=bestResult.score;}else{var score=0;}
+ 			res.end(JSON.stringify({lag:lag, score:score}));
 		});
 });
 
@@ -685,7 +698,7 @@ io.sockets.on('connection', function (socket) {
     }); //This is both the song and the current chord.  Must be processed at same time.
 
     socket.on('id', function (data) { //user is switching chords.
-        if (securityCheck(socket.request.connection.remoteAddress)) { //checks to see if the requester is on the approved list
+        if (securityCheck(socket.client.conn.remoteAddress)) { //checks to see if the requester is on the approved list
             currentChord = data.data;
 
             if (typeof timings != "undefined") {
@@ -709,7 +722,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('lid', function (data) { //user is switching lyrics.
-        if (securityCheck(socket.request.connection.remoteAddress)) { //checks to see if the requester is on the approved list
+        if (securityCheck(socket.client.conn.remoteAddress)) { //checks to see if the requester is on the approved list
             currentLyric = data.data;
 
             io.sockets.emit('bcurrentSong', {
@@ -721,7 +734,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('currentSong', function (data) { //user has sent a "change song" request or has requested the index
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             loadNewSong(data.data);
             console.log(data);
         }
@@ -729,7 +742,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('mod', function (data) { //situational modulation.  If a user misses this, they would need to refresh to get caught up.
         swapFlat = 0;
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             currentMod = data.data;
             io.sockets.emit('bmod', {
                 message: currentMod
@@ -742,7 +755,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('totmod', function (data) { //probably could be eliminated.  Totmod could be kept track of completely on the server side instead of simultaneously in all the clients at once.
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             totalMod = data.data;
             //io.sockets.emit('bTotMod', { message: totalMod});
             console.log(data);
@@ -750,7 +763,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('flat', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             if (swapFlat == 1) {
                 swapFlat = 0;
             } else {
@@ -764,7 +777,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('highlighting', function (data) { //This is the flat/sharp override button. Whatever the client's position on sharp/flatness, does the opposite.
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             if (highlighting == 1) {
                 highlighting = 0;
             } else {
@@ -779,7 +792,7 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on('timings', function (data) {
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             timings = data;
             var outputFilename = timingsDirectory + currentSong + '.JSON';
 
@@ -796,10 +809,11 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('next', function (data) { // which chord is next?  And when?
-        if (securityCheck(socket.request.connection.remoteAddress)) {
+        if (securityCheck(socket.client.conn.remoteAddress)) {
             	    console.log(data.nextChord + ", " + data.nextChange);
 
-            io.sockets.emit('bnext', {
+            io.sockets.emit('bClientQueue', {
+            													itemType: "chordChange",
             													nextChord: data.nextChord,
             												  nextChange: data.nextChange + Date.now()
             												});

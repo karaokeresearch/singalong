@@ -20,12 +20,13 @@
     "url": "https://github.com/karaokeresearch/singalong.git"
   },
   "dependencies": {
-    "express": "3.4.x",
+    "express": "4.x",
     "nedb": "^0.11.1",
     "socket.io": "1.x",
     "ua-parser-js": "*",
     "sortzzy": "*",
-    "socket-ntp-krcmod": "*"
+    "socket-ntp-krcmod": "*",
+    "cookie-parser": "*"
   },
   "keywords": [
     "karaoke",

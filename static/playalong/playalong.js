@@ -18,9 +18,18 @@
 	},250);
 	
 				
-	socket.on('bnext', function (data) { //what's the next chord and when
-			playQueue.push([parseInt(data.nextChange)-lagOverride,data.nextChord])
+	socket.on('bClientQueue', function (data) { //what's the next chord and when
+			if (data.itemType==="chordChange"){
+				playQueue.push([parseInt(data.nextChange)-playalong.lagOffset,data.nextChord])
+			}
 	});
+
+
+	$.getJSON("/ua", function (data) {
+		playalong.lagOffset= data.lag;
+		playalong.lagScore= data.score;
+	});
+
 
 		
 	};
