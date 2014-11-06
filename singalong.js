@@ -681,13 +681,20 @@ function sortByKey(array, key) {
 }
 
 
-app.get('/clientlist', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
+app.get('/admin', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
 	var clients = sortByKey(calibrationClients, 'score');
 	var table='<table border=1>';
-	table+='<tr><td>UUID</td><td>Lag</td><td>Score</td><td>Vendor</td><td>Model</td><td>OS</td><td>Version</td><td>Socket ID:</td></tr>';
+	table+='\n<tr><th>#</th><th>Lag</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th></tr>';
 	
-	for (var i=clients.length-1; i>=0; i--){
-	table+= "<tr><td>" +clients[i].uuid + "</td><td>" + clients[i].lag + "</td><td>" +  clients[i].score.toFixed(4)+ "</td><td>" +clients[i].vendor+ "</td><td>" + clients[i].model + "</td><td>" + clients[i].osName + "</td><td>" +   clients[i].osVersion+ "</td><td>" + clients[i].socketID + "</td></tr>";	
+	for (var i=0; i<clients.length; i++){
+	table+= '\n<tr style="background-color:';
+	if (clients[i].score ===1){table+= '#DDFFDD';}//green
+	else if (clients[i].score >0.75){table+= '#FFFFDD';}//yellow
+	else {table+= '#FFDDDD';}//red
+
+
+	
+	table+='"><td>' + clients[i].number + '</td><td>' + clients[i].lag + '</td><td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].vendor+ '</td><td>' + clients[i].model + '</td><td>' + clients[i].osName + '</td><td>' +   clients[i].osVersion+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td></tr>';	
 	
 	}
 	table+="</table>";
@@ -866,12 +873,12 @@ io.sockets.on('connection', function (socket) {
 
 	  socket.on('calibrationRegistry', function (data) { //Calibration conrol
 			var ua =parser.setUA(data.ua).getResult();			
-			calibrationClients.push({uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
+			calibrationClients.push({number:calibrationClients.length, uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
 			console.log ("\n\n-------------\n\n");
 			console.log(calibrationClients);
 			 socket.emit('bCalibrate', {
         message: 'startCount',
-        number: calibrationClients.length
+        number: calibrationClients.length-1
     	 });
 
 		});

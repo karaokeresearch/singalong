@@ -3,7 +3,7 @@
 
 		<title>Motion Instrument</title>
 	</head>
-	<body bgcolor="pink">
+	<body bgcolor="pink" onclick="playalong.loadIOS()">
 		<script type="text/javascript" src="../cookies.js"></script>
 		<script type="text/javascript" src="../gyro.js"></script>
 		<script type="text/javascript" src="../howler.js"></script>
@@ -14,191 +14,172 @@
 
 		<script type="text/javascript" src="../playalong.js"></script>
 
-						<div id="actual" style="font-size:20"></div>
-
-						<div id="queue" style="font-size:20"></div>
-						<div id="play" style="font-size:20"></div>
-						<div id="loadarea" style="font-size:7em; font-family=Sans;">LOADING</div>
-
-						
-						<BR>
-
-
-		<script>
-			
-			var socket = io.connect();
-			ntp.init(socket);      
-			playalong.init(socket);
+		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
+		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
 		
-			
-			gyro.frequency=50;
-			//var maxMotion=10;
-			var averageMotion=15;
+		
+		<BR>
 
-			var tone1;
-			var tone2;
-			var tone3;
-			var tone4;
 
-			var baseTone=[];
+<script type="text/javascript" >
 
-			var loadIOS= function(){
-				blipSound.play();
-			}
+var socket = io.connect();
+ntp.init(socket);      
+playalong.init(socket);
+
+
+gyro.frequency=50;
+//var maxMotion=10;
+var averageMotion=15;
+
+var tone1;
+var tone2;
+var tone3;
+var tone4;
+
+var baseTone=[];
+
+
+var soundsLoaded= function(){
+
+document.getElementById("console").innerHTML ='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate sounds.</span>';
+
+}
+
+
+//load WAV samples
+for (i=1; i<=23; i++){
+var wavurl=i+ '.wav';
+	baseTone[i] = new Howl({
+		urls: [wavurl],
+		autoplay: true,
+		loop: true,
+		volume: 0
+	});
+}
+
+baseTone[24] = new Howl({
+	urls: ['24.wav'],
+	autoplay: true,
+	loop: true,
+	volume: 0,
+	onload: soundsLoaded()
+});
+
+
+
+
+var changeChord = function (whichChord){
+	var chordNotes =[];
+	var chord=teoria.chord(whichChord);
+	for (i=0; i< chord.notes().length; i++) {
+		chordNotes.push((chord.notes()[i].key()+4)%24);
+	}
+	for (i=0; i< chord.notes().length; i++) {
+		chordNotes.push(((chord.notes()[i].key()+16)%24));
+	}
+	chordNotes.sort(function(a, b){return a-b});
+
+
+	var tempVol1=0;
+	var tempVol2=0;
+	var tempVol3=0;
+	var tempVol4=0;
 	
+	
+	if (tone1){
+		tempVol1=tone1.volume();
+	tone1.volume(0);}
+	if (tone2){
+		tempVol2=tone2.volume();
+	tone2.volume(0);}
+	if (tone3){
+		tempVol3=tone3.volume();
+	tone3.volume(0);}
+	if (tone4){
+		tempVol4=tone4.volume();
+	tone4.volume(0);}
+	
+	tone1 = baseTone[chordNotes[0]+1];
+	tone2 = baseTone[chordNotes[1]+1];
+	tone3 = baseTone[chordNotes[2]+1];
+	tone4 = baseTone[chordNotes[3]+1];
+	
+	tone1.volume(tempVol1);
+	tone2.volume(tempVol2);
+	tone3.volume(tempVol3);
+	tone4.volume(tempVol4);
+	
+	unmuteVolume();
+};
 
-			var soundsLoaded= function(){
-			document.getElementById("loadarea").innerHTML ='<span onclick="loadIOS()">LOADED.<br>Tap here if sounds do not play.</span>';
-				blipSound= new Howl({
-					urls: ['1.wav'],
-					autoplay: false,
-					loop: false,
-					volume: 0.1,
-				});
+var stopPlaying=function(){
+	playalong.playing=false;
+};
 
-		}
-		
-			
-			//load WAV samples
-			for (i=1; i<=23; i++){
-			var wavurl=i+ '.wav';
-				baseTone[i] = new Howl({
-					urls: [wavurl],
-					autoplay: true,
-					loop: true,
-					volume: 0
-				});
+var startPlaying=function(){
+	playalong.playing=true;
+};
+
+var decreaseInterval=0.020;
+
+gyro.startTracking(function(o) {
+	if (playalong.playing===true){
+
+		combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+
+		if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
+
+		loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
+
+		if (loudness <0) {loudness=0}
+		var whichLoud;
+
+
+		if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
+			if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
+				tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
+				}else{tone4.volume(tone4.volume()-decreaseInterval)}
+			}else{
+				tone4.volume(tone4.volume()-decreaseInterval)
 			}
 
-				baseTone[24] = new Howl({
-					urls: ['24.wav'],
-					autoplay: true,
-					loop: true,
-					volume: 0,
-					onload: soundsLoaded()
-				});
+			if (o.beta>0 && o.beta<180){ //90 center point
+				if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
+					tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
+					}else{tone1.volume(tone1.volume()-decreaseInterval)}
 
-
-
-			var changeChord = function (whichChord){
-				var chordNotes =[];
-				var chord=teoria.chord(whichChord);
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push((chord.notes()[i].key()+4)%24);
+				}else{
+					tone1.volume(tone1.volume()-decreaseInterval)
 				}
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push(((chord.notes()[i].key()+16)%24));
-				}
-				chordNotes.sort(function(a, b){return a-b});
 
-				var tempVol1=0;
-				var tempVol2=0;
-				var tempVol3=0;
-				var tempVol4=0;
+				if (o.beta>-90 && o.beta<90){ //0 center point
+					if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
+						tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
+						}else{tone2.volume(tone2.volume()-decreaseInterval)}
 
-
-				if (tone1){
-					tempVol1=tone1.volume();
-				tone1.volume(0);}
-				if (tone2){
-					tempVol2=tone2.volume();
-				tone2.volume(0);}
-				if (tone3){
-					tempVol3=tone3.volume();
-				tone3.volume(0);}
-				if (tone4){
-					tempVol4=tone4.volume();
-				tone4.volume(0);}
-
-				tone1 = baseTone[chordNotes[0]+1];
-				tone2 = baseTone[chordNotes[1]+1];
-				tone3 = baseTone[chordNotes[2]+1];
-				tone4 = baseTone[chordNotes[3]+1];
-
-				tone1.volume(tempVol1);
-				tone2.volume(tempVol2);
-				tone3.volume(tempVol3);
-				tone4.volume(tempVol4);
-
-			}
-
-
-
-
-			var decreaseInterval=0.020;
-
-			gyro.startTracking(function(o) {
-				
-				combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
-				
-				if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
-
-				loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
-
-				if (loudness <0) {loudness=0}
-				var whichLoud;
-
-
-				if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
-					if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
-						tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
-						}else{tone4.volume(tone4.volume()-decreaseInterval)}
 					}else{
-						tone4.volume(tone4.volume()-decreaseInterval)
+						tone2.volume(tone2.volume()-decreaseInterval)
 					}
 
-					if (o.beta>0 && o.beta<180){ //90 center point
-						if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
-							tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
-							}else{tone1.volume(tone1.volume()-decreaseInterval)}
+					if (o.beta>-180 && o.beta<-0){ // -90 center point
+						if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
+							tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
+							}else{tone3.volume(tone3.volume()-decreaseInterval)}
 
 						}else{
-							tone1.volume(tone1.volume()-decreaseInterval)
+							tone3.volume(tone3.volume()-decreaseInterval)
 						}
 
-						if (o.beta>-90 && o.beta<90){ //0 center point
-							if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
-								tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
-								}else{tone2.volume(tone2.volume()-decreaseInterval)}
+						if (tone4.volume() <decreaseInterval){tone4.volume(0);}
+						if (tone3.volume() <decreaseInterval){tone3.volume(0);}
+						if (tone2.volume() <decreaseInterval){tone2.volume(0);}
+						if (tone1.volume() <decreaseInterval){tone1.volume(0);}
 
-							}else{
-								tone2.volume(tone2.volume()-decreaseInterval)
-							}
-
-							if (o.beta>-180 && o.beta<-0){ // -90 center point
-								if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
-									tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
-									}else{tone3.volume(tone3.volume()-decreaseInterval)}
-
-								}else{
-									tone3.volume(tone3.volume()-decreaseInterval)
-								}
-
-								if (tone4.volume() <decreaseInterval){tone4.volume(0);}
-								if (tone3.volume() <decreaseInterval){tone3.volume(0);}
-								if (tone2.volume() <decreaseInterval){tone2.volume(0);}
-								if (tone1.volume() <decreaseInterval){tone1.volume(0);}
+	}
+});
 
 
-							});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-						</script>
-
-					</body>
-				</html>
+		</script>
+	</body>
+</html>
