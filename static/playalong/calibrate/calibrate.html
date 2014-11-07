@@ -1,0 +1,60 @@
+<html>
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="../ntpclient.js"></script>
+		<script src="../howler.js"></script>
+		<script src="../cookies.js"></script>
+		<script src="../../jquery-2.1.1.min.js"></script>
+		<script src="../playalong.js"></script>
+
+		<script>
+		//the four things every instrument must have:	
+		var changeChord=function(){};
+		var startPlaying=function(){};
+		var stopPlaying=function(){};
+		var instructions="Ready";			
+
+
+		var socket = io.connect();
+		ntp.init(socket);      
+		playalong.init(socket);
+
+
+
+		var startCalibration=function(){
+		    socket.emit('calibration', {
+			        data: 'start'
+			    }); 
+		}
+		
+		
+		var stopCalibration=function(){
+		    socket.emit('calibration', {
+			        data: 'stop'
+			    }); 
+		}
+
+		var refreshAdmin=function(){		
+		$( "#admin" ).load( "/admin");
+	}
+
+
+		</script>
+	</head>
+	<body>
+
+<button onclick="startCalibration()">Start Calibration</button>
+<button onclick="stopCalibration()">Stop Calibration</button>
+<br><br><br>
+<button onclick="refreshAdmin()">Refresh</button>
+<br><br><br>
+<div id="admin"></div>
+
+<br><br>
+		<div id="calibrate" style="font-size:2em; font-family=Sans;"></div>
+		<div id="console" style="font-size:1em; font-family=Sans;">Console</div>
+
+		
+		
+	</body>
+</html>

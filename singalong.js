@@ -65,6 +65,8 @@ var firstChord;
 var firstLyric;
 var highlighting = 1;
 var calibrationClients=[];
+var calibrating=false;
+var selectedChord='C'; //for clients connecting late to the game
 
 //************** HELPER FUNCTIONS ********************
 var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
@@ -721,6 +723,22 @@ io.sockets.on('connection', function (socket) {
     socket.emit('bHighlighting', {
         message: highlighting
     });
+		
+		socket.emit('bSelectedChord', {
+        chord: selectedChord
+    });
+    
+
+		if (calibrating===true){
+	    io.sockets.emit('bCalibrate', {
+	        message: 'start'
+	    });
+   	}else{
+	    io.sockets.emit('bCalibrate', {
+	        message: 'stop'
+	    });
+   	}
+
 
 
     socket.emit('bcurrentSong', {
@@ -843,7 +861,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('next', function (data) { // which chord is next?  And when?
         if (securityCheck(socket.client.conn.remoteAddress)) {
             	    console.log(data.nextChord + ", " + data.nextChange);
-
+						selectedChord=data.selectedChord;
+            console.log("selectedChord is " + selectedChord);
             io.sockets.emit('bClientQueue', {
             													itemType: "chordChange",
             													nextChord: data.nextChord,
@@ -857,13 +876,15 @@ io.sockets.on('connection', function (socket) {
 			if (securityCheck(socket.client.conn.remoteAddress)) {
 
 				if (data.data==='start'){
-					calibrationClients=[];
+					calibrationClients=[];//clear the list of clients
+					calibrating=true;
 			    io.sockets.emit('bCalibrate', {
 			        message: 'start'
 			    });
 		   	}
 
 				if (data.data==='stop'){
+					calibrating=false;
 			    io.sockets.emit('bCalibrate', {
 			        message: 'stop'
 			    });
@@ -872,13 +893,24 @@ io.sockets.on('connection', function (socket) {
 		});
 
 	  socket.on('calibrationRegistry', function (data) { //Calibration conrol
-			var ua =parser.setUA(data.ua).getResult();			
-			calibrationClients.push({number:calibrationClients.length, uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
+			var ua =parser.setUA(data.ua).getResult();
+			var clientNumber=-1;
+			for (i=0; i<calibrationClients.length; i++){
+				if (calibrationClients[i].uuid===data.uuid){
+					clientNumber=calibrationClients[i].number;
+					break;
+				}
+					
+			}
+			if (clientNumber===-1){			
+				clientNumber=calibrationClients.length;
+				calibrationClients.push({number:clientNumber, uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
+			}
 			console.log ("\n\n-------------\n\n");
 			console.log(calibrationClients);
 			 socket.emit('bCalibrate', {
         message: 'startCount',
-        number: calibrationClients.length-1
+        number: clientNumber
     	 });
 
 		});

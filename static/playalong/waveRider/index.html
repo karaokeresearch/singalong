@@ -39,10 +39,11 @@ var tone4;
 
 var baseTone=[];
 
+var instructions='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
 
 var soundsLoaded= function(){
 
-document.getElementById("console").innerHTML ='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate sounds.</span>';
+document.getElementById("console").innerHTML =instructions;
 
 }
 
@@ -110,11 +111,15 @@ var changeChord = function (whichChord){
 	tone3.volume(tempVol3);
 	tone4.volume(tempVol4);
 	
-	unmuteVolume();
 };
 
 var stopPlaying=function(){
 	playalong.playing=false;
+	tone1.volume(0);
+	tone2.volume(0);
+	tone3.volume(0);
+	tone4.volume(0);
+
 };
 
 var startPlaying=function(){
@@ -123,8 +128,22 @@ var startPlaying=function(){
 
 var decreaseInterval=0.020;
 
+
+
+
+
+
+
+
+
+
+
+
 gyro.startTracking(function(o) {
 	if (playalong.playing===true){
+
+		
+
 
 		combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
 

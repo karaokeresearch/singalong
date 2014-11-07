@@ -338,9 +338,12 @@
 			
 			//Predict next chord time and send
 			var nextChord = $("#chordNumber" + (currentChord +2)).html();
+			var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
       console.log(speedMultiplier);
       console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
+	    	console.log("selectedchord is " + selectedChord);
 	    socket.emit('next', {
+	    		selectedChord: selectedChord,
 	        nextChord:	nextChord,
 	        nextChange:	nextChange
 	    }); 
