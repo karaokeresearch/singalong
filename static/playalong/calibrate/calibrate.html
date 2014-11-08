@@ -20,6 +20,23 @@
 		playalong.init(socket);
 
 
+		var updateLag=function(sessionID, lag){
+		//console.log("updating lag");
+		    socket.emit('updateLag', {
+			        sessionID: sessionID,
+			        lag: lag,
+			    }); 
+		}
+
+
+		var commitLag=function(sessionID,lag,uuid){		
+	    socket.emit('commitLag', {
+		        sessionID: sessionID,
+		        lag: lag,
+		        uuid: uuid
+		        }); 
+	}
+
 
 		var startCalibration=function(){
 		    socket.emit('calibration', {
@@ -37,6 +54,7 @@
 		var refreshAdmin=function(){		
 		$( "#admin" ).load( "/admin");
 	}
+
 
 
 		</script>

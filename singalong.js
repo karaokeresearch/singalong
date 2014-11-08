@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+var howlerVersion='1.1.25';
+var singalongVersion='0.6.0';
+var globaloffset=182;
 
 /*!
  * singalong.js v0.6.0
@@ -66,7 +69,7 @@ var firstLyric;
 var highlighting = 1;
 var calibrationClients=[];
 var calibrating=false;
-var selectedChord='C'; //for clients connecting late to the game
+var selectedChord='C'; //for clients connecting before the very first song is played
 
 //************** HELPER FUNCTIONS ********************
 var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
@@ -534,53 +537,60 @@ if (data.length>0){
 
 
 
-var determineLag=function(model, callback){	
-	
-	if (model.device.model!==undefined && model.device.vendor!==undefined){//is it a mobile device
-		var queryLiteral = [{ "device.model": model.device.model},{ "device.vendor": model.device.vendor}];
-		db.find({ $and: queryLiteral }, function (err, docs) {
-			if (docs.length){//we found one or more matches for exact device model
-				//console.log("exact match");
-				sortExtractLagData(docs, model, function(lag,bestResult){
-					callback(lag, bestResult);
-				});
-			}else{//look for any results from the vendor
-	      //console.log('looking for vendor ' + model.device.vendor);
-				var queryLiteral = { "device.vendor": model.device.vendor};
-				db.find(queryLiteral, function (err, docs) {
-					if (docs.length){//we found one or more matches for vendor
-						//console.log("vendor match");
+var determineLag=function(model, uuid, callback){	
+	db.find({ "uuid": uuid}, function (err, docs) {//try to find it right away
+		if (docs.length){
+			console.log("uuid match")
+			docs[0].score=1;
+			callback(docs[0].lag, docs[0]);
+		}else{
+			if (model.device.model!==undefined && model.device.vendor!==undefined){//is it a mobile device
+				var queryLiteral = [{ "device.model": model.device.model},{ "device.vendor": model.device.vendor}];
+				db.find({ $and: queryLiteral }, function (err, docs) {
+					if (docs.length){//we found one or more matches for exact device model
+						//console.log("exact match");
 						sortExtractLagData(docs, model, function(lag,bestResult){
 							callback(lag, bestResult);
-							//consol	e.log(bestResult);
+						});
+					}else{//look for any results from the vendor
+			      //console.log('looking for vendor ' + model.device.vendor);
+						var queryLiteral = { "device.vendor": model.device.vendor};
+						db.find(queryLiteral, function (err, docs) {
+							if (docs.length){//we found one or more matches for vendor
+								//console.log("vendor match");
+								sortExtractLagData(docs, model, function(lag,bestResult){
+									callback(lag, bestResult);
+									//consol	e.log(bestResult);
+								});
+							}else{
+								callback(200);
+								//console.log("no vendor match. 200");
+							}
+						});
+					}
+			
+				});
+			
+			}else{ //it's not a mobile device
+			
+				var queryLiteral = {"os.name": model.os.name};
+				db.find(queryLiteral, function (err, docs) {
+					if (docs.length){//we found one or more matches for exact device model
+					
+						sortExtractLagData(docs, model, function(lag,bestResult){
+							//console.log("it's a PC!");
+							callback(lag, bestResult);
+							//console.log(bestResult);
 						});
 					}else{
-						callback(200);
-						//console.log("no vendor match. 200");
+						 callback(200)
+						//console.log("none for your OS found. 200");
 					}
 				});
-			}
-	
-		});
-	
-	}else{ //it's not a mobile device
-	
-		var queryLiteral = {"os.name": model.os.name};
-		db.find(queryLiteral, function (err, docs) {
-			if (docs.length){//we found one or more matches for exact device model
 			
-				sortExtractLagData(docs, model, function(lag,bestResult){
-					//console.log("it's a PC!");
-					callback(lag, bestResult);
-					//console.log(bestResult);
-				});
-			}else{
-				 callback(200)
-				//console.log("none for your OS found. 200");
 			}
-		});
-	
-	}
+		}
+	});
 };
 
 
@@ -654,22 +664,22 @@ app.get('/timings', function (req, res) { //JSON timings object
 app.use(cookieParser());
 app.use('/ua', function(req, res, next){
 	var ua = req.headers['user-agent'];
-	
+	var uuid;
 	//res.clearCookie('uuid');  
 	if (req.cookies.uuid){
-		//console.log(req.cookies);
+		uuid=req.cookies.uuid;
 	}	else{
-		var uuid='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		uuid='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 	    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 	    return v.toString(16);
 		});
-		res.cookie('uuid', uuid);
+//		res.cookie('uuid', uuid);
 		}
 	
 	var model= parser.setUA(ua).getResult();
-	  determineLag(model, function(lag,bestResult){
+	  determineLag(model, uuid, function(lag,bestResult){
 			if (bestResult){var score=bestResult.score;}else{var score=0;}
- 			res.end(JSON.stringify({lag:lag, score:score}));
+ 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid}));
 		});
 });
 
@@ -686,7 +696,7 @@ function sortByKey(array, key) {
 app.get('/admin', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
 	var clients = sortByKey(calibrationClients, 'score');
 	var table='<table border=1>';
-	table+='\n<tr><th>#</th><th>Lag</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th></tr>';
+	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th></tr>';
 	
 	for (var i=0; i<clients.length; i++){
 	table+= '\n<tr style="background-color:';
@@ -696,7 +706,9 @@ app.get('/admin', function (req, res) { //Meat of the HTML data that defines a p
 
 
 	
-	table+='"><td>' + clients[i].number + '</td><td>' + clients[i].lag + '</td><td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].vendor+ '</td><td>' + clients[i].model + '</td><td>' + clients[i].osName + '</td><td>' +   clients[i].osVersion+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td></tr>';	
+	table+='"><td>' + clients[i].number + '</td><td><input onchange="updateLag(\''+ clients[i].socketID+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value));" style="width:5em" type="number" id="'+clients[i].socketID+ '" value="' + clients[i].lag + '"></td>';
+	table+='<td><input onclick="commitLag(\''+ clients[i].socketID+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value), \''+ clients[i].uuid+ '\');" type="button" value="Commit"></td>';
+	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td></tr>';	
 	
 	}
 	table+="</table>";
@@ -730,11 +742,11 @@ io.sockets.on('connection', function (socket) {
     
 
 		if (calibrating===true){
-	    io.sockets.emit('bCalibrate', {
+	    socket.emit('bCalibrate', {
 	        message: 'start'
 	    });
    	}else{
-	    io.sockets.emit('bCalibrate', {
+	    socket.emit('bCalibrate', {
 	        message: 'stop'
 	    });
    	}
@@ -896,7 +908,8 @@ io.sockets.on('connection', function (socket) {
 			var ua =parser.setUA(data.ua).getResult();
 			var clientNumber=-1;
 			for (i=0; i<calibrationClients.length; i++){
-				if (calibrationClients[i].uuid===data.uuid){
+
+				if (calibrationClients[i].uuid===data.uuid){//if we already have the uuid, that's it. Only add that one.
 					clientNumber=calibrationClients[i].number;
 					break;
 				}
@@ -904,7 +917,7 @@ io.sockets.on('connection', function (socket) {
 			}
 			if (clientNumber===-1){			
 				clientNumber=calibrationClients.length;
-				calibrationClients.push({number:clientNumber, uuid:data.uuid, lag: data.lag, score:data.score, vendor:ua.device.vendor, model:ua.device.model, osName:ua.os.name, osVersion:ua.os.version,socketID:socket.id});
+				calibrationClients.push({number:clientNumber, uuid:data.uuid, lag: data.lag, score: data.score, ua: ua, socketID: socket.id});
 			}
 			console.log ("\n\n-------------\n\n");
 			console.log(calibrationClients);
@@ -914,6 +927,47 @@ io.sockets.on('connection', function (socket) {
     	 });
 
 		});
+
+
+	  socket.on('updateLag', function (data) { //Broadcast updated lag to client who updates cookie
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+				io.to(data.sessionID).emit('bUpdateLag', {
+		        lag: data.lag,
+		    });
+			}
+		});
+
+	  socket.on('commitLag', function (data) { //update calibrationClients. Update the DB, broadcast to client who updates cookie
+
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+				var ua;
+				for (i=0; i<calibrationClients.length;i++){
+					if (calibrationClients[i].uuid===data.uuid){
+						calibrationClients[i].lag=data.lag;
+						calibrationClients[i].score=1;
+						ua=calibrationClients[i].ua;
+					}
+				}
+				var toDB=ua;
+				toDB.uuid=data.uuid;
+				toDB.lag=data.lag;
+				toDB.howlerVersion=howlerVersion;
+				toDB.singalongVersion=singalongVersion;
+				toDB.globalOffset=globaloffset;
+				
+									
+				
+			
+				db.remove({ uuid: data.uuid }, { multi: true }, function (err, numRemoved) {
+						db.insert(toDB, function (err, newDoc) {   // Callback is optional
+						  // newDoc is the newly inserted document, including its _id
+						  // newDoc has no key called notToBeSaved since its value was undefined
+						});
+				});	
+
+			}
+		});
+
 
 
 

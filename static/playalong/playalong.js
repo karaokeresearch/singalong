@@ -98,6 +98,19 @@
 			}
 	});
 
+	
+				
+	socket.on('bUpdateLag', function (data) { //listen for chord change requests
+		playalong.lagOffset= data.lag;
+		playalong.lagScore= 1;
+		Cookies.set('lag',data.lag)
+		Cookies.set('score',1)		
+	});
+
+	
+	
+	
+	
 				
 	socket.on('bCalibrate', function (data) { //listen for chord change requests
 
@@ -133,11 +146,15 @@
 						var serverTime=ntp.serverTime();
 	    			var count=(Math.round((serverTime + 1000-(serverTime%1000) +1000 )/1000)%4 )+1;
 	   				playalong.playQueue.push(["calibrate", (serverTime + 1000-(serverTime%1000) +1000) -playalong.lagOffset,count])
-	   				console.log(serverTime + " queueing a " + count+ " event at " + (serverTime + 1000-(serverTime%1000) +1000 ));
+	   				//console.log(serverTime + " queueing a " + count+ " event at " + (serverTime + 1000-(serverTime%1000) +1000 ));
 	    		},1000);
 				}
 			}
 	});
+
+
+
+
 
 
 	socket.on('bSelectedChord', function (data) { //should only happen at startup
@@ -163,15 +180,23 @@
 
 
 
-
-	$.getJSON("/ua", function (data) {
+if (Cookies('lag') && Cookies('score') && Cookies('uuid')){
+		playalong.lagOffset=parseInt(Cookies('lag'));
+		playalong.lagScore=parseInt(Cookies('score'));		
+}else{
+	$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
 		playalong.lagOffset= data.lag;
 		playalong.lagScore= data.score;
+		Cookies.set('uuid', data.uuid);
 	});
+}
+
+
+
 
 
 		
-};
+};//end of init
 
 				
 
