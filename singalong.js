@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 var howlerVersion='1.1.25';
 var singalongVersion='0.6.0';
-var globaloffset=182;
+var globalOffset=182;
+var whoCalibratedContact='krc@brassrocket.com';  //put your own email address here so that calibration entries are tied to you in case they ever get rolled back into the master list
 
 /*!
  * singalong.js v0.6.0
@@ -696,7 +697,7 @@ function sortByKey(array, key) {
 app.get('/admin', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
 	var clients = sortByKey(calibrationClients, 'score');
 	var table='<table border=1>';
-	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th></tr>';
+	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th><th><input type=button value="Mute All" onclick="muteAll()"></th><th><input type=button value="Unmute All" onclick="unMuteAll()"></th></tr>';
 	
 	for (var i=0; i<clients.length; i++){
 	table+= '\n<tr style="background-color:';
@@ -707,8 +708,8 @@ app.get('/admin', function (req, res) { //Meat of the HTML data that defines a p
 
 	
 	table+='"><td>' + clients[i].number + '</td><td><input onchange="updateLag(\''+ clients[i].socketID+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value));" style="width:5em" type="number" id="'+clients[i].socketID+ '" value="' + clients[i].lag + '"></td>';
-	table+='<td><input onclick="commitLag(\''+ clients[i].socketID+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value), \''+ clients[i].uuid+ '\');" type="button" value="Commit"></td>';
-	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td></tr>';	
+	table+='<td><input onclick="commitLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value));" type="button" value="Commit"></td>';
+	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td><td><input type=button value="M" onclick="muteSocket(\''+ clients[i].socketID+ '\');"></td><td><input type=button value="S" onclick="unMuteSocket(\''+ clients[i].socketID+ '\');"></td></tr>';	
 	
 	}
 	table+="</table>";
@@ -929,9 +930,9 @@ io.sockets.on('connection', function (socket) {
 		});
 
 
-	  socket.on('updateLag', function (data) { //Broadcast updated lag to client who updates cookie
+	  socket.on('updateLag', function (data) { //Broadcast updated lag to client who in turn updates cookie
 			if (securityCheck(socket.client.conn.remoteAddress)) {
-				io.to(data.sessionID).emit('bUpdateLag', {
+				io.to(data.socketID).emit('bUpdateLag', {
 		        lag: data.lag,
 		    });
 			}
@@ -953,9 +954,11 @@ io.sockets.on('connection', function (socket) {
 				toDB.lag=data.lag;
 				toDB.howlerVersion=howlerVersion;
 				toDB.singalongVersion=singalongVersion;
-				toDB.globalOffset=globaloffset;
+				toDB.whoCalibratedContact=whoCalibratedContact;
+				toDB.globalOffset=globalOffset;
+				toDB.dateAdded=new Date();
 				
-									
+				//console.log("committing: ",toDB);
 				
 			
 				db.remove({ uuid: data.uuid }, { multi: true }, function (err, numRemoved) {
@@ -964,6 +967,46 @@ io.sockets.on('connection', function (socket) {
 						  // newDoc has no key called notToBeSaved since its value was undefined
 						});
 				});	
+
+			}
+		});
+
+
+
+	  socket.on('muteSocket', function (data) { //mute a client
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+				console.log("emitting!");
+				io.to(data.socketID).emit('bServerMute', {
+		        serverMute: true,
+		    });
+			}
+		});
+
+
+	  socket.on('unMuteSocket', function (data) { //unmute a client
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+				io.to(data.socketID).emit('bServerMute', {
+		        serverMute: false,
+		    });
+			}
+		});
+
+
+	  socket.on('serverMuteAll', function (data) { //mute or unmute all clients
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+				if (data.mute===true){
+					io.sockets.emit('bServerMute', {
+			        serverMute: true,
+			    });
+			  }
+				
+				if (data.mute===false){
+					io.sockets.emit('bServerMute', {
+			        serverMute: false,
+			    });
+			  }
+
+
 
 			}
 		});

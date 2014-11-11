@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<title>Playalong.js calibration module</title>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="../ntpclient.js"></script>
 		<script src="../howler.js"></script>
@@ -13,29 +14,28 @@
 		var startPlaying=function(){};
 		var stopPlaying=function(){};
 		var instructions="Ready";			
-
+		
 
 		var socket = io.connect();
 		ntp.init(socket);      
 		playalong.init(socket);
+		playalong.isCalibrator=true;//admin override so mute doesn't work on me. Security!
 
-
-		var updateLag=function(sessionID, lag){
+		var updateLag=function(socketID, lag){
 		//console.log("updating lag");
 		    socket.emit('updateLag', {
-			        sessionID: sessionID,
+			        socketID: socketID,
 			        lag: lag,
 			    }); 
 		}
 
 
-		var commitLag=function(sessionID,lag,uuid){		
+		var commitLag=function(uuid,lag){		
 	    socket.emit('commitLag', {
-		        sessionID: sessionID,
 		        lag: lag,
 		        uuid: uuid
 		        }); 
-	}
+		}
 
 
 		var startCalibration=function(){
@@ -51,6 +51,37 @@
 			    }); 
 		}
 
+
+		
+		var muteAll=function(){
+		    socket.emit('serverMuteAll', {
+			        mute: true
+			    }); 
+		}
+
+		
+		var unMuteAll=function(){
+		    socket.emit('serverMuteAll', {
+			        mute: false
+			    }); 
+		}
+
+		var muteSocket=function(socketID){
+		    socket.emit('muteSocket', {
+			        socketID: socketID
+			    }); 
+		}
+
+
+		var unMuteSocket=function(socketID){
+		    socket.emit('unMuteSocket', {
+			        socketID: socketID
+			    }); 
+		}
+
+
+
+
 		var refreshAdmin=function(){		
 		$( "#admin" ).load( "/admin");
 	}
@@ -60,7 +91,7 @@
 		</script>
 	</head>
 	<body>
-
+<h1>Playalong.js calibration module</h1>
 <button onclick="startCalibration()">Start Calibration</button>
 <button onclick="stopCalibration()">Stop Calibration</button>
 <br><br><br>

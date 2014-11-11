@@ -4,7 +4,9 @@
 	playalong.playQueue = [];
 	playalong.playing=false;
 	playalong.calibrating=false;
+	playalong.focusMuted=false;
 	playalong.serverMuted=false;
+	playalong.isCalibrator=false;
 	playalong.sounds={};
 	playalong.sounds.silence= new Howl({
 				urls: ['../silence.wav'],
@@ -36,12 +38,30 @@
 	}
 	
 	
-	var muteAll=function(){
-		Howler.volume(0);		
+	var serverMute=function(){
+		if (playalong.serverMuted===false && playalong.isCalibrator===false){
+			Howler.volume(0);		
+			}
+		playalong.serverMuted=true;
 	}
-	var unMuteAll=function(){
-		if (playalong.serverMuted===false)
-		Howler.volume(1);		
+	
+	var serverUnMute=function(){
+		if (playalong.focusMuted===false){
+			Howler.volume(1);
+		}
+		playalong.serverMuted=false
+	}
+
+	var focusMute=function(){
+		Howler.volume(0);		
+		playalong.focusMuted=true;
+	}
+	
+	var focusUnMute=function(){
+		if (playalong.serverMuted===false){
+		Howler.volume(1);
+		}
+		playalong.focusMuted=false;
 	}
 
 
@@ -49,10 +69,12 @@
 	setInterval(function () { //the queue
 
 	if (document.hidden){//phone screensaver engages or tab switched? Stop making any noise.
-			muteAll();
-		}else{
-			unMuteAll();
-		}
+		focusMute();
+	}
+	
+	if (document.hidden===false && playalong.focusMuted===true){
+		focusUnMute();
+	}
 
 		
 		while ((playalong.playQueue.length>0) &&(playalong.playQueue[0][1] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
@@ -103,8 +125,8 @@
 	socket.on('bUpdateLag', function (data) { //listen for chord change requests
 		playalong.lagOffset= data.lag;
 		playalong.lagScore= 1;
-		Cookies.set('lag',data.lag)
-		Cookies.set('score',1)		
+		Cookies.set('lag', data.lag, { expires: '01/01/2030' })
+		Cookies.set('score', 1, { expires: '01/01/2030' })		
 	});
 
 	
@@ -128,7 +150,7 @@
 				playalong.calibrating=false;
 				clearInterval(playalong.calibrateInterval);
 				startPlaying();
-				console.log("stopping calibration");
+				console.log("Calibration off or stopped.");
 				document.getElementById("console").innerHTML = instructions;
 				document.getElementById("calibrate").innerHTML ="";	
 
@@ -163,11 +185,12 @@
 	});
 
 
-	socket.on('bMute', function (data) { //server has asked you to mute svp
-		if (data.mute===true){
-			muteAll();
+	socket.on('bServerMute', function (data) { //server has asked you to mute svp
+	console.log("asked to mute/unmute");
+		if (data.serverMute===true){
+			serverMute();
 		}else{
-			unMuteAll();
+			serverUnMute();
 		}
 	});
 
@@ -177,19 +200,19 @@
 
 
 
-
-
-
-if (Cookies('lag') && Cookies('score') && Cookies('uuid')){
-		playalong.lagOffset=parseInt(Cookies('lag'));
-		playalong.lagScore=parseInt(Cookies('score'));		
-}else{
-	$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
-		playalong.lagOffset= data.lag;
-		playalong.lagScore= data.score;
-		Cookies.set('uuid', data.uuid);
-	});
-}
+	
+	
+	
+	if (Cookies('lag') && Cookies('score') && Cookies('uuid')){
+			playalong.lagOffset=parseInt(Cookies('lag'));
+			playalong.lagScore=parseInt(Cookies('score'));		
+	}else{
+		$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
+			playalong.lagOffset= data.lag;
+			playalong.lagScore= data.score;
+			Cookies.set('uuid', data.uuid, { expires: '01/01/2030' });
+		});
+	}
 
 
 
