@@ -21,10 +21,10 @@
 		playalong.init(socket);
 		playalong.isCalibrator=true;//admin override so mute doesn't work on me. Security!
 
-		var updateLag=function(socketID, lag){
+		var updateLag=function(uuid, lag){
 		//console.log("updating lag");
 		    socket.emit('updateLag', {
-			        socketID: socketID,
+			        uuid: uuid,
 			        lag: lag,
 			    }); 
 		}
@@ -66,16 +66,16 @@
 			    }); 
 		}
 
-		var muteSocket=function(socketID){
+		var muteSocket=function(uuid){
 		    socket.emit('muteSocket', {
-			        socketID: socketID
+			        uuid: uuid
 			    }); 
 		}
 
 
-		var unMuteSocket=function(socketID){
+		var unMuteSocket=function(uuid){
 		    socket.emit('unMuteSocket', {
-			        socketID: socketID
+			        uuid: uuid
 			    }); 
 		}
 

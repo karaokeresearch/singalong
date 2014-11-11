@@ -42,14 +42,20 @@
 		if (playalong.serverMuted===false && playalong.isCalibrator===false){
 			Howler.volume(0);		
 			}
-		playalong.serverMuted=true;
+		document.getElementById("console").innerHTML = "REMOTELY MUTED. PLEASE STAND BY.";
+
 	}
 	
 	var serverUnMute=function(){
 		if (playalong.focusMuted===false){
 			Howler.volume(1);
 		}
-		playalong.serverMuted=false
+		playalong.serverMuted=false;
+		if (playalong.calibrating===true){document.getElementById("console").innerHTML ='Calibration mode activated';}else{
+		document.getElementById("console").innerHTML = instructions;
+		}
+
+		
 	}
 
 	var focusMute=function(){
@@ -123,6 +129,7 @@
 	
 				
 	socket.on('bUpdateLag', function (data) { //listen for chord change requests
+
 		playalong.lagOffset= data.lag;
 		playalong.lagScore= 1;
 		Cookies.set('lag', data.lag, { expires: '01/01/2030' })
@@ -161,13 +168,13 @@
 				stopPlaying();
 				if (playalong.calibrating===false){
 					playalong.calibrating=true;
-					document.getElementById("console").innerHTML ='<span>Calibration mode activated</span>';
+					document.getElementById("console").innerHTML ='Calibration mode activated';
 					document.getElementById("calibrate").innerHTML =data.number;	
 
 	    		playalong.calibrateInterval=setInterval(function () { //demo: add items to the queue once a second
 						var serverTime=ntp.serverTime();
-	    			var count=(Math.round((serverTime + 1000-(serverTime%1000) +1000 )/1000)%4 )+1;
-	   				playalong.playQueue.push(["calibrate", (serverTime + 1000-(serverTime%1000) +1000) -playalong.lagOffset,count])
+	    			var count=(Math.round((serverTime + 1000-(serverTime%1000))/1000)%4 )+1;
+	   				playalong.playQueue.push(["calibrate", (serverTime + 1000-(serverTime%1000) ) -playalong.lagOffset,count])
 	   				//console.log(serverTime + " queueing a " + count+ " event at " + (serverTime + 1000-(serverTime%1000) +1000 ));
 	    		},1000);
 				}
@@ -186,7 +193,6 @@
 
 
 	socket.on('bServerMute', function (data) { //server has asked you to mute svp
-	console.log("asked to mute/unmute");
 		if (data.serverMute===true){
 			serverMute();
 		}else{
@@ -202,19 +208,19 @@
 
 	
 	
-	
-	if (Cookies('lag') && Cookies('score') && Cookies('uuid')){
-			playalong.lagOffset=parseInt(Cookies('lag'));
-			playalong.lagScore=parseInt(Cookies('score'));		
-	}else{
 		$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
+		
+		if (Cookies('lag') && Cookies('score') && Cookies('uuid')){
+				playalong.lagOffset=parseInt(Cookies('lag'));
+				playalong.lagScore=parseInt(Cookies('score'));		
+		}else{	
 			playalong.lagOffset= data.lag;
 			playalong.lagScore= data.score;
+		}
+			if (data.serverMuted===true){serverMute();}
 			Cookies.set('uuid', data.uuid, { expires: '01/01/2030' });
 		});
-	}
-
-
+	
 
 
 

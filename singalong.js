@@ -666,7 +666,10 @@ app.use(cookieParser());
 app.use('/ua', function(req, res, next){
 	var ua = req.headers['user-agent'];
 	var uuid;
+	var serverMuted=false;
 	//res.clearCookie('uuid');  
+
+
 	if (req.cookies.uuid){
 		uuid=req.cookies.uuid;
 	}	else{
@@ -676,11 +679,16 @@ app.use('/ua', function(req, res, next){
 		});
 //		res.cookie('uuid', uuid);
 		}
+
+		for (i=0; i<calibrationClients.length;i++){
+			if (calibrationClients[i].uuid===uuid && calibrationClients[i].serverMuted===true){var serverMuted=true;}
+		}
+
 	
 	var model= parser.setUA(ua).getResult();
 	  determineLag(model, uuid, function(lag,bestResult){
 			if (bestResult){var score=bestResult.score;}else{var score=0;}
- 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid}));
+ 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted}));
 		});
 });
 
@@ -707,9 +715,9 @@ app.get('/admin', function (req, res) { //Meat of the HTML data that defines a p
 
 
 	
-	table+='"><td>' + clients[i].number + '</td><td><input onchange="updateLag(\''+ clients[i].socketID+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value));" style="width:5em" type="number" id="'+clients[i].socketID+ '" value="' + clients[i].lag + '"></td>';
-	table+='<td><input onclick="commitLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].socketID +'\').value));" type="button" value="Commit"></td>';
-	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td><td><input type=button value="M" onclick="muteSocket(\''+ clients[i].socketID+ '\');"></td><td><input type=button value="S" onclick="unMuteSocket(\''+ clients[i].socketID+ '\');"></td></tr>';	
+	table+='"><td>' + clients[i].number + '</td><td><input onchange="updateLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].uuid +'\').value));" style="width:5em" type="number" id="'+clients[i].uuid+ '" value="' + clients[i].lag + '"></td>';
+	table+='<td><input onclick="commitLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].uuid+'\').value));" type="button" value="Commit"></td>';
+	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td><td><input type=button value="M" onclick="muteSocket(\''+ clients[i].uuid+ '\');"></td><td><input type=button value="S" onclick="unMuteSocket(\''+ clients[i].uuid + '\');"></td></tr>';	
 	
 	}
 	table+="</table>";
@@ -751,6 +759,7 @@ io.sockets.on('connection', function (socket) {
 	        message: 'stop'
 	    });
    	}
+
 
 
 
@@ -911,6 +920,7 @@ io.sockets.on('connection', function (socket) {
 			for (i=0; i<calibrationClients.length; i++){
 
 				if (calibrationClients[i].uuid===data.uuid){//if we already have the uuid, that's it. Only add that one.
+					calibrationClients[i].socketID=socket.id;
 					clientNumber=calibrationClients[i].number;
 					break;
 				}
@@ -932,9 +942,13 @@ io.sockets.on('connection', function (socket) {
 
 	  socket.on('updateLag', function (data) { //Broadcast updated lag to client who in turn updates cookie
 			if (securityCheck(socket.client.conn.remoteAddress)) {
-				io.to(data.socketID).emit('bUpdateLag', {
-		        lag: data.lag,
-		    });
+				for (i=0; i<calibrationClients.length;i++){
+					if(data.uuid===calibrationClients[i].uuid){
+						io.to(calibrationClients[i].socketID).emit('bUpdateLag', {
+				        lag: data.lag,
+				    });
+				  }
+				}
 			}
 		});
 
@@ -975,19 +989,32 @@ io.sockets.on('connection', function (socket) {
 
 	  socket.on('muteSocket', function (data) { //mute a client
 			if (securityCheck(socket.client.conn.remoteAddress)) {
-				console.log("emitting!");
-				io.to(data.socketID).emit('bServerMute', {
-		        serverMute: true,
-		    });
+				
+				for (i=0; i<calibrationClients.length;i++){
+					if (calibrationClients[i].uuid===data.uuid){
+						calibrationClients[i].serverMuted=true;
+						io.to(calibrationClients[i].socketID).emit('bServerMute', {
+				        serverMute: true,
+				    });
+
+					}
+				}
+	
 			}
 		});
 
 
 	  socket.on('unMuteSocket', function (data) { //unmute a client
 			if (securityCheck(socket.client.conn.remoteAddress)) {
-				io.to(data.socketID).emit('bServerMute', {
-		        serverMute: false,
-		    });
+				for (i=0; i<calibrationClients.length;i++){
+					if (calibrationClients[i].uuid===data.uuid){
+						calibrationClients[i].serverMuted=false;
+						io.to(calibrationClients[i].socketID).emit('bServerMute', {
+				        serverMute: false,
+				    });
+					}
+				}
+
 			}
 		});
 
@@ -995,12 +1022,20 @@ io.sockets.on('connection', function (socket) {
 	  socket.on('serverMuteAll', function (data) { //mute or unmute all clients
 			if (securityCheck(socket.client.conn.remoteAddress)) {
 				if (data.mute===true){
+					for (i=0; i<calibrationClients.length;i++){
+							calibrationClients[i].serverMuted=true;
+					}
+
 					io.sockets.emit('bServerMute', {
 			        serverMute: true,
 			    });
 			  }
 				
 				if (data.mute===false){
+					for (i=0; i<calibrationClients.length;i++){
+							calibrationClients[i].serverMuted=false;
+					}
+
 					io.sockets.emit('bServerMute', {
 			        serverMute: false,
 			    });
