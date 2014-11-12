@@ -176,7 +176,7 @@
 	
 	
 						var count=(Math.round((serverTime + 1000-(serverTime%1000) +1000 )/1000)%4 )+1;
-	   				playalong.playQueue.push(["calibrate", (serverTime + 1000-(serverTime%1000) +1000) -playalong.lagOffset,count])
+	   				playalong.playQueue.push(["calibrate", (serverTime + 1000-(serverTime%1000) +1000) -playalong.lagOffset,count]);
 		
 			
 	   				//console.log(serverTime + " queueing a " + count+ " event at " + (serverTime + 1000-(serverTime%1000) +1000 ));

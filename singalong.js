@@ -888,7 +888,8 @@ io.sockets.on('connection', function (socket) {
             io.sockets.emit('bClientQueue', {
             													itemType: "chordChange",
             													nextChord: data.nextChord,
-            												  nextChange: data.nextChange + Date.now()
+            												  nextChange: data.nextChange + Date.now(),
+            												  chordNumber: data.chordNumber
             												});
 
         }

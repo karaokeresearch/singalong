@@ -13,6 +13,7 @@
 
 	var socket = io.connect();
 	var currentChord = 0;
+	var currentSchedulerChord=0;
 	var currentLyric = 0;
 	var longestLine = 0;
 	var lastPos = 0; //the final div number
@@ -38,6 +39,9 @@
 	var karaokeMode = true;
 	var firstChord;
 	var highlighting = 1;
+	var singalong={};
+			singalong.playQueue = [];
+	ntp.init(socket);      
 	
 	//********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 	$(document).ready(function () { //
@@ -191,7 +195,7 @@
 	
 	    } else { //if the song is the same, it's just updates
 	        if (data.bid != null) {
-	            jumpToChord(data.bid)
+	            underlineJumpToChord(data.bid)
 	        }
 	        if (data.blid != null) {
 	            moveLyricHighlight(currentLyric, data.blid, true, function () {});
@@ -230,7 +234,16 @@
 	    }
 	}
 	
-	var moveHighlight = function(fromid, toid, callback) {
+	var moveChordUnderline = function(fromid, toid, callback) {
+	    //first, erase the highlight from the previous chord
+	    $("#chordNumber" + fromid).removeClass("underlinedchord");
+	    $("#chordNumber" + toid).addClass("underlinedchord");
+	    callback();
+	}
+
+
+
+	var moveChordHighlight = function(fromid, toid, callback) {
 	    //first, erase the highlight from the previous chord
 	
 	    $("#chordNumber" + fromid).removeClass("highlightedchord");
@@ -326,36 +339,40 @@
 	}
 	
 	
-	//***************** EMITTERS **********************
+	//***************** EMITTER FUNCTIONS **********************
 	var sendChord = function(whichchord) {
 
-	if (whichchord - currentChord == 1) { //likely pushed the D key
-		  currentChordTimeStamp = Date.now();
-	    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
-	    if (speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
-      prevChordTimeStamp = Date.now();
-			var nextChange = ((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier)*1000;
-			
-			//Predict next chord time and send
-			var nextChord = $("#chordNumber" + (currentChord +2)).html();
-			var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
-      console.log(speedMultiplier);
-      console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
-	    	console.log("selectedchord is " + selectedChord);
-	    socket.emit('next', {
-	    		selectedChord: selectedChord,
-	        nextChord:	nextChord,
-	        nextChange:	nextChange
-	    }); 
+		if (whichchord - currentChord == 1) { //likely pushed the D key
+			  currentChordTimeStamp = Date.now();
+		    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
+		    if (speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
+	      prevChordTimeStamp = Date.now();
+				var nextChange = ((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier)*1000;
+				
+				//Predict next chord time and send
+				var nextChord = $("#chordNumber" + (currentChord +2)).html();
+				var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
+	      console.log(speedMultiplier);
+	      console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
+		    console.log("selectedchord is " + selectedChord);
 
-	}
-			
-	    socket.emit('id', {
-	        data: whichchord
-	    }); 
-	    if (playerMode == "editor" && document.getElementById('audioplayer').paused == true && chordTimings[whichchord - firstChord] != null) { //rewind or fast forward
-	        document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
-	    }
+		    socket.emit('next', {
+		    		selectedChord: selectedChord,
+		        nextChord:	nextChord,
+		        nextChange:	nextChange,
+		        chordNumber: currentChord +2
+		    }); 
+	
+		}else{
+			//move the cursor and the highlight, reset everything
+		}
+				
+    socket.emit('id', {
+        data: whichchord
+    }); 
+    if (playerMode == "editor" && document.getElementById('audioplayer').paused == true && chordTimings[whichchord - firstChord] != null) { //rewind or fast forward
+        document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
+    }
 	
 	}
 	
@@ -374,6 +391,28 @@
 	
 	var jumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	    if (playerMode == "singalong") { //playback mode.  This chunk of code triggers lyrics
+	
+	
+	        if (whichchord - currentSchedulerChord == 1) { //likely pushed the D key
+						triggerLyrics(whichchord - firstChord, speedMultiplier);
+	        }
+	    }
+	
+			    moveChordHighlight(currentSchedulerChord, whichchord, function () { //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
+	        
+	        if (whichchord > firstChord || currentSchedulerChord > firstChord) //don't scroll until you're past the preview.
+	        {
+	            if (!(whichchord - currentSchedulerChord == 1 && ($("#chordNumber" + whichchord).offset().top) - $(document).scrollTop() - ($(window).height() / 5) < 0)) {
+	                goToByScroll("chordNumber" + currentSchedulerChord, "chordNumber" + whichchord);
+	            }
+	        }
+	        currentSchedulerChord = parseInt(whichchord);
+	    });
+	
+	}
+
+	var underlineJumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
+	    if (playerMode == "singalong") { //playback mode.  This chunk of code triggers lyrics
 	        if (whichchord < currentChord) { //moving backwards (user hit left, usually)
 	            if (typeof lyricTimeouts[currentChord - firstChord] != "undefined") {
 	                for (i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {
@@ -381,27 +420,15 @@
 	                }
 	            }
 	        }
-	
-	
-	        if (whichchord - currentChord == 1) { //likely pushed the D key
-           
-	                triggerLyrics(whichchord - firstChord, speedMultiplier);
-	        }
-	    }
-	
-	    moveHighlight(currentChord, whichchord, function () { //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-	        //
-	        if (whichchord > firstChord || currentChord > firstChord) //don't scroll until you're past the preview.
-	        {
-	            if (!(whichchord - currentChord == 1 && ($("#chordNumber" + whichchord).offset().top) - $(document).scrollTop() - ($(window).height() / 5) < 0)) {
-	                goToByScroll("chordNumber" + currentChord, "chordNumber" + whichchord);
-	            }
-	        }
-	        //if (lyricOffsets[whichchord]==null){}
+			}	
+			moveChordUnderline(currentChord, whichchord, function () { //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
 	        currentChord = parseInt(whichchord);
 	    });
 	
 	}
+
+
+
 	
 	
 	
@@ -711,7 +738,7 @@
 	            (function (i) {
 	                chordTimeouts[i] = setTimeout(function () {
 	                    if (chordsArmed == false) {
-	                        jumpToChord(i + firstChord);
+	                        underlineJumpToChord(i + firstChord);
 	                    }
 	
 	                    if (lyricsArmed == false) {
@@ -758,7 +785,7 @@
 	            i++;
 	            lyricTimeouts[chordnum][i] = setTimeout(function () {
 	                //console.log (currentChord + " --- " + name[1]);
-	                if (currentChord == chordnum + firstChord) { //is this the currently-selected chord and if not, don't scroll 
+	                if (currentSchedulerChord == chordnum + firstChord) { //is this the currently-selected chord and if not, don't scroll 
 	                    moveLyricHighlight(currentLyric, name[1] + 1, true, function () {});
 	                } else {
 	                    moveLyricHighlight(currentLyric, name[1] + 1, false, function () {});
@@ -882,7 +909,7 @@
 	
 	
 	    setTimeout(function () {
-	        jumpToChord(bid);
+	        underlineJumpToChord(bid);
 	    }, 500);
 	
 	}
@@ -892,7 +919,7 @@
 	    karaokeMode = false;
 	    textSizer(function () {});
 	    setTimeout(function () {
-	        jumpToChord(bid);
+	        underlineJumpToChord(bid);
 	    }, 500);
 	
 	}
@@ -912,5 +939,31 @@ function getQueryVariable(variable)
        }
        return(false);
 }
+
+
+//-------------------------------------------NTP stuff
+setInterval(function () { //the queue
+	while ((singalong.playQueue.length>0) &&(singalong.playQueue[0][1] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
+	console.log("here!");
+		if (singalong.playQueue[0][0] ==="chordChange"){
+			(function (){
+				var chordNumber=singalong.playQueue[0][2];
+				setTimeout(function (){
+					jumpToChord(chordNumber);
+				}, (singalong.playQueue[0][1] - ntp.serverTime()));
+			}());
+		}
+		singalong.playQueue.shift();
+	}
+},250);
+
+
+				
+socket.on('bClientQueue', function (data) { //listen for chord change requests
+console.log(data);
+		if (data.itemType==="chordChange"){
+			singalong.playQueue.push(["chordChange", parseInt(data.nextChange),data.chordNumber])
+		}
+});
 
 
