@@ -150,7 +150,8 @@
 	});
 	
 	
-	socket.on('bcurrentSong', function (data) { //what is the current song and where are we in it?  Sent every left or right movement.
+	socket.on('bcurrentSong', function (data) { //what is the current song and where are we in it?  Received every left or right movement.
+	    console.log('bcurrentSong received: ',data);
 	    if (data.song != currentSong) { //if there's a new song, or it's the index
 	        currentChord = 0;
 	        currentLyric = 0;
@@ -194,9 +195,6 @@
 	        });
 	
 	    } else { //if the song is the same, it's just updates
-	        if (data.bid != null) {
-	            underlineJumpToChord(data.bid)
-	        }
 	        if (data.blid != null) {
 	            moveLyricHighlight(currentLyric, data.blid, true, function () {});
 	        }
@@ -340,33 +338,49 @@
 	
 	
 	//***************** EMITTER FUNCTIONS **********************
-	var sendChord = function(whichchord) {
-
+	var sendChord = function(whichchord) { //wherein we send to the server "next" and "id"
+	
 		if (whichchord - currentChord == 1) { //likely pushed the D key
 			  currentChordTimeStamp = Date.now();
 		    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
-		    if (speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
+		    if (isNaN(speedMultiplier) || speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
 	      prevChordTimeStamp = Date.now();
 				var nextChange = ((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier)*1000;
-				
+				console.log(chordTimings[currentChord -firstChord+2] + " minus " +  chordTimings[currentChord-firstChord+1]);
 				//Predict next chord time and send
 				var nextChord = $("#chordNumber" + (currentChord +2)).html();
 				var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
 	      console.log(speedMultiplier);
 	      console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
 		    console.log("selectedchord is " + selectedChord);
+				
+				if (isNaN(nextChange)){var chordNumber=currentChord+1; //not actually in the body of the song.
+																 nextChord = $("#chordNumber" + (currentChord +1)).html();
+																 nextChange=0;
+																 }else{var chordNumber=currentChord+2}
+
+	
+		}else{
+			var selectedChord = $("#chordNumber" + (whichchord)).html(); 
+			var nextChord = $("#chordNumber" + (whichchord)).html();
+			var nextChange=0;
+			var chordNumber=whichchord;
+		}
+
+	  underlineJumpToChord(whichchord);
+
+
+				
 
 		    socket.emit('next', {
 		    		selectedChord: selectedChord,
 		        nextChord:	nextChord,
 		        nextChange:	nextChange,
-		        chordNumber: currentChord +2
+		        chordNumber: chordNumber
 		    }); 
-	
-		}else{
-			//move the cursor and the highlight, reset everything
-		}
-				
+
+
+
     socket.emit('id', {
         data: whichchord
     }); 
@@ -392,7 +406,7 @@
 	var jumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	    if (playerMode == "singalong") { //playback mode.  This chunk of code triggers lyrics
 	
-	
+					console.log("whichchord is ", whichchord, " and currentSchedulerChord is ", currentSchedulerChord ); 
 	        if (whichchord - currentSchedulerChord == 1) { //likely pushed the D key
 						triggerLyrics(whichchord - firstChord, speedMultiplier);
 	        }
@@ -739,6 +753,7 @@
 	                chordTimeouts[i] = setTimeout(function () {
 	                    if (chordsArmed == false) {
 	                        underlineJumpToChord(i + firstChord);
+	                        jumpToChord(i + firstChord);
 	                    }
 	
 	                    if (lyricsArmed == false) {
@@ -962,7 +977,8 @@ setInterval(function () { //the queue
 socket.on('bClientQueue', function (data) { //listen for chord change requests
 console.log(data);
 		if (data.itemType==="chordChange"){
-			singalong.playQueue.push(["chordChange", parseInt(data.nextChange),data.chordNumber])
+			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-100,data.chordNumber])}
 		}
 });
 

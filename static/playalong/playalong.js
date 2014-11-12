@@ -122,8 +122,13 @@
 				
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
 			if (data.itemType==="chordChange"){
+			if (data.nextChange<=ntp.serverTime()){changeChord(data.nextChord);}//if timestamped in the past, don't wait 0.25sec to run
+				else{			
 				playalong.playQueue.push(["chordChange", parseInt(data.nextChange)-playalong.lagOffset,data.nextChord])
 			}
+		}
+			
+			//changeChord(whatsnext);
 	});
 
 	

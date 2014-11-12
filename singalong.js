@@ -71,6 +71,7 @@ var highlighting = 1;
 var calibrationClients=[];
 var calibrating=false;
 var selectedChord='C'; //for clients connecting before the very first song is played
+var nextChord={};
 
 //************** HELPER FUNCTIONS ********************
 var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
@@ -748,6 +749,17 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('bSelectedChord', {
         chord: selectedChord
     });
+ 
+
+                                                            
+		io.sockets.emit('bClientQueue', {                            
+			itemType: nextChord.itemtype,      
+			nextChord: nextChord.nextChord,    
+			nextChange:  nextChord.nextChange, 
+			chordNumber: nextChord.chordNumber,
+		});                                  
+
+ 
     
 
 		if (calibrating===true){
@@ -885,11 +897,17 @@ io.sockets.on('connection', function (socket) {
             	    console.log(data.nextChord + ", " + data.nextChange);
 						selectedChord=data.selectedChord;
             console.log("selectedChord is " + selectedChord);
+
+						nextChord.itemtype="chordChange";
+						nextChord.nextChord= data.nextChord;
+						nextChord.nextChange=data.nextChange + Date.now();
+						nextChord.chordNumber=data.chordNumber;
+            
             io.sockets.emit('bClientQueue', {
-            													itemType: "chordChange",
-            													nextChord: data.nextChord,
-            												  nextChange: data.nextChange + Date.now(),
-            												  chordNumber: data.chordNumber
+            													itemType: nextChord.itemtype,
+            													nextChord: nextChord.nextChord, 
+            												  nextChange:  nextChord.nextChange,
+            												  chordNumber: nextChord.chordNumber,
             												});
 
         }
