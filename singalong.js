@@ -228,7 +228,7 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
 
         parseChunk = parseChunk + '<div class="chords"><span class="chordspan" style="position: absolute; left: 1em">';
         for (i = 0; i < allChords.length; i++) {
-            parseChunk += '<span id="chordNumber' + i + '" class="chordspan">' + allChords[i] + "</span>";
+            parseChunk += '<span id="chordNumber' + i + '" onclick="sendChord(' +i+ ')"class="chordspan">' + allChords[i] + "</span>";
             for (var j = 0; j < (5 - allChords[i].length); j++) {
                 parseChunk += ' ';
             } //
@@ -752,7 +752,7 @@ io.sockets.on('connection', function (socket) {
  
 
                                                             
-		io.sockets.emit('bClientQueue', {                            
+		socket.emit('bClientQueue', {                            
 			itemType: nextChord.itemtype,      
 			nextChord: nextChord.nextChord,    
 			nextChange:  nextChord.nextChange, 
@@ -1036,6 +1036,17 @@ io.sockets.on('connection', function (socket) {
 
 			}
 		});
+
+
+	  socket.on('oops', function (data) { //unmute a client
+			console.log("oops!");
+			if (securityCheck(socket.client.conn.remoteAddress)) {
+					io.sockets.emit('bOops', {
+			        oops: true
+			    });
+			}
+		});
+
 
 
 	  socket.on('serverMuteAll', function (data) { //mute or unmute all clients

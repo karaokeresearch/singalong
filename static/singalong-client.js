@@ -41,7 +41,15 @@
 	var highlighting = 1;
 	var singalong={};
 			singalong.playQueue = [];
+	var averageSpeedMultiplierArray=[];
+	var averageSpeedMultiplier;
+	var prevChange=0;
+	var prevPrevChange=0;
+	var nextChange=0;
+  var actualTimeItWouldHit;
+
 	ntp.init(socket);      
+
 	
 	//********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 	$(document).ready(function () { //
@@ -151,8 +159,9 @@
 	
 	
 	socket.on('bcurrentSong', function (data) { //what is the current song and where are we in it?  Received every left or right movement.
-	    console.log('bcurrentSong received: ',data);
+	    //console.log('bcurrentSong received: ',data);
 	    if (data.song != currentSong) { //if there's a new song, or it's the index
+	        currentSchedulerChord=0;
 	        currentChord = 0;
 	        currentLyric = 0;
 	        currentSong = data.song;
@@ -205,6 +214,18 @@
 	
 	
 	//**************HELPER FUNCTIONS
+var findMedian = function(array) {
+	  var values=array.slice(0);
+    values.sort( function(a,b) {return a - b;} );
+    var half = Math.floor(values.length/2);
+    if(values.length % 2)
+        return values[half];
+    else
+        return (values[half-1] + values[half]) / 2.0;
+}
+
+	
+	
 	var textSizer = function(callback) { //resize the text on the page.  The 0.6 has to do with the font ratio for both Vera and Courier New.
 	
 	    var charWidth = Math.round((($(window).width() - 40) / (longestLine + 2))); //font size is proportional to the width of the screen
@@ -339,20 +360,62 @@
 	
 	//***************** EMITTER FUNCTIONS **********************
 	var sendChord = function(whichchord) { //wherein we send to the server "next" and "id"
-	
-		if (whichchord - currentChord == 1) { //likely pushed the D key
+		if (whichchord - currentChord === -1){//left 
+	//	averageSpeedMultiplierArray.pop();
+		 socket.emit('oops', {
+		    oops: true
+		 }); 		
+		}	
+			
+		if (whichchord - currentChord === 1) { //likely pushed the D key
 			  currentChordTimeStamp = Date.now();
 		    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
-		    if (isNaN(speedMultiplier) || speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier=1;}
-	      prevChordTimeStamp = Date.now();
-				var nextChange = ((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*speedMultiplier)*1000;
-				console.log(chordTimings[currentChord -firstChord+2] + " minus " +  chordTimings[currentChord-firstChord+1]);
-				//Predict next chord time and send
-				var nextChord = $("#chordNumber" + (currentChord +2)).html();
+	      prevChordTimeStamp = Date.now();//next time 'round
+		    
+     if (isNaN(speedMultiplier) || speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier= averageSpeedMultiplier || 1;}
+//				
+//				averageSpeedMultiplierArray.push(speedMultiplier)
+//				if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
+//				averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
+//		//		console.log(speedMultiplier, averageSpeedMultiplier, averageSpeedMultiplierArray);
+
+				
+	//			prevPrevChange=prevChange;
+	 //     prevChange=actualTimeItWouldHit;
+
+			var dumbNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*speedMultiplier);
+
+	//			var trialNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*averageSpeedMultiplier);
+	//			var trialNextChangeTwoBack = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+0])*1000*averageSpeedMultiplier);
+
+															//amount of time at recording between the chord we were just on and when the next one is	      nextChange=trialNextChange;
+	      
+	//      actualTimeItWouldHit = (trialNextChange + Date.now());
+	      
+	      //nextChange=(prevPrevChange +trialNextChangeTwoBack) -Date.now();
+//			var smartNextChange=(prevChange +trialNextChange) -Date.now();
+		
+//				console.log(prevChange, trialNextChange, Date.now());	       
+//	    	if (isNaN(smartNextChange)|| currentChord<firstChord+3 || averageSpeedMultiplierArray.length<3){
+//	    		console.log("NaN!", smartNextChange);
+//	    		nextChange=dumbNextChange;}else{
+//	    		nextChange=smartNextChange;
+//	    		}	
+//
+	      nextChange=dumbNextChange;
+	      //console.log(nextChange);
+	      
+	      
+	      
+	      
+	      var nextChord = $("#chordNumber" + (currentChord +2)).html();
 				var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
-	      console.log(speedMultiplier);
-	      console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
-		    console.log("selectedchord is " + selectedChord);
+	      
+	      
+	      
+	      //console.log(speedMultiplier);
+	      //console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
+		   // console.log("selectedchord is " + selectedChord);
 				
 				if (isNaN(nextChange)){var chordNumber=currentChord+1; //not actually in the body of the song.
 																 nextChord = $("#chordNumber" + (currentChord +1)).html();
@@ -363,11 +426,11 @@
 		}else{
 			var selectedChord = $("#chordNumber" + (whichchord)).html(); 
 			var nextChord = $("#chordNumber" + (whichchord)).html();
-			var nextChange=0;
+			nextChange=0;
 			var chordNumber=whichchord;
 		}
 
-	  underlineJumpToChord(whichchord);
+	  underlineJumpToChord(whichchord);  //currentChord is changed here.
 
 
 				
@@ -406,8 +469,8 @@
 	var jumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	    if (playerMode == "singalong") { //playback mode.  This chunk of code triggers lyrics
 	
-					console.log("whichchord is ", whichchord, " and currentSchedulerChord is ", currentSchedulerChord ); 
-	        if (whichchord - currentSchedulerChord == 1) { //likely pushed the D key
+					//console.log("whichchord is ", whichchord, " and currentSchedulerChord is ", currentSchedulerChord , " and firstchord is ", firstChord); 
+	        if (whichchord - currentSchedulerChord === 1 || whichchord-firstChord===1) { //likely pushed the D key
 						triggerLyrics(whichchord - firstChord, speedMultiplier);
 	        }
 	    }
@@ -429,7 +492,8 @@
 	    if (playerMode == "singalong") { //playback mode.  This chunk of code triggers lyrics
 	        if (whichchord < currentChord) { //moving backwards (user hit left, usually)
 	            if (typeof lyricTimeouts[currentChord - firstChord] != "undefined") {
-	                for (i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {
+	                for (i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {	                    
+	                    console.log("clearing ",lyricTimeouts[currentChord - firstChord][i]);
 	                    clearTimeout(lyricTimeouts[currentChord - firstChord][i]);
 	                }
 	            }
@@ -924,6 +988,8 @@
 	
 	
 	    setTimeout(function () {
+	    		jumpToChord(bid);
+
 	        underlineJumpToChord(bid);
 	    }, 500);
 	
@@ -934,6 +1000,7 @@
 	    karaokeMode = false;
 	    textSizer(function () {});
 	    setTimeout(function () {
+	    		jumpToChord(bid);
 	        underlineJumpToChord(bid);
 	    }, 500);
 	
@@ -956,11 +1023,12 @@ function getQueryVariable(variable)
 }
 
 
-//-------------------------------------------NTP stuff
+//-------------------------------------------The Queue
 setInterval(function () { //the queue
 	while ((singalong.playQueue.length>0) &&(singalong.playQueue[0][1] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
-	console.log("here!");
-		if (singalong.playQueue[0][0] ==="chordChange"){
+	console.log(singalong.playQueue);
+
+		if (singalong.playQueue[0][0] === "chordChange"){
 			(function (){
 				var chordNumber=singalong.playQueue[0][2];
 				setTimeout(function (){
@@ -975,11 +1043,14 @@ setInterval(function () { //the queue
 
 				
 socket.on('bClientQueue', function (data) { //listen for chord change requests
-console.log(data);
 		if (data.itemType==="chordChange"){
 			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
-			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-100,data.chordNumber])}
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//65ms seems like a good delay for devices
 		}
 });
 
+socket.on('bOops', function (data) { //listen for chord change requests
+	console.log("oops!")
+	console.log(singalong.playQueue.pop());
+});
 
