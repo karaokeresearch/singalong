@@ -43,13 +43,10 @@
 			singalong.playQueue = [];
 	var averageSpeedMultiplierArray=[];
 	var averageSpeedMultiplier;
-	var prevChange=0;
-	var prevPrevChange=0;
 	var nextChange=0;
-  var actualTimeItWouldHit;
-
+  
 	ntp.init(socket);      
-
+  //jQuery.fx.interval = 25; //try to fix phone jerkiness since that callback no longer works
 	
 	//********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 	$(document).ready(function () { //
@@ -184,7 +181,7 @@
 	            modulateChord(totalModulation);
 	
 	            if (getQueryVariable("mode") === "chordchart"){
-	                activateChordChartMode(data.bid);
+	               activateChordChartMode(data.bid);
 	            } else {
 	                activateKaraokeMode(data.bid);
 	            } //previous test: if ($('#editorbutton').length)
@@ -369,55 +366,25 @@ var findMedian = function(array) {
 			
 		if (whichchord - currentChord === 1) { //likely pushed the D key
 			  currentChordTimeStamp = Date.now();
-		    speedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
+		    var futureSpeedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
 	      prevChordTimeStamp = Date.now();//next time 'round
 		    
-     if (isNaN(speedMultiplier) || speedMultiplier < 0.33 || speedMultiplier > 3) {speedMultiplier= averageSpeedMultiplier || 1;}
+     if (isNaN(futureSpeedMultiplier) || futureSpeedMultiplier < 0.33 || futureSpeedMultiplier > 3) {futureSpeedMultiplier=1;}
 //				
-//				averageSpeedMultiplierArray.push(speedMultiplier)
+//				averageSpeedMultiplierArray.push(futureSpeedMultiplier)
 //				if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
 //				averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
-//		//		console.log(speedMultiplier, averageSpeedMultiplier, averageSpeedMultiplierArray);
 
-				
-	//			prevPrevChange=prevChange;
-	 //     prevChange=actualTimeItWouldHit;
 
-			var dumbNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*speedMultiplier);
+			var dumbNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*futureSpeedMultiplier);
 
-	//			var trialNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*averageSpeedMultiplier);
-	//			var trialNextChangeTwoBack = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+0])*1000*averageSpeedMultiplier);
-
-															//amount of time at recording between the chord we were just on and when the next one is	      nextChange=trialNextChange;
-	      
-	//      actualTimeItWouldHit = (trialNextChange + Date.now());
-	      
-	      //nextChange=(prevPrevChange +trialNextChangeTwoBack) -Date.now();
-//			var smartNextChange=(prevChange +trialNextChange) -Date.now();
-		
-//				console.log(prevChange, trialNextChange, Date.now());	       
-//	    	if (isNaN(smartNextChange)|| currentChord<firstChord+3 || averageSpeedMultiplierArray.length<3){
-//	    		console.log("NaN!", smartNextChange);
-//	    		nextChange=dumbNextChange;}else{
-//	    		nextChange=smartNextChange;
-//	    		}	
-//
-	      nextChange=dumbNextChange;
-	      //console.log(nextChange);
-	      
-	      
-	      
-	      
-	      var nextChord = $("#chordNumber" + (currentChord +2)).html();
-				var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
-	      
-	      
-	      
-	      //console.log(speedMultiplier);
-	      //console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
-		   // console.log("selectedchord is " + selectedChord);
-				
-				if (isNaN(nextChange)){var chordNumber=currentChord+1; //not actually in the body of the song.
+	    nextChange=dumbNextChange;
+      
+      var nextChord = $("#chordNumber" + (currentChord +2)).html();
+			var selectedChord = $("#chordNumber" + (currentChord +1)).html(); 
+							
+	    //Preview chords and the first three chords are manual so as to eliminate confusion at top of song.
+			if (isNaN(nextChange) || currentChord<firstChord+3){var chordNumber=currentChord+1; //not actually in the body of the song.
 																 nextChord = $("#chordNumber" + (currentChord +1)).html();
 																 nextChange=0;
 																 }else{var chordNumber=currentChord+2}
@@ -430,23 +397,45 @@ var findMedian = function(array) {
 			var chordNumber=whichchord;
 		}
 
-	  underlineJumpToChord(whichchord);  //currentChord is changed here.
+	    console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
 
 
-				
 
-		    socket.emit('next', {
-		    		selectedChord: selectedChord,
-		        nextChord:	nextChord,
-		        nextChange:	nextChange,
-		        chordNumber: chordNumber
-		    }); 
+			
+
+	    socket.emit('next', {
+	    		selectedChord: selectedChord,
+	        nextChord:	nextChord,
+	        nextChange:	nextChange,
+	        chordNumber: chordNumber,
+					speedMultiplier: futureSpeedMultiplier
+
+	    }); 
 
 
 
     socket.emit('id', {
         data: whichchord
     }); 
+    //The first three chords are manual so as to eliminate confusion at top of song.
+ 				if (currentChord===firstChord+2){
+ 					var chordNumber=currentChord+2; 
+					nextChord = $("#chordNumber" + (currentChord +2)).html();
+					nextChange=dumbNextChange;
+
+			    socket.emit('next', {
+			    		selectedChord: selectedChord,
+			        nextChord:	nextChord,
+			        nextChange:	nextChange,
+			        speedMultiplier: futureSpeedMultiplier,
+			        chordNumber: chordNumber
+			    }); 
+
+					}
+   
+				
+	  underlineJumpToChord(whichchord);  //currentChord is changed here.
+
     if (playerMode == "editor" && document.getElementById('audioplayer').paused == true && chordTimings[whichchord - firstChord] != null) { //rewind or fast forward
         document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
     }
@@ -989,7 +978,6 @@ var findMedian = function(array) {
 	
 	    setTimeout(function () {
 	    		jumpToChord(bid);
-
 	        underlineJumpToChord(bid);
 	    }, 500);
 	
@@ -1044,8 +1032,11 @@ setInterval(function () { //the queue
 				
 socket.on('bClientQueue', function (data) { //listen for chord change requests
 		if (data.itemType==="chordChange"){
+			speedMultiplier=data.speedMultiplier || speedMultiplier;
+			console.log("speedMultiplier", speedMultiplier);
+		
 			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
-			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//65ms seems like a good delay for devices
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//180ms for my phone!!!
 		}
 });
 

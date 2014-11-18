@@ -153,6 +153,9 @@ var returnIndexHTML=function(callback){ //Spit out the index based on the list o
         }
 
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="1"><input type="hidden" id="lastLyric" value="1"></form>' //passing variables to the client.  Is this the right way?  My guess is probably yes.
+        parseChunk = parseChunk + '<div style="position: fixed; bottom:4px; right:4px"><button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button></div>';
+
+        
         callback(parseChunk);
     });
 }
@@ -224,21 +227,22 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
         parseChunk = parseChunk + '</div>';
 
 
-
-
+					
         parseChunk = parseChunk + '<div class="chords"><span class="chordspan" style="position: absolute; left: 1em">';
+        parseChunk = parseChunk + '<span id="chordNumber0" onclick="sendChord(\'0\')" class="chordspan">&gt;</span>&nbsp;'	;
+
         for (i = 0; i < allChords.length; i++) {
-            parseChunk += '<span id="chordNumber' + i + '" onclick="sendChord(' +i+ ')"class="chordspan">' + allChords[i] + "</span>";
+            parseChunk += '<span id="chordNumber' + (i+1) + '" onclick="sendChord(' +(i+1)+ ')" class="chordspan">' + allChords[i] + "</span>";
             for (var j = 0; j < (5 - allChords[i].length); j++) {
                 parseChunk += ' ';
             } //
             parseChunk += ' '; //dumb hack because sprintf doesn't work
 
             //chordsInSongLine = chordsInSongLine + allChords[i] + "  "; //make all the chords in the song the first line parsed by the parser
-            if ((i + 1) % Math.round(longestLine / 8) == 0) {
-                parseChunk += '</span></div><div class="chords"><span class="chordspan" style="position: absolute; left: 1em">'
+            if ((i + 1) % Math.round(longestLine / 8) == 0) {//no more than 8 chords per preview line.
+                parseChunk += '</span></div><div class="chords"><span class="chordspan" style="position: absolute; left: 1em">&nbsp;&nbsp;'
             } //hack.  Will make font too small on a song with many complicated chords
-            firstChord = i;
+            firstChord = i+1;
         }
         firstChord++;
         parseChunk = parseChunk + '</span></div><br><br>';
@@ -365,7 +369,7 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
             parseChunk = parseChunk + '</span>';
             parseChunk = parseChunk + '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';
         }
-        parseChunk = parseChunk + ' <button style="background-color:#DDDDDD;"><a href="menu.html"><img src="hamburger.png" style="width:2em; padding-top:0.3em"></a></button>';
+        parseChunk = parseChunk + ' <button style="background-color:#DDDDDD;"><a href="index.html"><img src="hamburger.png" style="width:2em; padding-top:0.3em"></a></button>';
         
 
         parseChunk = parseChunk + '</div>';
@@ -704,6 +708,7 @@ function sortByKey(array, key) {
 
 
 app.get('/admin', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
+if (securityCheck(req.ip)) {
 	var clients = sortByKey(calibrationClients, 'score');
 	var table='<table border=1>';
 	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th><th><input type=button value="Mute All" onclick="muteAll()"></th><th><input type=button value="Unmute All" onclick="unMuteAll()"></th></tr>';
@@ -723,7 +728,7 @@ app.get('/admin', function (req, res) { //Meat of the HTML data that defines a p
 	}
 	table+="</table>";
 	res.end(table)
-
+}else{res.end("");}
 });
 
 
@@ -757,6 +762,7 @@ io.sockets.on('connection', function (socket) {
 			nextChord: nextChord.nextChord,    
 			nextChange:  nextChord.nextChange, 
 			chordNumber: nextChord.chordNumber,
+			speedMultiplier: nextChord.speedMultiplier
 		});                                  
 
  
@@ -902,11 +908,13 @@ io.sockets.on('connection', function (socket) {
 						nextChord.nextChord= data.nextChord;
 						nextChord.nextChange=data.nextChange + Date.now();
 						nextChord.chordNumber=data.chordNumber;
+            nextChord.speedMultiplier=data.speedMultiplier;
             
             io.sockets.emit('bClientQueue', {
             													itemType: nextChord.itemtype,
             													nextChord: nextChord.nextChord, 
             												  nextChange:  nextChord.nextChange,
+            												  speedMultiplier: nextChord.speedMultiplier,
             												  chordNumber: nextChord.chordNumber,
             												});
 

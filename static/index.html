@@ -1,20 +1,39 @@
-<!DOCTYPE html>
 <html>
-    <head>
-        <title>Singalong</title>
-        <link rel="stylesheet" type="text/css" href="singalong-client-karaokemode.css" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="viewport" content="initial-scale=1.0" />
+	<head>
+		<title>Singalong.js - menu</title>
 
-        <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
-        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-        <script type="text/javascript" src="playalong/ntpclient.js"></script>
-        <script type="text/javascript" src="singalong-client.js"></script>
+		<style>
+			a 			{color: #FF0000; font-family:Sans-serif; font-size:2em}
+			strong 	{font-family:Sans-serif; font-size:2em}
+			body 	{background-color:#FFFFCC}
 
-    </head>
+		</style>
 
-    <body>
 
-    </body>
+	</head>
+	<body>
+		<div>
+			<span style="width:75%">
+				<b>SINGALONG.JS and PLAYALONG.JS</b><br>
+				<strong style="font-size:5em">MAIN MENU</strong>
+				
+				<br><br><strong>SINGALONG</strong>
+				<br><a href="singalong.html?mode=karaoke">Karaoke Mode</a>
+				<br><a href="singalong.html?mode=chordchart">Chord Chart Mode</a>
+				<br><br><br>
+				<strong>VIRTUAL INSTRUMENTS</strong>
+				<br><a href="/playalong/fingerStrummer/index.html">Finger Strummer</a>
+				<br>
 
+				<br><a href="/playalong/angleStrummer/index.html">Angle Strummer</a> (requires phone or tablet)
+
+				<br>
+				<br><a href="/playalong/waveRider/index.html">Wave Rider</a> (requires phone or tablet)
+
+			</span>
+			
+		<a style="position: fixed; bottom:4px; right:4px; font-size:0.5em" href= http://192.168.0.2/playalong/calibrate/calibrate.html>Administration</a>
+
+		</div>
+	</body>
 </html>

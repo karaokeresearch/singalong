@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Playalong.js calibration module</title>
+		<title>Playalong.js administration center</title>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="../ntpclient.js"></script>
 		<script src="../howler.js"></script>
@@ -9,7 +9,7 @@
 		<script src="../playalong.js"></script>
 
 		<script>
-		//the four things every instrument must have:	
+		//the four things every instrument must have (plus some <DIV>s):	
 		var changeChord=function(){};
 		var startPlaying=function(){};
 		var stopPlaying=function(){};
@@ -102,7 +102,11 @@
 <br><br>
 		<div id="calibrate" style="font-size:2em; font-family=Sans;"></div>
 		<div id="console" style="font-size:1em; font-family=Sans;">Console</div>
+	 <div id="currentChord" style="font-size:1em; font-family=Sans;"></div>
 
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
 		
 		
 	</body>

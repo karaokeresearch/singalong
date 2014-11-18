@@ -1,9 +1,9 @@
 <html>
 	<head>
-
 		<title>Motion Instrument</title>
 	</head>
 	<body bgcolor="pink" onclick="playalong.loadIOS()">
+
 		<script type="text/javascript" src="../cookies.js"></script>
 		<script type="text/javascript" src="../gyro.js"></script>
 		<script type="text/javascript" src="../howler.js"></script>
@@ -16,10 +16,15 @@
 
 		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
 		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
 		
 		
 		<BR>
 
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
 
 <script type="text/javascript" >
 
@@ -39,12 +44,18 @@ var tone4;
 
 var baseTone=[];
 
-var instructions='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
+var instructions='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds if iPad/Pod/Phone.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
+
+
+
+var startPlaying=function(){
+	playalong.playing=true;
+};
 
 var soundsLoaded= function(){
 
-document.getElementById("console").innerHTML =instructions;
-
+	$("#console").html(instructions);
+	startPlaying();
 }
 
 
@@ -71,46 +82,52 @@ baseTone[24] = new Howl({
 
 
 var changeChord = function (whichChord){
-	var chordNotes =[];
-	var chord=teoria.chord(whichChord);
-	for (i=0; i< chord.notes().length; i++) {
-		chordNotes.push((chord.notes()[i].key()+4)%24);
+	var keepgoing=true;
+	try{
+		var chord=teoria.chord(whichChord);
 	}
-	for (i=0; i< chord.notes().length; i++) {
-		chordNotes.push(((chord.notes()[i].key()+16)%24));
-	}
-	chordNotes.sort(function(a, b){return a-b});
-
-
-	var tempVol1=0;
-	var tempVol2=0;
-	var tempVol3=0;
-	var tempVol4=0;
+	catch(err){keepgoing=false;}
+	if(keepgoing){
+		var chordNotes =[];
+		for (i=0; i< chord.notes().length; i++) {
+			chordNotes.push((chord.notes()[i].key()+4)%24);
+		}
+		for (i=0; i< chord.notes().length; i++) {
+			chordNotes.push(((chord.notes()[i].key()+16)%24));
+		}
+		chordNotes.sort(function(a, b){return a-b});
 	
 	
-	if (tone1){
-		tempVol1=tone1.volume();
-	tone1.volume(0);}
-	if (tone2){
-		tempVol2=tone2.volume();
-	tone2.volume(0);}
-	if (tone3){
-		tempVol3=tone3.volume();
-	tone3.volume(0);}
-	if (tone4){
-		tempVol4=tone4.volume();
-	tone4.volume(0);}
-	
-	tone1 = baseTone[chordNotes[0]+1];
-	tone2 = baseTone[chordNotes[1]+1];
-	tone3 = baseTone[chordNotes[2]+1];
-	tone4 = baseTone[chordNotes[3]+1];
-	
-	tone1.volume(tempVol1);
-	tone2.volume(tempVol2);
-	tone3.volume(tempVol3);
-	tone4.volume(tempVol4);
-	
+		var tempVol1=0;
+		var tempVol2=0;
+		var tempVol3=0;
+		var tempVol4=0;
+		
+		
+		if (tone1){
+			tempVol1=tone1.volume();
+		tone1.volume(0);}
+		if (tone2){
+			tempVol2=tone2.volume();
+		tone2.volume(0);}
+		if (tone3){
+			tempVol3=tone3.volume();
+		tone3.volume(0);}
+		if (tone4){
+			tempVol4=tone4.volume();
+		tone4.volume(0);}
+		
+		tone1 = baseTone[chordNotes[0]+1];
+		tone2 = baseTone[chordNotes[1]+1];
+		tone3 = baseTone[chordNotes[2]+1];
+		tone4 = baseTone[chordNotes[3]+1];
+		
+		tone1.volume(tempVol1);
+		tone2.volume(tempVol2);
+		tone3.volume(tempVol3);
+		tone4.volume(tempVol4);
+		$("#currentChord").html("<br><b>"+whichChord +"</b>");
+}
 };
 
 var stopPlaying=function(){
@@ -122,9 +139,6 @@ var stopPlaying=function(){
 
 };
 
-var startPlaying=function(){
-	playalong.playing=true;
-};
 
 var decreaseInterval=0.020;
 

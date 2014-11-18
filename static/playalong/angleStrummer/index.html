@@ -2,53 +2,91 @@
 	<head>
 		<title>Angle Strummer</title>
 	</head>
-	<body bgcolor="#CCCCFF">
-		<div id="loading" style="font-size:4em">Loading...</div>
-
-		<script type="text/javascript" src="../gyro.js"></script>
+	<body bgcolor="#CCCCFF" onclick="playalong.loadIOS()">
+		
 		<script type="text/javascript" src="../cookies.js"></script>
+		<script type="text/javascript" src="../gyro.js"></script>
 		<script type="text/javascript" src="../howler.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="../ntpclient.js"></script>
 		<script type="text/javascript" src="../teoria.js"></script>
-		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
+
 		<script type="text/javascript" src="../playalong.js"></script>
 
+  	<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
+		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
+<br>
+	<select style="font-size:4em" onchange="changeInstrument()" id="instrument">
+		  <option value="EPiano4000.ogg">Piano</option>
+		  <option value="EGuitar4000.ogg">Guitar</option>
+		  <option  selected="selected" value="EBells4000.ogg">Bells</option>
+		  <option value="EOrgan4000.ogg">Organ</option>
+		</select>
 
+		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
+
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
+
+	
 		<script>
-			var hasLoaded=false;
-			var stringIDs=[];
-			var chordNotes=[];
-
-
+			
 			var socket = io.connect();
 			ntp.init(socket);      
 			playalong.init(socket);
-			var preload=150;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
-			var lagOverride=300 + preload;
-			var playQueue=[];
+			playalong.preLoadDelay=0;
+
+			gyro.frequency=50;
+			var instructions='<span>ANGLE STRUMMER<br>Adjust your volume and tap the screen to activate sounds if iPad/Pod/Phone.<BR><BR>Grasp your device so your thumb and index finger touch the front and back. Strum it as if you were playing the guitar.</span>';
 
 
 
 			var changeChord = function (whichChord){
-				chordNotes=[];
-				var chord=teoria.chord(whichChord);
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push((chord.notes()[i].key()+4)%24);
+			 	var keepgoing=true;
+				try{
+					var chord=teoria.chord(whichChord);
 				}
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push(((chord.notes()[i].key()+16)%24));
+				catch(err){keepgoing=false;}
+
+				if (keepgoing){
+					chordNotes=[];			
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push((chord.notes()[i].key()+4)%24);
+					}
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push(((chord.notes()[i].key()+16)%24));
+					}
+					chordNotes.sort(function(a, b){return a-b});
+						$("#currentChord").html("<br><b>"+whichChord +"</b>");
 				}
-				chordNotes.sort(function(a, b){return a-b});
 			}
 
 
-			noteLength=4000;
+var stopPlaying=function(){
+	playalong.playing=false;
+
+};
+
+var startPlaying=function(){
+	playalong.playing=true;
+};			
+			
+var soundsLoaded= function(){
+	//setTimeout(function(){
+		$("#console").html(instructions);
+		startPlaying();
+	//},2000);
+};
+		
+			
+			var noteLength=4000;
 			var sound = new Howl({
-				urls: ['strumAscendAmono.ogg' ],
+				urls: ['../instruments/EBells4000.ogg' ],
 				volume: 0.65,
-				onload: function(){document.getElementById("loading").innerHTML = "Strum your phone like it was a pretend guitar!";
-					hasLoaded=true;
-				},
+				onload: soundsLoaded(),
 				sprite: {
 					1 : [ 0*noteLength, 3800],
 					2 : [ 1*noteLength, 3800],
@@ -77,22 +115,54 @@
 				}
 			});
 
+var changeInstrument = function(){
+	stopPlaying();
+	$("#console").html("LOADING")
+		var url=("../instruments/" + $("#instrument").val());
+	sound.unload();
+	sound = new Howl({
+		urls: [url],
+		volume: 0.65,
+		onload: soundsLoaded(),
+		sprite: {
+			1 : [ 0*noteLength, 3800],
+			2 : [ 1*noteLength, 3800],
+			3 : [ 2*noteLength, 3800],
+			4 : [ 3*noteLength, 3800],
+			5 : [ 4*noteLength, 3800],
+			6 : [ 5*noteLength, 3800],
+			7 : [ 6*noteLength, 3800],
+			8 : [ 7*noteLength, 3800],
+			9 : [ 8*noteLength, 3800],
+			10 : [ 9*noteLength, 3800],
+			11 : [10*noteLength, 3800],
+			12 : [11*noteLength, 3800],
+			13 : [12*noteLength, 3800],
+			14 : [13*noteLength, 3800],
+			15 : [14*noteLength, 3800],
+			16 : [15*noteLength, 3800],
+			17 : [16*noteLength, 3800],
+			18 : [17*noteLength, 3800],
+			19 : [18*noteLength, 3800],
+			20 : [19*noteLength, 3800],
+			21 : [20*noteLength, 3800],
+			22 : [21*noteLength, 3800],
+			23 : [22*noteLength, 3800],
+			24 : [23*noteLength, 3800]
+			}
+		});
+};
 
 
 
 
-
-
-
-
-			gyro.frequency=50;
 
 
 
 			var previousAngle;
 
 			gyro.startTracking(function(o) {
-				if (hasLoaded){
+				if (playalong.playing===true){
 					if ((o.beta >=-15 && previousAngle<-15) || (o.beta <=-15 && previousAngle>-15)){
 						sound.play(chordNotes[1]+1);
 					}

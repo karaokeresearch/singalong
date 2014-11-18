@@ -8,6 +8,8 @@
 	playalong.serverMuted=false;
 	playalong.isCalibrator=false;
 	playalong.sounds={};
+	playalong.preLoadDelay=0;
+
 	playalong.sounds.silence= new Howl({
 				urls: ['../silence.wav'],
 				autoplay: false,
@@ -42,7 +44,7 @@
 		if (playalong.serverMuted===false && playalong.isCalibrator===false){
 			Howler.volume(0);		
 			}
-		document.getElementById("console").innerHTML = "REMOTELY MUTED. PLEASE STAND BY.";
+		$("#console").html("REMOTELY MUTED. PLEASE STAND BY.");
 
 	}
 	
@@ -51,8 +53,11 @@
 			Howler.volume(1);
 		}
 		playalong.serverMuted=false;
-		if (playalong.calibrating===true){document.getElementById("console").innerHTML ='Calibration mode activated';}else{
-		document.getElementById("console").innerHTML = instructions;
+		if (playalong.calibrating===true){
+			$("#console").html('Calibration mode activated');
+			$("#currentChord").css("visibility", "hidden");}else{
+		$("#console").html(instructions);
+		$("#currentChord").css("visibility", "visible");
 		}
 
 		
@@ -121,10 +126,11 @@
 	
 				
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
+		console.log(data);
 			if (data.itemType==="chordChange"){
 			if (data.nextChange<=ntp.serverTime()){changeChord(data.nextChord);}//if timestamped in the past, don't wait 0.25sec to run
 				else{			
-				playalong.playQueue.push(["chordChange", parseInt(data.nextChange)-playalong.lagOffset,data.nextChord])
+				playalong.playQueue.push(["chordChange", (parseInt(data.nextChange)-playalong.lagOffset)-	playalong.preLoadDelay,data.nextChord])
 			}
 		}
 			
@@ -146,7 +152,7 @@
 	
 	
 				
-	socket.on('bCalibrate', function (data) { //listen for chord change requests
+	socket.on('bCalibrate', function (data) { //listen for calibration requests
 
 			if (data.message==="start"){
 		    socket.emit('calibrationRegistry', {
@@ -159,13 +165,15 @@
 			}
 
 			if (data.message==="stop"){
-				playalong.calibrating=false;
-				clearInterval(playalong.calibrateInterval);
-				startPlaying();
-				console.log("Calibration off or stopped.");
-				document.getElementById("console").innerHTML = instructions;
-				document.getElementById("calibrate").innerHTML ="";	
-
+				if(playalong.calibrating===true){
+					playalong.calibrating=false;
+					clearInterval(playalong.calibrateInterval);
+					startPlaying();
+					console.log("Calibration off or stopped.");
+					$("#console").html(instructions);
+					$("#calibrate").html("");	
+					$("#currentChord").css("visibility","visible");
+				}
 			}
 
 
@@ -173,8 +181,9 @@
 				stopPlaying();
 				if (playalong.calibrating===false){
 					playalong.calibrating=true;
-					document.getElementById("console").innerHTML ='Calibration mode activated';
-					document.getElementById("calibrate").innerHTML =data.number;	
+					$("#console").html('Calibration mode activated');
+					$("#currentChord").css("visibility", "hidden");
+					$("#calibrate").html(data.number);	
 
 	    		playalong.calibrateInterval=setInterval(function () { //demo: add items to the queue once a second
 						var serverTime=ntp.serverTime();

@@ -3,42 +3,117 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 		<title>Finger Strummer</title>
 	</head>
+
+
 	<body bgcolor="#DDFFDD" style="padding: 0; margin: 0;">
-
-		<div id="hit" style="font-size: 0; background: #42d692; padding: 0px;">
-			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
-			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 60%;"></span>
-			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
-			<span id="target" style="background: #222222; display: inline-block; width: 20%; height: 60%;"></span>
-			<span id="target" style="background: #FFFFFF; display: inline-block; width: 20%; height: 60%;"></span>
-		</div>
-		<p></p>
-		<div id="whee" style="text-align:center;"> </div>
-
-		<div id="instructions" style="font-size: 2em; text-align:center;">Use your finger or mouse to swipe across the ersatz keyboard.</div>
-
 		<script type="text/javascript" src="../cookies.js"></script>
+		<script type="text/javascript" src="../gyro.js"></script>
 		<script type="text/javascript" src="../howler.js"></script>
-		<script type="text/javascript" src="../hammer.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="../ntpclient.js"></script>
 		<script type="text/javascript" src="../teoria.js"></script>
-		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
 		<script type="text/javascript" src="../playalong.js"></script>
+		<script type="text/javascript" src="../hammer.js"></script>
 
-		<script>
+
+<style>
+    #hit {
+        display: table;
+        width: 100%;
+        height:60%
+    }
+
+    #hit > * {
+        border-right: 6px solid grey;
+        display: table-cell;
+        width: 20%;
+			}
+			
+
+</style>
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
+
+		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
+		
+
+
+
+		<div id="hit" style="font-size: 0; background: #42d692; height: 60%; padding: 0px;">
+			<span id="target1" style="background: #FFFFFF;"></span></span>
+			<span id="target2" style="background: #FFFFFF;"></span>
+			<span id="target3" style="background: #FFFFFF;"></span>
+			<span id="target4" style="background: #FFFFFF;"></span>
+			<span id="target5" style="background: #FFFFFF;""></span>
+		</div>
+		<p>
+			
+		<select onchange="changeInstrument()" id="instrument">
+		  <option value="EPiano4000.ogg">Piano</option>
+		  <option value="EGuitar4000.ogg">Guitar</option>
+		  <option  selected="selected" value="EBells4000.ogg">Bells</option>
+		  <option value="EOrgan4000.ogg">Organ</option>
+		</select>
+			
+			
+			</p>
+		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
+
+
+
+
+		<script type="text/javascript">
 
 			var socket = io.connect();
 			ntp.init(socket);      
 			playalong.init(socket);
-			var preload=150;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
-			var lagOverride=300 + preload;
-			var playQueue=[];
+			playalong.preLoadDelay=150;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
+			var instructions='<span>FINGER STRUMMER<br>Adjust your volume and strum across the "strings" above to generate sounds.</span>';
 
+			$( "#target5").css('border-right', '6px solid white'); //because hax
 
 			var xPrev=0;
 
 
 			var el = document.querySelector("#hit");
+
+		
+		
+		
+
+
+ 		var checkStrum = function(finger) {//play the note
+				if (playalong.playing===true){
+					
+					for (j = 1; j < 5; j++) {
+						var stringPos=j*(window.innerWidth/5)-3;
+			       //your finger right of line  and   previously left of line   and previously rightof the string minus 1/5 the screen
+						if((finger.center.x >stringPos && finger.center.x < stringPos + window.innerWidth/5 && xPrev<=stringPos && xPrev>stringPos-window.innerWidth/5) || (finger.center.x <stringPos && finger.center.x > stringPos - window.innerWidth/5 && xPrev>=stringPos && xPrev<stringPos+window.innerWidth/5)) {
+	             
+							sound.play(chordNotes[j-1]+1,function(soundID){
+							if (j<5){ //seems unnecessary, and yet...
+								$( "#target"+j).css('border-right', '6px solid #00FF00');
+								makeGrey(j);
+							}
+							stringIDs[j-1]=soundID;
+							//document.getElementById("whee").innerHTML = j +" was "  + xPrev + ", is " + finger.center.x + ", and 1/5=" + (window.innerWidth/5);
+							});
+						}
+	
+					}
+					//document.getElementById("instructions").innerHTML = "was "  + xPrev + ", is " + finger.center.x;
+	
+					xPrev=finger.center.x;
+
+				}
+			}
+
+
+
 
 
 			var mc = new Hammer(el);
@@ -52,22 +127,51 @@
       
       var changeChord = function (whichChord){
 				chordNotes=[];
-      	console.log(whichChord);
-				var chord=teoria.chord(whichChord);
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push((chord.notes()[i].key()+4)%24); 
+      	//console.log(whichChord);
+
+
+			 	var keepgoing=true;
+				try{
+					var chord=teoria.chord(whichChord);
 				}
-				for (i=0; i< chord.notes().length; i++) {
-					chordNotes.push(((chord.notes()[i].key()+16)%24));
+				catch(err){keepgoing=false;}
+					
+				if (keepgoing){
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push((chord.notes()[i].key()+4)%24); 
+					}
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push(((chord.notes()[i].key()+16)%24));
+					}
+					chordNotes.sort(function(a, b){return a-b});
+					$("#currentChord").html("<br><b>"+whichChord +"</b>");
 				}
-				chordNotes.sort(function(a, b){return a-b});
 			}
 			
+
+var stopPlaying=function(){
+	playalong.playing=false;
+
+};
+
+var startPlaying=function(){
+	playalong.playing=true;
+};			
 			
-			noteLength=4000;
+var soundsLoaded= function(){
+	//setTimeout(function(){
+		$("#console").html(instructions);
+		startPlaying();
+	//},2000);
+};
+			
+			
+			
+			var noteLength=4000;
 			var sound = new Howl({
-				urls: ['EgoingUpBells4000.ogg' ],
+				urls: ['../instruments/EBells4000.ogg' ],
 				volume: 0.65,
+				onload: soundsLoaded(),
 				sprite: {
 					1 : [ 0*noteLength, 3800],
 					2 : [ 1*noteLength, 3800],
@@ -96,25 +200,49 @@
 				}
 			});
 
-			function checkStrum(finger) {//play the note
-				for (j = 1; j < 5; j++) {
-					var stringPos=j*(window.innerWidth/5);
-       //your finger right of line  and   previously left of line   and previously rightof the string minus 1/5 the screen
-       //         
-					if((finger.center.x >stringPos && finger.center.x < stringPos + window.innerWidth/5 && xPrev<=stringPos && xPrev>stringPos-window.innerWidth/5) || (finger.center.x <stringPos && finger.center.x > stringPos - window.innerWidth/5 && xPrev>=stringPos && xPrev<stringPos+window.innerWidth/5)) {
-             
-						sound.play(chordNotes[j-1]+1,function(soundID){
-						stringIDs[j-1]=soundID;
-						//document.getElementById("whee").innerHTML = j +" was "  + xPrev + ", is " + finger.center.x + ", and 1/5=" + (window.innerWidth/5);
-						});
-					}
-
-				}
-				//document.getElementById("instructions").innerHTML = "was "  + xPrev + ", is " + finger.center.x;
-
-				xPrev=finger.center.x;
-
+var changeInstrument = function(){
+	stopPlaying();
+	$("#console").html("LOADING")
+		var url=("../instruments/" + $("#instrument").val());
+	sound.unload();
+	sound = new Howl({
+		urls: [url],
+		volume: 0.65,
+		onload: soundsLoaded(),
+		sprite: {
+			1 : [ 0*noteLength, 3800],
+			2 : [ 1*noteLength, 3800],
+			3 : [ 2*noteLength, 3800],
+			4 : [ 3*noteLength, 3800],
+			5 : [ 4*noteLength, 3800],
+			6 : [ 5*noteLength, 3800],
+			7 : [ 6*noteLength, 3800],
+			8 : [ 7*noteLength, 3800],
+			9 : [ 8*noteLength, 3800],
+			10 : [ 9*noteLength, 3800],
+			11 : [10*noteLength, 3800],
+			12 : [11*noteLength, 3800],
+			13 : [12*noteLength, 3800],
+			14 : [13*noteLength, 3800],
+			15 : [14*noteLength, 3800],
+			16 : [15*noteLength, 3800],
+			17 : [16*noteLength, 3800],
+			18 : [17*noteLength, 3800],
+			19 : [18*noteLength, 3800],
+			20 : [19*noteLength, 3800],
+			21 : [20*noteLength, 3800],
+			22 : [21*noteLength, 3800],
+			23 : [22*noteLength, 3800],
+			24 : [23*noteLength, 3800]
 			}
+		});
+};
+
+var makeGrey= function(whichString){
+	setTimeout(function(){
+		$( "#target"+whichString).css('border-right', '6px solid grey');
+	},250);
+}
 
 		</script>
 	</body>
