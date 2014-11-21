@@ -52,10 +52,16 @@
 		<p>
 			
 		<select onchange="changeInstrument()" id="instrument">
-		  <option value="EPiano4000.ogg">Piano</option>
-		  <option value="EGuitar4000.ogg">Guitar</option>
-		  <option  selected="selected" value="EBells4000.ogg">Bells</option>
-		  <option value="EOrgan4000.ogg">Organ</option>
+		<option value ="Banjo2000.ogg">Banjo</option>
+    <option value ="Bells4000.ogg">Bells</option>          
+    <option value ="BlipB500.ogg">Blip B</option>          
+    <option value ="BlipF500.ogg">Blip F</option>           
+    <option value ="Guitar4000.ogg">Guitar</option>         
+    <option value ="ItalianAccordian500.ogg">Italian Accordian</option>
+    <option selected="selected" value ="Marimba1000.ogg">Marimba</option>        
+    <option value ="MutedGuitar500.ogg">Muted Guitar</option>     
+    <option value ="Piano4000.ogg">Piano</option>          
+		<option value ="Pizz2000.ogg">Pizzicato Strings</option>           
 		</select>
 			
 			
@@ -83,6 +89,12 @@
 
 		
 		
+
+
+		$(document).ready(function () { //
+			changeInstrument();
+		});
+
 		
 
 
@@ -159,81 +171,54 @@ var startPlaying=function(){
 };			
 			
 var soundsLoaded= function(){
+	
 	//setTimeout(function(){
 		$("#console").html(instructions);
 		startPlaying();
 	//},2000);
 };
 			
-			
-			
-			var noteLength=4000;
-			var sound = new Howl({
-				urls: ['../instruments/EBells4000.ogg' ],
-				volume: 0.65,
-				onload: soundsLoaded(),
-				sprite: {
-					1 : [ 0*noteLength, 3800],
-					2 : [ 1*noteLength, 3800],
-					3 : [ 2*noteLength, 3800],
-					4 : [ 3*noteLength, 3800],
-					5 : [ 4*noteLength, 3800],
-					6 : [ 5*noteLength, 3800],
-					7 : [ 6*noteLength, 3800],
-					8 : [ 7*noteLength, 3800],
-					9 : [ 8*noteLength, 3800],
-					10 : [ 9*noteLength, 3800],
-					11 : [10*noteLength, 3800],
-					12 : [11*noteLength, 3800],
-					13 : [12*noteLength, 3800],
-					14 : [13*noteLength, 3800],
-					15 : [14*noteLength, 3800],
-					16 : [15*noteLength, 3800],
-					17 : [16*noteLength, 3800],
-					18 : [17*noteLength, 3800],
-					19 : [18*noteLength, 3800],
-					20 : [19*noteLength, 3800],
-					21 : [20*noteLength, 3800],
-					22 : [21*noteLength, 3800],
-					23 : [22*noteLength, 3800],
-					24 : [23*noteLength, 3800]
-				}
-			});
+		
 
 var changeInstrument = function(){
 	stopPlaying();
 	$("#console").html("LOADING")
 		var url=("../instruments/" + $("#instrument").val());
-	sound.unload();
+		url.match(/([0-9]+)\.ogg$/);
+		var noteLength= parseInt(RegExp.$1);
+		if (typeof sound !== 'undefined') {
+			sound.unload();
+		}
+
 	sound = new Howl({
 		urls: [url],
 		volume: 0.65,
-		onload: soundsLoaded(),
+		onload: soundsLoaded,
 		sprite: {
-			1 : [ 0*noteLength, 3800],
-			2 : [ 1*noteLength, 3800],
-			3 : [ 2*noteLength, 3800],
-			4 : [ 3*noteLength, 3800],
-			5 : [ 4*noteLength, 3800],
-			6 : [ 5*noteLength, 3800],
-			7 : [ 6*noteLength, 3800],
-			8 : [ 7*noteLength, 3800],
-			9 : [ 8*noteLength, 3800],
-			10 : [ 9*noteLength, 3800],
-			11 : [10*noteLength, 3800],
-			12 : [11*noteLength, 3800],
-			13 : [12*noteLength, 3800],
-			14 : [13*noteLength, 3800],
-			15 : [14*noteLength, 3800],
-			16 : [15*noteLength, 3800],
-			17 : [16*noteLength, 3800],
-			18 : [17*noteLength, 3800],
-			19 : [18*noteLength, 3800],
-			20 : [19*noteLength, 3800],
-			21 : [20*noteLength, 3800],
-			22 : [21*noteLength, 3800],
-			23 : [22*noteLength, 3800],
-			24 : [23*noteLength, 3800]
+			1 : [ 0*noteLength,  noteLength-30],
+			2 : [ 1*noteLength,  noteLength-30],
+			3 : [ 2*noteLength,  noteLength-30],
+			4 : [ 3*noteLength,  noteLength-30],
+			5 : [ 4*noteLength,  noteLength-30],
+			6 : [ 5*noteLength,  noteLength-30],
+			7 : [ 6*noteLength,  noteLength-30],
+			8 : [ 7*noteLength,  noteLength-30],
+			9 : [ 8*noteLength,  noteLength-30],
+			10 : [ 9*noteLength, noteLength-30],
+			11 : [10*noteLength, noteLength-30],
+			12 : [11*noteLength, noteLength-30],
+			13 : [12*noteLength, noteLength-30],
+			14 : [13*noteLength, noteLength-30],
+			15 : [14*noteLength, noteLength-30],
+			16 : [15*noteLength, noteLength-30],
+			17 : [16*noteLength, noteLength-30],
+			18 : [17*noteLength, noteLength-30],
+			19 : [18*noteLength, noteLength-30],
+			20 : [19*noteLength, noteLength-30],
+			21 : [20*noteLength, noteLength-30],
+			22 : [21*noteLength, noteLength-30],
+			23 : [22*noteLength, noteLength-30],
+			24 : [23*noteLength, noteLength-30]
 			}
 		});
 };

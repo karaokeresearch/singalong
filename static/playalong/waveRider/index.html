@@ -16,6 +16,15 @@
 
 		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
 		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<select style="font-size:2em" onchange="changeInstrument()" id="instrument">
+			<option selected="selected" value="organ.ogg">Organ</option>
+			<option value="8-bit.wav">8-bit</option>
+			<option value="humanvoxlow.ogg">Human Vocals (low)</option>
+			<option value="humanvoxhigh.ogg">Human Vocals (high)</option>
+			<option value="stringslow.ogg">Strings (low)</option>
+			<option value="stringshigh.ogg">Strings (high)</option>
+		</select>
+
 		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
 		
 		
@@ -23,7 +32,7 @@
 
 
 <div style="position: fixed; bottom:4px; right:4px">
-<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:7em; padding-top:0.3em"></a></button>
 </div>
 
 <script type="text/javascript" >
@@ -48,8 +57,23 @@ var instructions='<span>WAVE RIDER<br>Adjust your volume and tap the screen to a
 
 
 
+$(document).ready(function () { //
+	loadLoops("organ", "wav");
+});
+
+
 var startPlaying=function(){
 	playalong.playing=true;
+};
+
+
+var stopPlaying=function(){
+	playalong.playing=false;
+	tone1.volume(0);
+	tone2.volume(0);
+	tone3.volume(0);
+	tone4.volume(0);
+
 };
 
 var soundsLoaded= function(){
@@ -58,25 +82,49 @@ var soundsLoaded= function(){
 	startPlaying();
 }
 
-
-//load WAV samples
-for (i=1; i<=23; i++){
-var wavurl=i+ '.wav';
-	baseTone[i] = new Howl({
-		urls: [wavurl],
-		autoplay: true,
-		loop: true,
-		volume: 0
-	});
+var changeInstrument = function(){
+	var option=$("#instrument").val().split(".");
+	loadLoops(option[0], option[1]);
+	
 }
 
-baseTone[24] = new Howl({
-	urls: ['24.wav'],
-	autoplay: true,
-	loop: true,
-	volume: 0,
-	onload: soundsLoaded()
-});
+var loadLoops= function(directory, extension){
+	console.log(directory,extension);
+	if (playalong.playing===true){stopPlaying();}
+	$("#console").html("LOADING");
+
+	if (baseTone.length>0){
+			for (i=1; i<=24; i++){
+			baseTone[i].unload();
+		}
+	}
+
+
+	for (i=1; i<=24; i++){
+		var wavurl=directory + "/" + (i) + "." + extension;
+	
+		if (i!==24){
+			baseTone[i] = new Howl({
+				urls: [wavurl],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+	
+		}else{
+			baseTone[24] = new Howl({
+				urls: [wavurl],
+				autoplay: true,
+				loop: true,
+				volume: 0,
+				onload: soundsLoaded
+			});
+		}
+	}
+changeChord(playalong.currentChord);
+}
+
+
 
 
 
@@ -130,17 +178,9 @@ var changeChord = function (whichChord){
 }
 };
 
-var stopPlaying=function(){
-	playalong.playing=false;
-	tone1.volume(0);
-	tone2.volume(0);
-	tone3.volume(0);
-	tone4.volume(0);
-
-};
 
 
-var decreaseInterval=0.020;
+var decreaseInterval=0.017;
 
 
 

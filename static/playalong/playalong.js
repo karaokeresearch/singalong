@@ -95,6 +95,8 @@
 					var whatsnext=playalong.playQueue[0][2];
 					setTimeout(function (){
 						changeChord(whatsnext);
+						playalong.currentChord=whatsnext;
+
 					}, (playalong.playQueue[0][1] - ntp.serverTime()));
 				}());
 			}
@@ -126,15 +128,17 @@
 	
 				
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
-		console.log(data);
+		//console.log(data);
 			if (data.itemType==="chordChange"){
-			if (data.nextChange<=ntp.serverTime()){changeChord(data.nextChord);}//if timestamped in the past, don't wait 0.25sec to run
+			if (data.nextChange<=ntp.serverTime()){
+				changeChord(data.nextChord);
+				playalong.currentChord=data.nextChord;
+				}//if timestamped in the past, don't wait 0.25sec to run
 				else{			
 				playalong.playQueue.push(["chordChange", (parseInt(data.nextChange)-playalong.lagOffset)-	playalong.preLoadDelay,data.nextChord])
 			}
 		}
 			
-			//changeChord(whatsnext);
 	});
 
 	
@@ -169,7 +173,7 @@
 					playalong.calibrating=false;
 					clearInterval(playalong.calibrateInterval);
 					startPlaying();
-					console.log("Calibration off or stopped.");
+					//console.log("Calibration off or stopped.");
 					$("#console").html(instructions);
 					$("#calibrate").html("");	
 					$("#currentChord").css("visibility","visible");
@@ -205,8 +209,9 @@
 
 
 	socket.on('bSelectedChord', function (data) { //should only happen at startup
-		console.log("received bSelectedChord " + data.chord);
+		//console.log("received bSelectedChord " + data.chord);
 		changeChord(data.chord);
+		playalong.currentChord=data.chord;
 	});
 
 
