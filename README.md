@@ -1,5 +1,6 @@
 # singalong.js
-**_A product of the Karaoke Research Council_**
+**A product of the Karaoke Research Council**
+
 Singalong is a new type of musical instrument and display engine to facilitate live musical performances. It's written entirely in javascript and HTML5 and uses socket.io to broadcast and utilize lyrics and chord change data between a central server and many clients. The conductor uses an inexpensive USB or MIDI foot pedal to control the progress of a given song.
 
 It consists of two parts:
