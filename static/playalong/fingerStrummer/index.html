@@ -14,7 +14,7 @@
 		<script type="text/javascript" src="../teoria.js"></script>
     <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
 		<script type="text/javascript" src="../playalong.js"></script>
-		<script type="text/javascript" src="../hammer.js"></script>
+		<script type="text/javascript" src="../hammer.min.js"></script>
 
 
 <style>
@@ -96,31 +96,29 @@
 		});
 
 		
-
+		var checkPress = function(finger){
+			xPrev=finger.center.x;	
+			console.log("press");
+		};
 
  		var checkStrum = function(finger) {//play the note
 				if (playalong.playing===true){
-					
+				if (xPrev<1){xPrev=finger.center.x;}
 					for (j = 1; j < 5; j++) {
 						var stringPos=j*(window.innerWidth/5)-3;
 			       //your finger right of line  and   previously left of line   and previously rightof the string minus 1/5 the screen
-						if((finger.center.x >stringPos && finger.center.x < stringPos + window.innerWidth/5 && xPrev<=stringPos && xPrev>stringPos-window.innerWidth/5) || (finger.center.x <stringPos && finger.center.x > stringPos - window.innerWidth/5 && xPrev>=stringPos && xPrev<stringPos+window.innerWidth/5)) {
+
+						if (xPrev>stringPos && finger.center.x<stringPos || xPrev<stringPos && finger.center.x>stringPos  ){
+						xPrev=finger.center.x;
+ 						console.log("now:", finger.center.x, "then:", xPrev, "j:" , j);						
 	             
 							sound.play(chordNotes[j-1]+1,function(soundID){
-							if (j<5){ //seems unnecessary, and yet...
 								$( "#target"+j).css('border-right', '6px solid #00FF00');
 								makeGrey(j);
-							}
-							stringIDs[j-1]=soundID;
-							//document.getElementById("whee").innerHTML = j +" was "  + xPrev + ", is " + finger.center.x + ", and 1/5=" + (window.innerWidth/5);
+ 							 	stringIDs[j-1]=soundID;
 							});
 						}
-	
 					}
-					//document.getElementById("instructions").innerHTML = "was "  + xPrev + ", is " + finger.center.x;
-	
-					xPrev=finger.center.x;
-
 				}
 			}
 
@@ -130,7 +128,7 @@
 
 			var mc = new Hammer(el);
 			mc.on("panmove", checkStrum);
-			mc.on("tap", checkStrum);
+			mc.on("panstart", checkPress);
 
 			//mc.on("swipe pan panstart panmove panend pancancel multipan press pressup pinch rotate tap doubletap",
 

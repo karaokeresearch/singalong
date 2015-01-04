@@ -1011,7 +1011,7 @@ function getQueryVariable(variable)
 }
 
 
-//-------------------------------------------The Queue
+//-------------------------------------------The Queue (scheduler)
 setInterval(function () { //the queue
 	while ((singalong.playQueue.length>0) &&(singalong.playQueue[0][1] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
 	console.log(singalong.playQueue);
@@ -1036,7 +1036,7 @@ socket.on('bClientQueue', function (data) { //listen for chord change requests
 			console.log("speedMultiplier", speedMultiplier);
 		
 			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
-			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//180ms for my phone!!!
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//Set to zero here, but really 180ms for my phone!!! It's a problem!
 		}
 });
 

@@ -124,7 +124,7 @@ playalong.lockOrientation= function() {
 
 
 
-	setInterval(function () { //the queue
+	setInterval(function () { //the queue (scheduler)
 
 	if (document.hidden){//phone screensaver engages or tab switched? Stop making any noise.
 		focusMute();
