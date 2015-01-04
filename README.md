@@ -10,17 +10,17 @@ An karaoke-like presentation for your browser. Two modes: a "classic" karaoke mo
 ##playalong.js
 New in release 0.6, playalong.js is a musical instrument designed to run in a distributed fashion across several mobile devices, such as smart phones and tablets. It consists of three instruments: fingerStrummer, angleRider, and waveRider. Tones emitted from these client devices change on the fly to stay in sync with chord sheet information currently being displayed by singalong.js's scheduler. It's cool! Included virtual instruments include:
 
-*Accordian
-*Banjo
-*Bells
-*Blips
-*Guitar
-*Human chorus
-*Marimba
-*Organ
-*Piano
-*Pizzacato strings
-*Strings section
+* Accordian
+* Banjo
+* Bells
+* Blips
+* Guitar
+* Human chorus
+* Marimba
+* Organ
+* Piano
+* Pizzacato strings
+* Strings section
 
 ## Key Controls
 Once playalong is running, a client attached to localhost may control the output of any attached client using the following keystrokes:
