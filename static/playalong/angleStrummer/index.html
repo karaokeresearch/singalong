@@ -2,7 +2,7 @@
 	<head>
 		<title>Angle Strummer</title>
 	</head>
-	<body bgcolor="#CCCCFF" onclick="playalong.loadIOS()">
+	<body bgcolor="#CCCCFF">
 		
 		<script type="text/javascript" src="../cookies.js"></script>
 		<script type="text/javascript" src="../gyro.js"></script>
@@ -15,19 +15,19 @@
 		<script type="text/javascript" src="../playalong.js"></script>
 
   	<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
-		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:2em; font-family=Sans;">LOADING</div>
 <br>
 	<select style="font-size:4em" onchange="changeInstrument()" id="instrument">
-		<option selected="selected" value ="Banjo2000.ogg">Banjo</option>
-    <option value ="Bells4000.ogg">Bells</option>          
-    <option value ="BlipB500.ogg">Blip B</option>          
-    <option value ="BlipF500.ogg">Blip F</option>           
-    <option value ="Guitar4000.ogg">Guitar</option>         
-    <option value ="ItalianAccordian500.ogg">Italian Accordian</option>
-    <option value ="Marimba1000.ogg">Marimba</option>        
-    <option value ="MutedGuitar500.ogg">Muted Guitar</option>
-    <option value ="Piano4000.ogg">Piano</option>
-		<option value ="Pizz2000.ogg">Pizzicato Strings</option>
+		<option selected="selected" value ="Banjo2000">Banjo</option>
+    <option value ="Bells4000">Bells</option>          
+    <option value ="BlipB500">Blip B</option>          
+    <option value ="BlipF500">Blip F</option>           
+    <option value ="Guitar4000">Guitar</option>         
+    <option value ="ItalianAccordian500">Italian Accordian</option>
+    <option value ="Marimba1000">Marimba</option>        
+    <option value ="MutedGuitar500">Muted Guitar</option>
+    <option value ="Piano4000">Piano</option>
+		<option value ="Pizz2000">Pizzicato Strings</option>
 	</select>
 
 		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
@@ -43,10 +43,10 @@
 			var socket = io.connect();
 			ntp.init(socket);      
 			playalong.init(socket);
-			playalong.preLoadDelay=0;
+			playalong.preLoadDelay=150;
 
 			gyro.frequency=50;
-			var instructions='<span>ANGLE STRUMMER<br>Adjust your volume and tap the screen to activate sounds if iPad/Pod/Phone.<BR><BR>Grasp your device so your thumb and index finger touch the front and back. Strum it as if you were playing the guitar.</span>';
+			var instructions='<span>ANGLE STRUMMER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and grasp your device so your thumb and index finger touch the front and back. Strum it as if you were playing the guitar.</span>';
 
 
 		$(document).ready(function () { //
@@ -97,41 +97,41 @@ var changeInstrument = function(){
 	stopPlaying();
 	$("#console").html("LOADING")
 		var url=("../instruments/" + $("#instrument").val());
-		url.match(/([0-9]+)\.ogg$/);
+		url.match(/([0-9]+)$/);
 		var noteLength= parseInt(RegExp.$1);
 		if (typeof sound !== 'undefined') {
 			sound.unload();
 		}
 
 	sound = new Howl({
-		urls: [url],
+		urls: [url+'.ogg', url+'.wav'],
 		volume: 0.65,
 		onload: soundsLoaded,
 		sprite: {
-			1 : [ 0*noteLength,  noteLength-30],
-			2 : [ 1*noteLength,  noteLength-30],
-			3 : [ 2*noteLength,  noteLength-30],
-			4 : [ 3*noteLength,  noteLength-30],
-			5 : [ 4*noteLength,  noteLength-30],
-			6 : [ 5*noteLength,  noteLength-30],
-			7 : [ 6*noteLength,  noteLength-30],
-			8 : [ 7*noteLength,  noteLength-30],
-			9 : [ 8*noteLength,  noteLength-30],
-			10 : [ 9*noteLength, noteLength-30],
-			11 : [10*noteLength, noteLength-30],
-			12 : [11*noteLength, noteLength-30],
-			13 : [12*noteLength, noteLength-30],
-			14 : [13*noteLength, noteLength-30],
-			15 : [14*noteLength, noteLength-30],
-			16 : [15*noteLength, noteLength-30],
-			17 : [16*noteLength, noteLength-30],
-			18 : [17*noteLength, noteLength-30],
-			19 : [18*noteLength, noteLength-30],
-			20 : [19*noteLength, noteLength-30],
-			21 : [20*noteLength, noteLength-30],
-			22 : [21*noteLength, noteLength-30],
-			23 : [22*noteLength, noteLength-30],
-			24 : [23*noteLength, noteLength-30]
+			1 : [ 0*noteLength,  noteLength-70],
+			2 : [ 1*noteLength,  noteLength-70],
+			3 : [ 2*noteLength,  noteLength-70],
+			4 : [ 3*noteLength,  noteLength-70],
+			5 : [ 4*noteLength,  noteLength-70],
+			6 : [ 5*noteLength,  noteLength-70],
+			7 : [ 6*noteLength,  noteLength-70],
+			8 : [ 7*noteLength,  noteLength-70],
+			9 : [ 8*noteLength,  noteLength-70],
+			10 : [ 9*noteLength, noteLength-70],
+			11 : [10*noteLength, noteLength-70],
+			12 : [11*noteLength, noteLength-70],
+			13 : [12*noteLength, noteLength-70],
+			14 : [13*noteLength, noteLength-70],
+			15 : [14*noteLength, noteLength-70],
+			16 : [15*noteLength, noteLength-70],
+			17 : [16*noteLength, noteLength-70],
+			18 : [17*noteLength, noteLength-70],
+			19 : [18*noteLength, noteLength-70],
+			20 : [19*noteLength, noteLength-70],
+			21 : [20*noteLength, noteLength-70],
+			22 : [21*noteLength, noteLength-70],
+			23 : [22*noteLength, noteLength-70],
+			24 : [23*noteLength, noteLength-70]
 			}
 		});
 };

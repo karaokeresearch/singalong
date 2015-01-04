@@ -1,8 +1,22 @@
 <html>
 	<head>
+				<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 		<title>Motion Instrument</title>
 	</head>
-	<body bgcolor="pink" onclick="playalong.loadIOS()">
+	<body bgcolor="pink">
+<style>
+ 
+         body
+         {
+            box-sizing: border-box;
+				    text-size-adjust: 100%;
+				    -moz-text-size-adjust: 100%;
+				    -ms-text-size-adjust: 100%;
+				    -webkit-text-size-adjust: 100%;
+            margin: 0em auto;
+            padding: 0 0em;
+         }
+ </style>
 
 		<script type="text/javascript" src="../cookies.js"></script>
 		<script type="text/javascript" src="../gyro.js"></script>
@@ -14,25 +28,28 @@
 
 		<script type="text/javascript" src="../playalong.js"></script>
 
-		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
-		<div id="console" style="font-size:2em; font-family=Sans;">LOADING</div>
-		<select style="font-size:2em" onchange="changeInstrument()" id="instrument">
-			<option selected="selected" value="organ.ogg">Organ</option>
-			<option value="8-bit.wav">8-bit</option>
-			<option value="humanvoxlow.ogg">Human Vocals (low)</option>
-			<option value="humanvoxhigh.ogg">Human Vocals (high)</option>
-			<option value="stringslow.ogg">Strings (low)</option>
-			<option value="stringshigh.ogg">Strings (high)</option>
+		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:1em; font-family=Sans;">LOADING</div>
+		<select style="font-size:1em" onchange="changeInstrument()" id="instrument">
+			<option selected="selected" value="organ">Organ</option>
+			<!-- //We reject this one because I can't make an mp3 file this small... FOR NOW
+			<option value="8-bit">8-bit</option>
+			
+			-->
+			<option value="humanvoxlow">Human Vocals (low)</option>
+			<option value="humanvoxhigh">Human Vocals (high)</option>
+			<option value="stringslow">Strings (low)</option>
+			<option value="stringshigh">Strings (high)</option>
 		</select>
 
-		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
+		<div id="currentChord" style="font-size:2em; font-family=Sans;"></div>
 		
 		
 		<BR>
 
 
 <div style="position: fixed; bottom:4px; right:4px">
-<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:7em; padding-top:0.3em"></a></button>
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:3em; padding-top:0.3em"></a></button>
 </div>
 
 <script type="text/javascript" >
@@ -53,12 +70,12 @@ var tone4;
 
 var baseTone=[];
 
-var instructions='<span>WAVE RIDER<br>Adjust your volume and tap the screen to activate sounds if iPad/Pod/Phone.<BR><BR>Grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
+var instructions='<span>WAVE RIDER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
 
 
 
 $(document).ready(function () { //
-	loadLoops("organ", "wav");
+	loadLoops("organ");
 });
 
 
@@ -83,13 +100,11 @@ var soundsLoaded= function(){
 }
 
 var changeInstrument = function(){
-	var option=$("#instrument").val().split(".");
-	loadLoops(option[0], option[1]);
-	
+	loadLoops($("#instrument").val());
 }
 
-var loadLoops= function(directory, extension){
-	console.log(directory,extension);
+var loadLoops= function(directory){
+
 	if (playalong.playing===true){stopPlaying();}
 	$("#console").html("LOADING");
 
@@ -101,11 +116,11 @@ var loadLoops= function(directory, extension){
 
 
 	for (i=1; i<=24; i++){
-		var wavurl=directory + "/" + (i) + "." + extension;
+		var wavurl=directory + "/" + (i);
 	
 		if (i!==24){
 			baseTone[i] = new Howl({
-				urls: [wavurl],
+				urls: [wavurl+'.ogg', wavurl+'.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
@@ -113,7 +128,7 @@ var loadLoops= function(directory, extension){
 	
 		}else{
 			baseTone[24] = new Howl({
-				urls: [wavurl],
+				urls: [wavurl+'.ogg', wavurl+'.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0,

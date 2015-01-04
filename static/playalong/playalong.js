@@ -35,8 +35,55 @@
 	playalong.init = function (sock) {
 	var socket=sock;
 
+
+playalong.fullscreen = function(element) {
+      if(document.documentElement.requestFullscreen) {
+         document.documentElement.requestFullscreen();
+      } else if(document.documentElement.webkitRequestFullscreen) {
+         document.documentElement.webkitRequestFullscreen();
+      } else if(document.documentElement.mozRequestFullScreen) {
+         document.documentElement.mozRequestFullScreen();
+      } else if(document.documentElement.msRequestFullscreen) {
+         element.msRequestFullscreen();
+      }
+};
+
+
+playalong.lockOrientation= function() {
+			if (typeof screen.orientation !== "undefined" && screen.orientation.lock !== "undefined" ){
+				screen.orientation.lock('portrait-primary');
+			} else if(window.screen.lockOrientation){
+				window.screen.lockOrientation('portrait-primary');
+			} else if(window.screen.mozLockOrientation){
+				window.screen.mozLockOrientation('portrait-primary');
+			} else if (window.screen.msLockOrientation){
+			window.screen.msLockOrientation('portrait-primary');
+			} 
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	playalong.loadIOS= function(){
+		var a=playalong.fullscreen();
+
 		playalong.sounds.silence.play();
+
+		playalong.lockOrientation();
 	}
 	
 	
