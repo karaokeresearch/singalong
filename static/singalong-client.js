@@ -162,6 +162,9 @@
 	        currentChord = 0;
 	        currentLyric = 0;
 	        currentSong = data.song;
+	        averageSpeedMultiplierArray = [];
+					averageSpeedMultiplier= 1;
+					speedMultiplier = 1;
 	
 	
 	        jQuery("body").load("/load", function () {
@@ -371,9 +374,6 @@ var findMedian = function(array) {
 		    
      if (isNaN(futureSpeedMultiplier) || futureSpeedMultiplier < 0.33 || futureSpeedMultiplier > 3) {futureSpeedMultiplier=1;}
 //				
-//				averageSpeedMultiplierArray.push(futureSpeedMultiplier)
-//				if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
-//				averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
 
 
 			var dumbNextChange = parseInt((chordTimings[currentChord -firstChord+2] - chordTimings[currentChord-firstChord+1])*1000*futureSpeedMultiplier);
@@ -1014,12 +1014,21 @@ function getQueryVariable(variable)
 //-------------------------------------------The Queue (scheduler)
 setInterval(function () { //the queue
 	while ((singalong.playQueue.length>0) &&(singalong.playQueue[0][1] - ntp.serverTime() <500)){//although it's tested every 250 ms, we can schedule up to 500ms away.
-	console.log(singalong.playQueue);
-
+	
 		if (singalong.playQueue[0][0] === "chordChange"){
 			(function (){
 				var chordNumber=singalong.playQueue[0][2];
+				var mult=singalong.playQueue[0][3];
 				setTimeout(function (){
+				speedMultiplier=mult || speedMultiplier;
+
+				//averageSpeedMultiplierArray.push(speedMultiplier)
+				//if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
+				//averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
+
+				//console.log("speedMultiplier", speedMultiplier, "average ", averageSpeedMultiplier);
+
+
 					jumpToChord(chordNumber);
 				}, (singalong.playQueue[0][1] - ntp.serverTime()));
 			}());
@@ -1032,11 +1041,9 @@ setInterval(function () { //the queue
 				
 socket.on('bClientQueue', function (data) { //listen for chord change requests
 		if (data.itemType==="chordChange"){
-			speedMultiplier=data.speedMultiplier || speedMultiplier;
-			console.log("speedMultiplier", speedMultiplier);
-		
+
 			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
-			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber])}//Set to zero here, but really 180ms for my phone!!! It's a problem!
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber, data.speedMultiplier])}//Set to zero here, but really 180ms for my phone!!! It's a problem!
 		}
 });
 
