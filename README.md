@@ -1,9 +1,19 @@
 # singalong.js
 **A product of the Karaoke Research Council**
 
-Singalong is a new type of musical instrument and display engine to facilitate live musical performances. It's written entirely in javascript and HTML5 and uses socket.io to broadcast and utilize lyrics and chord change data between a central server and many clients. The conductor uses an inexpensive USB or MIDI foot pedal to control the progress of a given song.
+Singalong is a suite of tools for rehearsing and facilitating live musical performances using a web browser.
 
-It consists of two parts:
+* A mobile-browser-targeted karaoke display with lyric highlighting that works in real time without the use of a click track
+* A similiar interface for live chord charts or "fake books" to facilitate live band karaoke and singalongs
+* A control interface where song progress is controlled by a band member using inexpensive USB foot pedals, or a computer keyboard
+* A set of HTML5-based virtual instruments that allows non-musicians and/or audience members to play along with the band in perfect time
+
+##Core technologies
+Node, socket.io, HTML5, jQuery, gyro.js, hammer.js, howler.js, the Fluid (R3) SoundFont, socket-ntp-krcmod, teoria.js
+
+It's written entirely in javascript and HTML5. Socket.io broadcasts lyrics and chord change data between a central server and one to many clients. A band member or conductor can trigger chord changes using a familiar "chord chart" interface via an inexpensive USB or MIDI foot pedal (or any other kind of input device) to control the progress of a given song.
+
+There's two main parts:
 ##singalong.js
 An karaoke-like presentation for your browser. Two modes: a "classic" karaoke mode with lyric highlighting and a "fake book" mode to feed chord changes to any musician playing along. A typical use for singalong.js uses a scheduler to transmit lyric and/or chord changes, perfectly synchronized to several devices at once over a wireless LAN.
 
