@@ -1,0 +1,113 @@
+<html>
+	<head>
+		<title>Playalong.js administration center</title>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="../ntpclient.js"></script>
+		<script src="../howler.js"></script>
+		<script src="../cookies.js"></script>
+		<script src="../../jquery-2.1.1.min.js"></script>
+		<script src="../playalong.js"></script>
+
+		<script>
+		//the four things every instrument must have (plus some <DIV>s):	
+		var changeChord=function(){};
+		var startPlaying=function(){};
+		var stopPlaying=function(){};
+		var instructions="Ready";			
+		
+
+		var socket = io.connect();
+		ntp.init(socket);      
+		playalong.init(socket);
+		playalong.isCalibrator=true;//admin override so mute doesn't work on me. Security!
+
+		var updateLag=function(uuid, lag){
+		//console.log("updating lag");
+		    socket.emit('updateLag', {
+			        uuid: uuid,
+			        lag: lag,
+			    }); 
+		}
+
+
+		var commitLag=function(uuid,lag){		
+	    socket.emit('commitLag', {
+		        lag: lag,
+		        uuid: uuid
+		        }); 
+		}
+
+
+		var startCalibration=function(){
+		    socket.emit('calibration', {
+			        data: 'start'
+			    }); 
+		}
+		
+		
+		var stopCalibration=function(){
+		    socket.emit('calibration', {
+			        data: 'stop'
+			    }); 
+		}
+
+
+		
+		var muteAll=function(){
+		    socket.emit('serverMuteAll', {
+			        mute: true
+			    }); 
+		}
+
+		
+		var unMuteAll=function(){
+		    socket.emit('serverMuteAll', {
+			        mute: false
+			    }); 
+		}
+
+		var muteSocket=function(uuid){
+		    socket.emit('muteSocket', {
+			        uuid: uuid
+			    }); 
+		}
+
+
+		var unMuteSocket=function(uuid){
+		    socket.emit('unMuteSocket', {
+			        uuid: uuid
+			    }); 
+		}
+
+
+
+
+		var refreshAdmin=function(){		
+		$( "#admin" ).load( "/admin");
+	}
+
+
+
+		</script>
+	</head>
+	<body>
+<h1>Playalong.js calibration module</h1>
+<button onclick="startCalibration()">Start Calibration</button>
+<button onclick="stopCalibration()">Stop Calibration</button>
+<br><br><br>
+<button onclick="refreshAdmin()">Refresh</button>
+<br><br><br>
+<div id="admin"></div>
+
+<br><br>
+		<div id="calibrate" style="font-size:2em; font-family=Sans;"></div>
+		<div id="console" style="font-size:1em; font-family=Sans;">Console</div>
+	 <div id="currentChord" style="font-size:1em; font-family=Sans;"></div>
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
+		
+		
+	</body>
+</html>

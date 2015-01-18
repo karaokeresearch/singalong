@@ -1,0 +1,273 @@
+<html>
+	<head>
+				<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+		<title>Motion Instrument</title>
+	</head>
+	<body bgcolor="pink">
+<style>
+ 
+         body
+         {
+            box-sizing: border-box;
+				    text-size-adjust: 100%;
+				    -moz-text-size-adjust: 100%;
+				    -ms-text-size-adjust: 100%;
+				    -webkit-text-size-adjust: 100%;
+            margin: 0em auto;
+            padding: 0 0em;
+         }
+ </style>
+
+		<script type="text/javascript" src="../cookies.js"></script>
+		<script type="text/javascript" src="../gyro.js"></script>
+		<script type="text/javascript" src="../howler.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="../ntpclient.js"></script>
+		<script type="text/javascript" src="../teoria.js"></script>
+    <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
+
+		<script type="text/javascript" src="../playalong.js"></script>
+
+		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:1em; font-family=Sans;">LOADING</div>
+		<select style="font-size:1em" onchange="changeInstrument()" id="instrument">
+			<option selected="selected" value="organ">Organ</option>
+			<!-- //We reject this one because I can't make an mp3 file this small... FOR NOW
+			<option value="8-bit">8-bit</option>
+			
+			-->
+			<option value="humanvoxlow">Human Vocals (low)</option>
+			<option value="humanvoxhigh">Human Vocals (high)</option>
+			<option value="stringslow">Strings (low)</option>
+			<option value="stringshigh">Strings (high)</option>
+		</select>
+
+		<div id="currentChord" style="font-size:2em; font-family=Sans;"></div>
+		
+		
+		<BR>
+
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:3em; padding-top:0.3em"></a></button>
+</div>
+
+<script type="text/javascript" >
+
+var socket = io.connect();
+ntp.init(socket);      
+playalong.init(socket);
+
+
+gyro.frequency=50;
+//var maxMotion=10;
+var averageMotion=15;
+
+var tone1;
+var tone2;
+var tone3;
+var tone4;
+
+var baseTone=[];
+
+var instructions='<span>WAVE RIDER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
+
+
+
+$(document).ready(function () { //
+	loadLoops("organ");
+});
+
+
+var startPlaying=function(){
+	playalong.playing=true;
+};
+
+
+var stopPlaying=function(){
+	playalong.playing=false;
+	tone1.volume(0);
+	tone2.volume(0);
+	tone3.volume(0);
+	tone4.volume(0);
+
+};
+
+var soundsLoaded= function(){
+
+	$("#console").html(instructions);
+	startPlaying();
+}
+
+var changeInstrument = function(){
+	loadLoops($("#instrument").val());
+}
+
+var loadLoops= function(directory){
+
+	if (playalong.playing===true){stopPlaying();}
+	$("#console").html("LOADING");
+
+	if (baseTone.length>0){
+			for (i=1; i<=24; i++){
+			baseTone[i].unload();
+		}
+	}
+
+
+	for (i=1; i<=24; i++){
+		var wavurl=directory + "/" + (i);
+	
+		if (i!==24){
+			baseTone[i] = new Howl({
+				urls: [wavurl+'.ogg', wavurl+'.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0
+			});
+	
+		}else{
+			baseTone[24] = new Howl({
+				urls: [wavurl+'.ogg', wavurl+'.wav'],
+				autoplay: true,
+				loop: true,
+				volume: 0,
+				onload: soundsLoaded
+			});
+		}
+	}
+changeChord(playalong.currentChord);
+}
+
+
+
+
+
+
+var changeChord = function (whichChord){
+	var keepgoing=true;
+	try{
+		var chord=teoria.chord(whichChord);
+	}
+	catch(err){keepgoing=false;}
+	if(keepgoing){
+		var chordNotes =[];
+		for (i=0; i< chord.notes().length; i++) {
+			chordNotes.push((chord.notes()[i].key()+4)%24);
+		}
+		for (i=0; i< chord.notes().length; i++) {
+			chordNotes.push(((chord.notes()[i].key()+16)%24));
+		}
+		chordNotes.sort(function(a, b){return a-b});
+	
+	
+		var tempVol1=0;
+		var tempVol2=0;
+		var tempVol3=0;
+		var tempVol4=0;
+		
+		
+		if (tone1){
+			tempVol1=tone1.volume();
+		tone1.volume(0);}
+		if (tone2){
+			tempVol2=tone2.volume();
+		tone2.volume(0);}
+		if (tone3){
+			tempVol3=tone3.volume();
+		tone3.volume(0);}
+		if (tone4){
+			tempVol4=tone4.volume();
+		tone4.volume(0);}
+		
+		tone1 = baseTone[chordNotes[0]+1];
+		tone2 = baseTone[chordNotes[1]+1];
+		tone3 = baseTone[chordNotes[2]+1];
+		tone4 = baseTone[chordNotes[3]+1];
+		
+		tone1.volume(tempVol1);
+		tone2.volume(tempVol2);
+		tone3.volume(tempVol3);
+		tone4.volume(tempVol4);
+		$("#currentChord").html("<br><b>"+whichChord +"</b>");
+}
+};
+
+
+
+var decreaseInterval=0.017;
+
+
+
+
+
+
+
+
+
+
+
+
+gyro.startTracking(function(o) {
+	if (playalong.playing===true){
+
+		
+
+
+		combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+
+		if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
+
+		loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
+
+		if (loudness <0) {loudness=0}
+		var whichLoud;
+
+
+		if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
+			if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
+				tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
+				}else{tone4.volume(tone4.volume()-decreaseInterval)}
+			}else{
+				tone4.volume(tone4.volume()-decreaseInterval)
+			}
+
+			if (o.beta>0 && o.beta<180){ //90 center point
+				if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
+					tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
+					}else{tone1.volume(tone1.volume()-decreaseInterval)}
+
+				}else{
+					tone1.volume(tone1.volume()-decreaseInterval)
+				}
+
+				if (o.beta>-90 && o.beta<90){ //0 center point
+					if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
+						tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
+						}else{tone2.volume(tone2.volume()-decreaseInterval)}
+
+					}else{
+						tone2.volume(tone2.volume()-decreaseInterval)
+					}
+
+					if (o.beta>-180 && o.beta<-0){ // -90 center point
+						if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
+							tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
+							}else{tone3.volume(tone3.volume()-decreaseInterval)}
+
+						}else{
+							tone3.volume(tone3.volume()-decreaseInterval)
+						}
+
+						if (tone4.volume() <decreaseInterval){tone4.volume(0);}
+						if (tone3.volume() <decreaseInterval){tone3.volume(0);}
+						if (tone2.volume() <decreaseInterval){tone2.volume(0);}
+						if (tone1.volume() <decreaseInterval){tone1.volume(0);}
+
+	}
+});
+
+
+		</script>
+	</body>
+</html>

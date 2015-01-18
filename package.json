@@ -1,13 +1,13 @@
 {
   "name": "singalong",
   "preferGlobal": true,
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Application to facilitate casual musical singalongs and live band Karaoke",
-  "contributors": [ 
+  "contributors": [
     {
       "name": "Ross Brackett",
       "email": "krc@brassrocket.com"
-    } 
+    }
   ],
   "bin": {
     "singalong": "./singalong.js"
@@ -19,17 +19,24 @@
     "type": "git",
     "url": "https://github.com/karaokeresearch/singalong.git"
   },
-    "dependencies": {
-    "socket.io":  "0.9.x",
-    "express":  "3.4.x"
-  },  
+  "dependencies": {
+    "express": "4.x",
+    "nedb": "^0.11.1",
+    "socket.io": "1.x",
+    "ua-parser-js": "*",
+    "sortzzy": "*",
+    "socket-ntp-krcmod": "*",
+    "cookie-parser": "*"
+  },
   "keywords": [
     "karaoke",
     "singalong",
     "chords",
     "tab",
     "live",
-    "live-band"
+    "live-band",
+    "virtual instrument",
+    "distributed soundcard"
   ],
   "author": "Karaoke Research Council <krc@brassrocket.com>",
   "license": "GPL-2.0"

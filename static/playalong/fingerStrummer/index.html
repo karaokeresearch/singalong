@@ -1,0 +1,232 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+		<title>Finger Strummer</title>
+	</head>
+
+
+	<body bgcolor="#DDFFDD" style="padding: 0; margin: 0;">
+		<script type="text/javascript" src="../cookies.js"></script>
+		<script type="text/javascript" src="../gyro.js"></script>
+		<script type="text/javascript" src="../howler.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="../ntpclient.js"></script>
+		<script type="text/javascript" src="../teoria.js"></script>
+    <script type="text/javascript" src="../../jquery-2.1.1.min.js"></script>
+		<script type="text/javascript" src="../playalong.js"></script>
+		<script type="text/javascript" src="../hammer.min.js"></script>
+
+
+<style>
+    #hit {
+        display: table;
+        width: 100%;
+        height:60%
+    }
+
+    #hit > * {
+        border-right: 6px solid grey;
+        display: table-cell;
+        width: 20%;
+			}
+			
+
+</style>
+
+<div style="position: fixed; bottom:4px; right:4px">
+<button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button>
+</div>
+
+		<div id="calibrate" style="font-size:20em; font-family=Sans;"></div>
+		
+
+
+
+		<div id="hit" style="font-size: 0; background: #42d692; height: 60%; padding: 0px;">
+			<span id="target1" style="background: #FFFFFF;"></span></span>
+			<span id="target2" style="background: #FFFFFF;"></span>
+			<span id="target3" style="background: #FFFFFF;"></span>
+			<span id="target4" style="background: #FFFFFF;"></span>
+			<span id="target5" style="background: #FFFFFF;""></span>
+		</div>
+		<p>
+			
+		<select onchange="changeInstrument()" id="instrument">
+		<option value ="Banjo2000">Banjo</option>
+    <option value ="Bells4000">Bells</option>          
+    <option value ="BlipB500">Blip B</option>          
+    <option value ="BlipF500">Blip F</option>           
+    <option value ="Guitar4000">Guitar</option>         
+    <option value ="ItalianAccordian500">Italian Accordian</option>
+    <option selected="selected" value ="Marimba1000">Marimba</option>        
+    <option value ="MutedGuitar500">Muted Guitar</option>     
+    <option value ="Piano4000">Piano</option>          
+		<option value ="Pizz2000">Pizzicato Strings</option>           
+		</select>
+			
+			
+			</p>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<div id="currentChord" style="font-size:4em; font-family=Sans;"></div>
+
+
+
+
+		<script type="text/javascript">
+
+			var socket = io.connect();
+			ntp.init(socket);      
+			playalong.init(socket);
+			playalong.preLoadDelay=150;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
+			var instructions='<span>FINGER STRUMMER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and strum across the "strings" above to generate sounds.</span>';
+
+			$( "#target5").css('border-right', '6px solid white'); //because hax
+
+			var xPrev=0;
+
+
+			var el = document.querySelector("#hit");
+
+		
+		
+
+
+		$(document).ready(function () { //
+			changeInstrument();
+		});
+
+		
+		var checkPress = function(finger){
+			xPrev=finger.center.x;	
+			console.log("press");
+		};
+
+ 		var checkStrum = function(finger) {//play the note
+				if (playalong.playing===true){
+				if (xPrev<1){xPrev=finger.center.x;}
+					for (j = 1; j < 5; j++) {
+						var stringPos=j*(window.innerWidth/5)-3;
+			       //your finger right of line  and   previously left of line   and previously rightof the string minus 1/5 the screen
+
+						if (xPrev>stringPos && finger.center.x<stringPos || xPrev<stringPos && finger.center.x>stringPos  ){
+						xPrev=finger.center.x;
+ 						console.log("now:", finger.center.x, "then:", xPrev, "j:" , j);						
+	             
+							sound.play(chordNotes[j-1]+1,function(soundID){
+								$( "#target"+j).css('border-right', '6px solid #00FF00');
+								makeGrey(j);
+ 							 	stringIDs[j-1]=soundID;
+							});
+						}
+					}
+				}
+			}
+
+
+
+
+
+			var mc = new Hammer(el);
+			mc.on("panmove", checkStrum);
+			mc.on("panstart", checkPress);
+
+			//mc.on("swipe pan panstart panmove panend pancancel multipan press pressup pinch rotate tap doubletap",
+
+			var stringIDs=[];
+			var chordNotes=[];
+      
+      var changeChord = function (whichChord){
+				chordNotes=[];
+      	//console.log(whichChord);
+
+
+			 	var keepgoing=true;
+				try{
+					var chord=teoria.chord(whichChord);
+				}
+				catch(err){keepgoing=false;}
+					
+				if (keepgoing){
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push((chord.notes()[i].key()+4)%24); 
+					}
+					for (i=0; i< chord.notes().length; i++) {
+						chordNotes.push(((chord.notes()[i].key()+16)%24));
+					}
+					chordNotes.sort(function(a, b){return a-b});
+					$("#currentChord").html("<br><b>"+whichChord +"</b>");
+				}
+			}
+			
+
+var stopPlaying=function(){
+	playalong.playing=false;
+
+};
+
+var startPlaying=function(){
+	playalong.playing=true;
+};			
+			
+var soundsLoaded= function(){
+	
+	//setTimeout(function(){
+		$("#console").html(instructions);
+		startPlaying();
+	//},2000);
+};
+			
+		
+
+var changeInstrument = function(){
+	stopPlaying();
+	$("#console").html("LOADING")
+		var url=("../instruments/" + $("#instrument").val());
+		url.match(/([0-9]+)$/);
+		var noteLength= parseInt(RegExp.$1);
+		if (typeof sound !== 'undefined') {
+			sound.unload();
+		}
+
+	sound = new Howl({
+		urls: [url+'.ogg', url+'.wav'],
+		volume: 0.65,
+		onload: soundsLoaded,
+		sprite: {
+			1 : [ 0*noteLength,  noteLength-70],
+			2 : [ 1*noteLength,  noteLength-70],
+			3 : [ 2*noteLength,  noteLength-70],
+			4 : [ 3*noteLength,  noteLength-70],
+			5 : [ 4*noteLength,  noteLength-70],
+			6 : [ 5*noteLength,  noteLength-70],
+			7 : [ 6*noteLength,  noteLength-70],
+			8 : [ 7*noteLength,  noteLength-70],
+			9 : [ 8*noteLength,  noteLength-70],
+			10 : [ 9*noteLength, noteLength-70],
+			11 : [10*noteLength, noteLength-70],
+			12 : [11*noteLength, noteLength-70],
+			13 : [12*noteLength, noteLength-70],
+			14 : [13*noteLength, noteLength-70],
+			15 : [14*noteLength, noteLength-70],
+			16 : [15*noteLength, noteLength-70],
+			17 : [16*noteLength, noteLength-70],
+			18 : [17*noteLength, noteLength-70],
+			19 : [18*noteLength, noteLength-70],
+			20 : [19*noteLength, noteLength-70],
+			21 : [20*noteLength, noteLength-70],
+			22 : [21*noteLength, noteLength-70],
+			23 : [22*noteLength, noteLength-70],
+			24 : [23*noteLength, noteLength-70]
+			}
+		});
+};
+
+var makeGrey= function(whichString){
+	setTimeout(function(){
+		$( "#target"+whichString).css('border-right', '6px solid grey');
+	},250);
+}
+
+		</script>
+	</body>
+</html>
