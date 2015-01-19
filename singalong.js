@@ -584,7 +584,7 @@ var determineLag=function(model, uuid, callback){
 					if (docs.length){//we found one or more matches for exact device model
 					
 						sortExtractLagData(docs, model, function(lag,bestResult){
-							//console.log("it's a PC!");
+
 							callback(lag, bestResult);
 							//console.log(bestResult);
 						});
@@ -692,8 +692,19 @@ app.use('/ua', function(req, res, next){
 	
 	var model= parser.setUA(ua).getResult();
 	  determineLag(model, uuid, function(lag,bestResult){
-			if (bestResult){var score=bestResult.score;}else{var score=0;}
- 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted}));
+			if (bestResult){ //should always happen
+				if (bestResult.device.vendor){//mobile
+					if (bestResult.device.vendor==="Apple"){var displayLag=100;}
+					else{var displayLag=200;}
+				}else{//not mobile
+					var displayLag=0;
+					}
+				var score=bestResult.score;}
+			else{  //something bad happened.
+				var score=0;
+			}
+			
+ 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, displayLag:displayLag}));
 		});
 });
 

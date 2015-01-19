@@ -177,7 +177,7 @@ playalong.lockOrientation= function() {
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
 		//console.log(data);
 			if (data.itemType==="chordChange"){
-			if (data.nextChange<=ntp.serverTime()){
+			if (data.nextChange<=ntp.serverTime()-playalong.lagOffset){
 				changeChord(data.nextChord);
 				playalong.currentChord=data.nextChord;
 				}//if timestamped in the past, don't wait 0.25sec to run

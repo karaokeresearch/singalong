@@ -77,7 +77,7 @@
 			var socket = io.connect();
 			ntp.init(socket);      
 			playalong.init(socket);
-			playalong.preLoadDelay=150;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
+			playalong.preLoadDelay=0;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
 			var instructions='<span>FINGER STRUMMER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and strum across the "strings" above to generate sounds.</span>';
 
 			$( "#target5").css('border-right', '6px solid white'); //because hax

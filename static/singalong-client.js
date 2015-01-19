@@ -50,6 +50,25 @@
 	
 	//********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 	$(document).ready(function () { //
+
+
+		$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
+		
+		if (Cookies('displayLag')){
+				singalong.displayLag=parseInt(Cookies('displayLag'));
+		}else{	
+			singalong.displayLag= data.displayLag;
+		}
+			Cookies.set('displayLag', data.displayLag, { expires: '01/01/2030' });
+		});
+	
+
+
+
+
+
+
+
 	
 	    //Possible events
 	    $(window).resize(function () { //detect if the window is resized, if so, resize the text
@@ -361,7 +380,6 @@ var findMedian = function(array) {
 	//***************** EMITTER FUNCTIONS **********************
 	var sendChord = function(whichchord) { //wherein we send to the server "next" and "id"
 		if (whichchord - currentChord === -1){//left 
-	//	averageSpeedMultiplierArray.pop();
 		 socket.emit('oops', {
 		    oops: true
 		 }); 		
@@ -1022,9 +1040,9 @@ setInterval(function () { //the queue
 				setTimeout(function (){
 				speedMultiplier=mult || speedMultiplier;
 
-				//averageSpeedMultiplierArray.push(speedMultiplier)
-				//if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
-				//averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
+				averageSpeedMultiplierArray.push(speedMultiplier)
+				if (averageSpeedMultiplierArray.length>3){averageSpeedMultiplierArray.shift()};
+				averageSpeedMultiplier=Number(findMedian(averageSpeedMultiplierArray));
 
 				//console.log("speedMultiplier", speedMultiplier, "average ", averageSpeedMultiplier);
 
@@ -1042,13 +1060,15 @@ setInterval(function () { //the queue
 socket.on('bClientQueue', function (data) { //listen for chord change requests
 		if (data.itemType==="chordChange"){
 
-			if (data.nextChange<=ntp.serverTime()){jumpToChord(data.chordNumber);}//if zero time, run immediately
-			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-0,data.chordNumber, data.speedMultiplier])}//Set to zero here, but really 180ms for my phone!!! It's a problem!
+			if (data.nextChange<=ntp.serverTime()-singalong.displayLag){jumpToChord(data.chordNumber);}//if zero time, run immediately
+			else{singalong.playQueue.push(["chordChange", parseInt(data.nextChange)-singalong.displayLag,data.chordNumber, data.speedMultiplier])}//Set to zero here, but really 180ms for my phone!!! It's a problem!
 		}
 });
 
 socket.on('bOops', function (data) { //listen for chord change requests
-	console.log("oops!")
-	console.log(singalong.playQueue.pop());
+	console.log("oops!", singalong.playQueue[0]);
+	console.log(singalong.playQueue.splice(1,1));
+	speedMultiplier=averageSpeedMultiplier[0];
+	averageSpeedMultiplierArray.pop();
 });
 

@@ -1,7 +1,7 @@
 {
   "name": "singalong",
   "preferGlobal": true,
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Application to facilitate casual musical singalongs and live band Karaoke",
   "contributors": [
     {
