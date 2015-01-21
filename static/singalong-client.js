@@ -54,12 +54,24 @@
 
 		$.getJSON("/ua", function (data) {  //don't set these into a cookie until adjusted by server
 		
-		if (Cookies('displayLag')){
-				singalong.displayLag=parseInt(Cookies('displayLag'));
-		}else{	
-			singalong.displayLag= data.displayLag;
-		}
-			Cookies.set('displayLag', data.displayLag, { expires: '01/01/2030' });
+	//the next few lines are commented out because we are still messing with this system.
+	//		if (Cookies('displayLag')){
+	//				singalong.displayLag=parseInt(Cookies('displayLag'));
+		//	}else{	
+				if (data.osName ==="Android"){
+					singalong.displayLag=200;
+				} 
+				else if (data.osName ==="iOS"){
+					singalong.displayLag=100;
+				} 
+				else if (data.osName ==="Windows Phone" || data.osName ==="Windows Mobile"){
+					singalong.displayLag=150;
+				} 
+				else{singalong.displayLag=0;}
+			
+				singalong.osName=data.osName;
+//   		}
+//			Cookies.set('displayLag', singalong.displayLag, { expires: '01/01/2030' });
 		});
 	
 

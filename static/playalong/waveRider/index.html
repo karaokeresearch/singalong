@@ -29,7 +29,7 @@
 		<script type="text/javascript" src="../playalong.js"></script>
 
 		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
-		<div id="console" onclick="playalong.loadIOS()" style="font-size:1em; font-family=Sans;">LOADING</div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:2em; font-family=Sans;">LOADING</div>
 		<select style="font-size:1em" onchange="changeInstrument()" id="instrument">
 			<option selected="selected" value="organ">Organ</option>
 			<!-- //We reject this one because I can't make an mp3 file this small... FOR NOW
@@ -70,7 +70,7 @@ var tone4;
 
 var baseTone=[];
 
-var instructions='<span>WAVE RIDER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and grasp your device so your finger touches the screen. Tilt the phone to various angles and move it through 3D space to generate different sounds.</span>';
+var instructions='<span><b>WAVE RIDER</b><br>Instructions: Tilt the phone to various angles and move it through 3D space to generate different tones.</span>';
 
 
 
@@ -93,11 +93,6 @@ var stopPlaying=function(){
 
 };
 
-var soundsLoaded= function(){
-
-	$("#console").html(instructions);
-	startPlaying();
-}
 
 var changeInstrument = function(){
 	loadLoops($("#instrument").val());
@@ -132,7 +127,7 @@ var loadLoops= function(directory){
 				autoplay: true,
 				loop: true,
 				volume: 0,
-				onload: soundsLoaded
+				onload: playalong.soundsLoaded
 			});
 		}
 	}

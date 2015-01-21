@@ -43,7 +43,7 @@
 
 
 		<div id="hit" style="font-size: 0; background: #42d692; height: 60%; padding: 0px;">
-			<span id="target1" style="background: #FFFFFF;"></span></span>
+			<span id="target1" style="background: #FFFFFF;"></span>
 			<span id="target2" style="background: #FFFFFF;"></span>
 			<span id="target3" style="background: #FFFFFF;"></span>
 			<span id="target4" style="background: #FFFFFF;"></span>
@@ -78,7 +78,7 @@
 			ntp.init(socket);      
 			playalong.init(socket);
 			playalong.preLoadDelay=0;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
-			var instructions='<span>FINGER STRUMMER<br>Tap here to activate sounds for iPad/iPod/iPhone or to go full screen. Adjust your volume and strum across the "strings" above to generate sounds.</span>';
+			var instructions='<span><b>FINGER STRUMMER</b><br>Instructions: Strum across the "strings" above to generate sounds.</span>';
 
 			$( "#target5").css('border-right', '6px solid white'); //because hax
 
@@ -168,14 +168,6 @@ var startPlaying=function(){
 	playalong.playing=true;
 };			
 			
-var soundsLoaded= function(){
-	
-	//setTimeout(function(){
-		$("#console").html(instructions);
-		startPlaying();
-	//},2000);
-};
-			
 		
 
 var changeInstrument = function(){
@@ -191,7 +183,7 @@ var changeInstrument = function(){
 	sound = new Howl({
 		urls: [url+'.ogg', url+'.wav'],
 		volume: 0.65,
-		onload: soundsLoaded,
+		onload: playalong.soundsLoaded,
 		sprite: {
 			1 : [ 0*noteLength,  noteLength-70],
 			2 : [ 1*noteLength,  noteLength-70],

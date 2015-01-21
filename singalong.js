@@ -533,7 +533,9 @@ if (data.length>0){
 		i++;
 	}
 	avgLag=parseInt(avgLag/i);
-	callback(avgLag, results[0]);
+	var dataForCallback=results[0].data
+	dataForCallback.score = results[0].score
+	callback(avgLag, dataForCallback);
 }else{callback(200,'');} //it should never come to this, since the function should always be passsed data.  But just in case...
 }
 
@@ -693,18 +695,12 @@ app.use('/ua', function(req, res, next){
 	var model= parser.setUA(ua).getResult();
 	  determineLag(model, uuid, function(lag,bestResult){
 			if (bestResult){ //should always happen
-				if (bestResult.device.vendor){//mobile
-					if (bestResult.device.vendor==="Apple"){var displayLag=100;}
-					else{var displayLag=200;}
-				}else{//not mobile
-					var displayLag=0;
-					}
 				var score=bestResult.score;}
 			else{  //something bad happened.
 				var score=0;
 			}
-			
- 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, displayLag:displayLag}));
+//			console.log(bestResult);
+ 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, osName:bestResult.os.name}));
 		});
 });
 
