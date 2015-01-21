@@ -9,6 +9,7 @@
 	playalong.isCalibrator=false;
 	playalong.sounds={};
 	playalong.preLoadDelay=0;
+	playalong.activated=false;
 
 	playalong.sounds.silence= new Howl({
 				urls: ['../silence.wav'],
@@ -202,24 +203,26 @@ playalong.lockOrientation= function() {
 
 
 	playalong.soundsLoaded= function(){
-			$("#console").html(instructions);
 
-	if (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone"){
+	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone")){
 			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT</span>");
-	}		
+	}else{
+			$("#console").html(instructions);
+	}
 		startPlaying();
 }
 
 
 
 	playalong.loadIOS= function(){
-		
+	
 		playalong.sounds.silence.play();
 		
 		var a=playalong.fullscreen();
 		playalong.lockOrientation();
 		$("#console").html(instructions);
-
+		playalong.activated=true;
+	
 	}
 	
 	
