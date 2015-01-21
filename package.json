@@ -1,8 +1,8 @@
 {
   "name": "singalong",
   "preferGlobal": true,
-  "version": "0.6.3",
-  "description": "Application to facilitate casual musical singalongs and live band Karaoke",
+  "version": "0.6.4",
+  "description": "Live band karaoke and virtual musical instruments in your mobile browser",
   "contributors": [
     {
       "name": "Ross Brackett",
