@@ -19,15 +19,23 @@
 
 <style>
     #hit {
+    	  background-color:white;
         display: table;
         width: 100%;
-        height:60%
+        height:60%;
+        padding: 0px;
     }
 
-    #hit > * {
-        border-right: 6px solid grey;
-        display: table-cell;
-        width: 20%;
+		.spacer{
+				display: inline-block;
+        width: 19.2%;
+		}
+			
+    .string{
+				background-color: grey;
+				display: inline-block;
+        width: 1%;
+        height: 100%;
 			}
 			
 
@@ -42,12 +50,17 @@
 
 
 
-		<div id="hit" style="font-size: 0; background: #42d692; height: 60%; padding: 0px;">
-			<span id="target1" style="background: #FFFFFF;"></span>
-			<span id="target2" style="background: #FFFFFF;"></span>
-			<span id="target3" style="background: #FFFFFF;"></span>
-			<span id="target4" style="background: #FFFFFF;"></span>
-			<span id="target5" style="background: #FFFFFF;""></span>
+		<div id="hit">
+			<span class="spacer"></span>
+			<span class="string" id="target1"></span>
+			<span class="spacer"></span>
+			<span class="string" id="target2"></span>
+			<span class="spacer"></span>
+			<span class="string" id="target3"></span>
+			<span class="spacer"></span>
+			<span class="string" id="target4"></span>
+			<span class="spacer"></span>
+
 		</div>
 		<p>
 			
@@ -80,8 +93,6 @@
 			playalong.preLoadDelay=0;      //how far in advance to pre-load chords (akin to how quickly a guitar player's left hand moves in anticipation of the chord change)
 			var instructions='<span><b>FINGER STRUMMER</b><br>Instructions: Strum across the "strings" above to generate sounds.</span>';
 
-			$( "#target5").css('border-right', '6px solid white'); //because hax
-
 			var xPrev=0;
 
 
@@ -113,7 +124,7 @@
  						console.log("now:", finger.center.x, "then:", xPrev, "j:" , j);						
 	             
 							sound.play(chordNotes[j-1]+1,function(soundID){
-								$( "#target"+j).css('border-right', '6px solid #00FF00');
+								$( "#target"+j).css('background-color', '#00FF00');
 								makeGrey(j);
  							 	stringIDs[j-1]=soundID;
 							});
@@ -215,7 +226,7 @@ var changeInstrument = function(){
 
 var makeGrey= function(whichString){
 	setTimeout(function(){
-		$( "#target"+whichString).css('border-right', '6px solid grey');
+		$( "#target"+whichString).css('background-color', 'grey');
 	},250);
 }
 
