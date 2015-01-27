@@ -153,7 +153,7 @@ var returnIndexHTML=function(callback){ //Spit out the index based on the list o
         }
 
         parseChunk = parseChunk + '<form name="hiddenvars"><input type="hidden" id="longestLine" value="' + longestLine + '"><input type="hidden" id="lastPos" value="1"><input type="hidden" id="lastLyric" value="1"></form>' //passing variables to the client.  Is this the right way?  My guess is probably yes.
-        parseChunk = parseChunk + '<div style="position: fixed; bottom:4px; right:4px"><button style="background-color:#DDDDDD;"><a href="/index.html"><img src="../../hamburger.png" style="width:2em; padding-top:0.3em"></a></button></div>';
+        parseChunk = parseChunk + '<a href="/index.html"><div style="position: fixed; bottom:1em; right:1em; background-color:#EEEEEE"><img src="../../hamburger.png" style="width:2em; padding:0.5em; border:0.1em solid #999999;"></div></a>';
 
         
         callback(parseChunk);
@@ -369,7 +369,7 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
             parseChunk = parseChunk + '</span>';
             parseChunk = parseChunk + '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';
         }
-        parseChunk = parseChunk + ' <button style="background-color:#DDDDDD;"><a href="index.html"><img src="hamburger.png" style="width:2em; padding-top:0.3em"></a></button>';
+        parseChunk = parseChunk + '<a href="/index.html"><div style="display: inline-block; background-color:#EEEEEE"><img src="../../hamburger.png" style="width:2em; padding:0.5em; border:0.1em solid #999999;"></div></a>';
         
 
         parseChunk = parseChunk + '</div>';
