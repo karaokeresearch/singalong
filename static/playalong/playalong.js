@@ -163,7 +163,7 @@
 
 
 
-playalong.fullscreen = function(element) {
+playalong.fullscreen = function(callback) {
       if(document.documentElement.requestFullscreen) {
          document.documentElement.requestFullscreen();
       } else if(document.documentElement.webkitRequestFullscreen) {
@@ -171,7 +171,7 @@ playalong.fullscreen = function(element) {
       } else if(document.documentElement.mozRequestFullScreen) {
          document.documentElement.mozRequestFullScreen();
       } else if(document.documentElement.msRequestFullscreen) {
-         element.msRequestFullscreen();
+         document.documentElement.msRequestFullscreen();
       }
 };
 
@@ -216,13 +216,16 @@ playalong.lockOrientation= function() {
 
 	playalong.loadIOS= function(){
 	
-		playalong.sounds.silence.play();
+		playalong.sounds.silence.play(); //unlock audio on iOS
 		
-		var a=playalong.fullscreen();
-		playalong.lockOrientation();
+		playalong.fullscreen();  //while we're at it, let's fullscreen and lock orientation
+		
+		setTimeout(function(){
+			playalong.lockOrientation();
+			},1); //you've got to be kidding me. This fixes Firefox orientation lock #haxx #findabetterway
+		
 		$("#console").html(instructions);
 		playalong.activated=true;
-	
 	}
 	
 	
