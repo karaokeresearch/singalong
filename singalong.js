@@ -653,6 +653,7 @@ returnIndexHTML(function (HTML) { //generate the initial index, cache it
 //************** URL handlers ********************
 
 app.get('/load', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
+res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate'); //IE11 gets confused otherwise
     if (currentSong == "index") {
         res.end(parsedHTML);
     } else {
@@ -691,16 +692,17 @@ app.use('/ua', function(req, res, next){
 			if (calibrationClients[i].uuid===uuid && calibrationClients[i].serverMuted===true){var serverMuted=true;}
 		}
 
-	
+	var osName;
 	var model= parser.setUA(ua).getResult();
 	  determineLag(model, uuid, function(lag,bestResult){
 			if (bestResult){ //should always happen
+				osName=bestResult.os.name;
 				var score=bestResult.score;}
 			else{  //something bad happened.
 				var score=0;
 			}
 //			console.log(bestResult);
- 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, osName:bestResult.os.name}));
+ 			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, osName:osName}));
 		});
 });
 

@@ -1,12 +1,12 @@
 @font-face {
     font-family: Bitstream Vera Sans Mono Bold;
-    src: url('VeraMoBd.eot?') format('eot'),
+    src: url('VeraMoBd.eot?') format('embedded-opentype'),
     url('VeraMoBd.ttf') format('truetype');
 }
 
 @font-face {
     font-family: Bitstream Vera Sans Mono;
-    src: url('VeraMono.eot?') format('eot'),
+    src: url('VeraMono.eot?') format('embedded-opentype'),
     url('VeraMono.ttf') format('truetype');
 }
 
@@ -43,7 +43,7 @@
 .lyrics{
     color: #666666;
     background-color: #FFFFFF;
-    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New;
     padding: 0;
     margin-top: 0;
     margin-right: 0;
@@ -58,7 +58,7 @@
     text-align: center;
     color: black;
     background-color: #FFFFFF;
-    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New;
     padding: 0;
     margin-top: 0em;
     margin-right: 0;
@@ -72,7 +72,7 @@
     text-align: center;
     color: blue;
     background-color: #FFFFFF;
-    font-family:Bitstream Vera Sans Mono Bold,  Courier New Bold;
+    font-family:Bitstream Vera Sans Mono Bold,  Courier New;
     padding: 0;
     margin-top: 0;
     margin-right: 0;
@@ -85,7 +85,7 @@
 
 .highlightedchord{
 	color: #000000;                                              
-	font-family: Bitstream Vera Sans Mono Bold, Courier New Bold; 
+	font-family: Bitstream Vera Sans Mono Bold, Courier New; 
 	background-color: #6CD2FF !important;                                    
 }
 

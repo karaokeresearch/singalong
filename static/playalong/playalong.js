@@ -203,7 +203,6 @@ playalong.lockOrientation= function() {
 
 
 	playalong.soundsLoaded= function(){
-
 	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone")){
 			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT</span>");
 	}else{
