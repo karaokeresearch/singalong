@@ -1,5 +1,5 @@
 /*!
- * singalong-client v0.6.0
+ * singalong-client v0.6.4
  * browser client for singalong.js
  *
  * Karaoke Research Council

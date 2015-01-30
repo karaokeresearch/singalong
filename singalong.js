@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var howlerVersion='1.1.25';
-var singalongVersion='0.6.1';
+var singalongVersion='0.6.4';
 var globalOffset=182;
 var whoCalibratedContact='krc@brassrocket.com';  //put your own email address here so that calibration entries are tied to you in case they ever get rolled back into the master list
 
@@ -697,9 +697,10 @@ app.use('/ua', function(req, res, next){
 
 	var osName;
 	var model= parser.setUA(ua).getResult();
+  osName=model.os.name;
+
 	  determineLag(model, uuid, function(lag,bestResult){
 			if (bestResult){ //should always happen
-				osName=bestResult.os.name;
 				var score=bestResult.score;}
 			else{  //something bad happened.
 				var score=0;

@@ -203,7 +203,7 @@ playalong.lockOrientation= function() {
 
 
 	playalong.soundsLoaded= function(){
-	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone")){
+	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone" || playalong.osName==="Windows Phone OS" || playalong.osName==="Windows Mobile")){
 			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT</span>");
 	}else{
 			$("#console").html(instructions);

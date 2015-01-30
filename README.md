@@ -64,6 +64,18 @@ At startup, singalong looks for a subdirectory called "songs" under the folder y
 
 To add additional songs, place text files containing chord charts in the ./songs subdirectory, and an optional .ogg file to sync it to in ./audio if you want automatic lyrics highlighting for performances.
 
+## Lag
+In order to accurately calibrate clients, playalong.js needs a baseline latency, that is, my laptop's sound card's lag in the browser, or 182 ms. Since your sound card probably sucks less than mine, you will need to manually modify singalong.js to override this latency. Please note that the application doesn't have the ability as of yet to offset for latencies other than 182, this is a to-fix bug. If you're having problems with client sync, this is probably it. The line to change is at the very top of singalong.js. It currently reads:
+
+```
+globalOffset=182;
+```
+
+First determine your computer's sound card latency in the browser you'll be using to control singalong. I don't have an demo that can do this yet, sorry. Basically, you need to mic your keyboard and speaker and measure the amount of time it takes from hitting a key that triggers a sound to when the sound comes out the sound card. This page shows you the gist: https://ccrma.stanford.edu/~matt/latencytest/
+
+Then, delete useragents.nedb in your local directory and calibrate a few clients against your PC until the server can start accurately guessing latencies.
+
+From the menu, hit "Administration" in the lower right corner. Start calibration and hit refresh until all clients are synced up. Save the values to the database and your system will be able to more and more accurately guess client latencies in the future.
 
 ### User experience
 At its most basic level, Singalong is a way to auto-scroll chord charts using a USB foot pedal or the "D" key of your keyboard.  The chord charts are displayed as large as possible on the screen.
