@@ -653,7 +653,7 @@ returnIndexHTML(function (HTML) { //generate the initial index, cache it
 //************** URL handlers ********************
 
 app.get('/load', function (req, res) { //Meat of the HTML data that defines a page.  Loaded into the <BODY> area </BODY>
-res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate'); //IE11 gets confused otherwise
+res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate'); //IE11 gets confused otherwise
     if (currentSong == "index") {
         res.end(parsedHTML);
     } else {
@@ -665,7 +665,10 @@ res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate'); //I
     }
 });
 app.get('/timings', function (req, res) { //JSON timings object
-    res.setHeader('Content-Type', 'application/json');
+    res.set({
+    	'Content-Type': 'application/json',
+			'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+		});
 
     res.end(JSON.stringify(timings));
 
@@ -702,6 +705,11 @@ app.use('/ua', function(req, res, next){
 				var score=0;
 			}
 //			console.log(bestResult);
+    res.set({
+    	'Content-Type': 'application/json',
+			'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+		});
+
  			res.end(JSON.stringify({lag:lag, score:score, uuid:uuid, serverMuted:serverMuted, osName:osName}));
 		});
 });
