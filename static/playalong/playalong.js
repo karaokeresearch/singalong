@@ -52,7 +52,7 @@
 
 	
 				
-	socket.on('bUpdateLag', function (data) { //listen for chord change requests
+	socket.on('bUpdateLag', function (data) { 
 
 		playalong.lagOffset= data.lag;
 		playalong.lagScore= 1;

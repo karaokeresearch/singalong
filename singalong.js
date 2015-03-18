@@ -365,7 +365,7 @@ var returnChordHTML=function(fileName, authorized, callback){ //open up a file f
             parseChunk = parseChunk + '<button onclick="document.getElementById(\'audioplayer\').volume-=0.1">Vol v</button>';
             //parseChunk = parseChunk	+ '<button class="editor" style="display:none" onclick="settingsWindow()">Settings</button>'; //some day, perhaps a metadata approach is warranted.
             parseChunk = parseChunk + '<button onclick="sendJSON()">Save</button>';
-            parseChunk = parseChunk + '<span style="background-color:white; display: inline-block; width:1.5em; text-align:right" id="playbackrate">1</span>x<input type="range" id="speedslider" step="0.1" value="1" min="0.3" max="1" onchange="changePlaybackRate(this.value)">';
+            parseChunk = parseChunk + '<span style="background-color:white; display: inline-block; width:1.5em; text-align:right" id="playbackrate">1</span>x<input type="range" id="speedslider" step="0.0625" value="1" min="0.5" max="1" onchange="changePlaybackRate(this.value)">';
             parseChunk = parseChunk + '</span>';
             parseChunk = parseChunk + '&nbsp;&nbsp;&nbsp;&nbsp;<button onclick="changeSong(\'index\')">Index</button>';
         }
@@ -729,7 +729,7 @@ app.get('/admin', function (req, res) { //Meat of the HTML data that defines a p
 if (securityCheck(req.ip)) {
 	var clients = sortByKey(calibrationClients, 'score');
 	var table='<table border=1>';
-	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th>Vendor</th><th>Model</th><th>OS</th><th>Version</th><th>Socket ID</th><th>UUID</th><th><input type=button value="Mute All" onclick="muteAll()"></th><th><input type=button value="Unmute All" onclick="unMuteAll()"></th></tr>';
+	table+='\n<tr><th>#</th><th>Lag</th><th>DB</th><th>Match %</th><th style="background:#DDDDDD">Vendor</th><th style="background:#DDDDDD">Model</th><th>OS</th><th>Version</th><th style="background:#DDDDDD">Browser</th><th style="background:#DDDDDD">Version</th><th>Socket ID</th><th>UUID</th><th><input type=button value="Mute All" onclick="muteAll()"></th><th><input type=button value="Unmute All" onclick="unMuteAll()"></th></tr>';
 	
 	for (var i=0; i<clients.length; i++){
 	table+= '\n<tr style="background-color:';
@@ -741,7 +741,7 @@ if (securityCheck(req.ip)) {
 	
 	table+='"><td>' + clients[i].number + '</td><td><input onchange="updateLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].uuid +'\').value));" style="width:5em" type="number" id="'+clients[i].uuid+ '" value="' + clients[i].lag + '"></td>';
 	table+='<td><input onclick="commitLag(\''+ clients[i].uuid+ '\', parseInt(document.getElementById(\''+clients[i].uuid+'\').value));" type="button" value="Commit"></td>';
-	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' + clients[i].socketID + '</td><td>' +clients[i].uuid + '</td><td><input type=button value="M" onclick="muteSocket(\''+ clients[i].uuid+ '\');"></td><td><input type=button value="S" onclick="unMuteSocket(\''+ clients[i].uuid + '\');"></td></tr>';	
+	table+='<td>' +  (clients[i].score*100).toFixed(3)+ '</td><td>' +clients[i].ua.device.vendor+ '</td><td>' + clients[i].ua.device.model + '</td><td>' + clients[i].ua.os.name + '</td><td>' +   clients[i].ua.os.version+ '</td><td>' +   clients[i].ua.browser.name+ '</td><td>' +   clients[i].ua.browser.version+ '</td><td>' + clients[i].socketID.substr(16,4) + '</td><td>' +clients[i].uuid.substr(32,4) + '</td><td><input type=button value="M" onclick="muteSocket(\''+ clients[i].uuid+ '\');"></td><td><input type=button value="S" onclick="unMuteSocket(\''+ clients[i].uuid + '\');"></td></tr>';	
 	
 	}
 	table+="</table>";

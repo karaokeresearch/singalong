@@ -1025,8 +1025,8 @@ var findMedian = function(array) {
 	}
 	
 	var changePlaybackRate = function(rate) {
-	document.getElementById('audioplayer').playbackRate=rate	
-	$("#playbackrate").html(rate);
+	document.getElementById('audioplayer').playbackRate=rate;
+	$("#playbackrate").html(Number(rate).toFixed(2));
 	}
 
 function getQueryVariable(variable)
