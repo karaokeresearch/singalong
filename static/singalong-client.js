@@ -46,6 +46,9 @@
 	var nextChange=0;
   
 	ntp.init(socket);      
+
+	singalong.displayLag=0;
+
   //jQuery.fx.interval = 25; //try to fix phone jerkiness since that callback no longer works
 	
 	//********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
