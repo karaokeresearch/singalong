@@ -184,7 +184,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 		averageSpeedMultiplier = 1;
 		speedMultiplier = 1;
 
-		jQuery("body").load("/load", function() {
+		$("body").load("/load", function() {
 			lyricsArmed = false;
 			chordsArmed = false;
 			playerMode = "singalong";
@@ -258,9 +258,10 @@ var textSizer = function(callback) { //resize the text on the page.  The 0.6 has
 	callback();
 };
 
-var goToByScroll = function(fromid, toid) { //moves a scroll spot 1/5 of the way down the screen to the currently selected chord
+var goToByScroll = function(toid) { //moves a scroll spot 1/5 of the way down the screen to the currently selected chord
+	
 	if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
-		//console.log ("scrolling " + fromid + " to " +toid);
+
 		$('html,body').animate({
 			scrollTop: $("#" + toid).offset().top - $(window).height() / 5
 		}, 600); //this value is how many ms it takes for transitions
@@ -284,6 +285,8 @@ var moveChordHighlight = function(fromid, toid, callback) {
 };
 
 var moveLyricHighlight = function(fromid, toid, shouldscroll, callback) {
+	var fromidString;
+	var toidString;
 
 	toid = parseInt(toid);
 	fromid = parseInt(fromid);
@@ -364,7 +367,7 @@ var nudgeLyric = function(increment) {
 
 //***************** EMITTER FUNCTIONS **********************
 var sendChord = function(whichchord) { //wherein we send to the server "next" and "id"
-	var chordnumber;
+	var chordNumber;
 	var selectedChord;
 	var nextChord;
 	var futureSpeedMultiplier;
@@ -425,7 +428,7 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 	});
 	//The first three chords are manual so as to eliminate confusion at top of song.
 	if (currentChord === firstChord + 2) {
-		var chordNumber = currentChord + 2;
+		chordNumber = currentChord + 2;
 		nextChord = $("#chordNumber" + (currentChord + 2)).html();
 		nextChange = dumbNextChange;
 
@@ -473,7 +476,7 @@ var jumpToChord = function(whichchord) { //jump a chord given an integer value t
 		if (whichchord > firstChord || currentSchedulerChord > firstChord) //don't scroll until you're past the preview.
 		{
 			if (!(whichchord - currentSchedulerChord === 1 && ($("#chordNumber" + whichchord).offset().top) - $(document).scrollTop() - ($(window).height() / 5) < 0)) {
-				goToByScroll("chordNumber" + currentSchedulerChord, "chordNumber" + whichchord);
+				goToByScroll("chordNumber" + whichchord);
 			}
 		}
 		currentSchedulerChord = parseInt(whichchord);
@@ -485,7 +488,7 @@ var underlineJumpToChord = function(whichchord) { //jump a chord given an intege
 	if (playerMode === "singalong") { //playback mode.  This chunk of code triggers lyrics
 		if (whichchord < currentChord) { //moving backwards (user hit left, usually)
 			if (typeof lyricTimeouts[currentChord - firstChord] !== "undefined") {
-				for (i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {
+				for (var i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {
 					console.log("clearing ", lyricTimeouts[currentChord - firstChord][i]);
 					clearTimeout(lyricTimeouts[currentChord - firstChord][i]);
 				}
@@ -530,7 +533,6 @@ var modulateChord = function(increment) {
 	var chordNum; //div value when cycling through
 	var toColorName;
 	var cellSaid;
-	var chordBase;
 	var chordSharp = 0;
 	var chordFlat = 0;
 	var chordType;
@@ -790,7 +792,6 @@ var compileTimings = function() {
 
 var playAudio = function() {
 	var i;
-	var j;
 
 	compileTimings();
 
@@ -826,7 +827,7 @@ var pauseAudio = function() {
 	document.getElementById('audioplayer').pause();
 	document.getElementById('speedslider').disabled = false;
 
-	for (i = 0; i < chordTimeouts.length; i++) {
+	for (var i = 0; i < chordTimeouts.length; i++) {
 		clearTimeout(chordTimeouts[i]);
 	}
 
@@ -861,10 +862,6 @@ var triggerLyrics = function(chordnum, multiplier) {
 
 var sendJSON = function() {
 	compileTimings();
-	var myList = [{
-		lyricTimings: lyricTimings,
-		chordTimings: chordTimings
-	}];
 	socket.emit('timings', {
 		lyricOffsets: lyricOffsets,
 		chordTimings: chordTimings,
@@ -883,7 +880,7 @@ var editorMode = function() {
 		$('#singalongbutton').css("color", "grey");
 		playerMode = "editor";
 		$('.editor').show("1000");
-		for (i = 0; i < chordTimings.length; i++) {
+		for (var i = 0; i < chordTimings.length; i++) {
 			if (chordTimings[i] !== null) {
 				$("#chordNumber" + (i + firstChord)).addClass("recorded");
 			}
@@ -908,7 +905,7 @@ var singalongMode = function() {
 	$('#singalongbutton').css("color", "black");
 	playerMode = "singalong";
 	$('.editor').hide("1000");
-	for (i = 0; i < chordTimings.length; i++) {
+	for (var i = 0; i < chordTimings.length; i++) {
 		if (chordTimings[i] !== null) {
 			$("#chordNumber" + (i + firstChord)).removeClass("recorded");
 		}
@@ -923,7 +920,7 @@ var singalongMode = function() {
 
 var armLyrics = function() {
 	if (document.getElementById('audioplayer').paused === true) {
-		lyricsArmed ^= true;
+		lyricsArmed = !lyricsArmed;
 		if (lyricsArmed === true) {
 			$('#armlyricsbutton').css("color", "red");
 		} else {
@@ -935,7 +932,7 @@ var armLyrics = function() {
 var armChords = function() {
 	if (document.getElementById('audioplayer').paused === true) {
 
-		chordsArmed ^= true;
+		chordsArmed = !chordsArmed;
 		if (chordsArmed === true) {
 			$('#armchordsbutton').css("color", "red");
 		} else {
@@ -1037,7 +1034,7 @@ socket.on('bClientQueue', function(data) { //listen for chord change requests
 	}
 });
 
-socket.on('bOops', function(data) { //listen for chord change requests
+socket.on('bOops', function() { //listen for chord change requests
 	console.log("oops!", playQueue[0]);
 	console.log(playQueue.splice(1, 1));
 	speedMultiplier = averageSpeedMultiplier[0];
