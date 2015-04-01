@@ -260,7 +260,7 @@ var textSizer = function(callback) { //resize the text on the page.  The 0.6 has
 
 var goToByScroll = function(toid) { //moves a scroll spot 1/5 of the way down the screen to the currently selected chord
 	
-	if (Math.abs(($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
+	if ((($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
 
 		$('html,body').animate({
 			scrollTop: $("#" + toid).offset().top - $(window).height() / 5
