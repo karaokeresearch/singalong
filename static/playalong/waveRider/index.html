@@ -31,7 +31,7 @@
 		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
 		<div id="console" onclick="playalong.loadIOS()" style="font-size:2em; font-family=Sans;">LOADING</div>
 		<select style="font-size:1em" onchange="changeInstrument()" id="instrument">
-			<option selected="selected" value="organ">Organ</option>
+			<option value="organ">Organ</option>
 			<!-- //We reject this one because I can't make an mp3 file this small... FOR NOW
 			<option value="8-bit">8-bit</option>
 			
@@ -39,7 +39,7 @@
 			<option value="humanvoxlow">Human Vocals (low)</option>
 			<option value="humanvoxhigh">Human Vocals (high)</option>
 			<option value="stringslow">Strings (low)</option>
-			<option value="stringshigh">Strings (high)</option>
+			<option selected="selected" value="stringshigh">Strings (high)</option>
 		</select>
 
 		<div id="currentChord" style="font-size:2em; font-family=Sans;"></div>
@@ -76,7 +76,7 @@ var instructions='<span><b>WAVE RIDER</b><br>Instructions: Tilt the phone to var
 
 
 $(document).ready(function () { //
-	loadLoops("organ");
+	loadLoops("stringshigh");
 });
 
 
