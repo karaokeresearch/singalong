@@ -174,7 +174,7 @@ socket.on('bHighlighting', function(data) {
 });
 
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Received every left or right movement.
-	//console.log('bcurrentSong received: ',data);
+	
 	if (data.song !== currentSong) { //if there's a new song, or it's the index
 		currentSchedulerChord = 0;
 		currentChord = 0;
@@ -192,12 +192,12 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			lastPos = Number($('#lastPos').val()); //the final chord div number
 			lastLyric = Number($('#lastLyric').val()); //the final lyric div number
 			firstChord = Number($('#firstChord').val()); //
-			//console.log("firstchord=" + firstChord);
+			
 			$('html,body').animate({
 				scrollTop: 0
 			}, 0); //scroll to top at new load. Just makes it more professional
 			currentLyric = (data.blid);
-			moveLyricHighlight(currentLyric, data.blid, true, function() {});
+		    moveLyricHighlight(currentLyric, data.blid, true, function() {});
 			modulateChord(totalModulation);
 
 			if (getQueryVariable("mode") === "chordchart") {
@@ -219,11 +219,6 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 				lyricTimings = [];
 			}
 		});
-
-	} else { //if the song is the same, it's just updates
-		if (data.blid !== null) {
-			moveLyricHighlight(currentLyric, data.blid, true, function() {});
-		}
 
 	}
 });
@@ -288,6 +283,7 @@ var moveLyricHighlight = function(fromid, toid, shouldscroll, callback) {
 	var fromidString;
 	var toidString;
 
+    
 	toid = parseInt(toid);
 	fromid = parseInt(fromid);
 	//console.log("Movehightlight - " +fromid + " - " +toid);
@@ -412,7 +408,7 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 		chordNumber = whichchord;
 	}
 
-	console.log("nextChord is " + nextChord + " and nextChange is " + nextChange);
+	
 
 	socket.emit('next', {
 		selectedChord: selectedChord,
@@ -842,14 +838,16 @@ var pauseAudio = function() {
 };
 
 var triggerLyrics = function(chordnum, multiplier) {
+
+
 	//console.log ("triggerLyrics - " + chordnum);
 	var i = 0;
 	lyricTimeouts[chordnum] = [];
-	if (lyricOffsets[chordnum] !== null) {
+	if (lyricOffsets[chordnum] !== undefined) {
 		lyricOffsets[chordnum].forEach(function(name) {
 			i++;
 			lyricTimeouts[chordnum][i] = setTimeout(function() {
-				//console.log (currentChord + " --- " + name[1]);
+				
 				if (currentSchedulerChord === chordnum + firstChord) { //is this the currently-selected chord and if not, don't scroll 
 					moveLyricHighlight(currentLyric, name[1] + 1, true, function() {});
 				} else {
