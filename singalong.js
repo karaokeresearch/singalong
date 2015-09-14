@@ -388,17 +388,23 @@ var localIPs=function(){ //generate a list of IP addresses
         var alias = 0;
         interfaces[dev].forEach(function (details) {
             if (details.family == 'IPv4') {
-                listofIPs[j] = String(details.address);
+                listofIPs.push(String(details.address));
+                listofIPs.push("::ffff:" + String(details.address));
+                console.log ("::ffff:" + String(details.address));
+            }else{
+                   listofIPs.push(String(details.address));
+            }
                 console.log(String(details.address));
                 j++;
                 alias++;
-            }
+            //}
         });
     }
 }
 
 var securityCheck=function(comparisonIP){ //check to see if the local IP addresses are the one sending the signals. Used to ignore signals from clients.  Eventually, clients should not accidentally send to avoid "asleep on the D key" syndrome
     for (j = 0; j < listofIPs.length; j++) {
+        console.log (listofIPs[j]);
         if ((listofIPs[j] == comparisonIP) || (disableSecurity == 1)) {
             return true;
         }
