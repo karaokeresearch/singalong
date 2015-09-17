@@ -197,6 +197,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 				scrollTop: 0
 			}, 0); //scroll to top at new load. Just makes it more professional
 			currentLyric = (data.blid);
+			console.log(data.blid);
 		    moveLyricHighlight(currentLyric, data.blid, true, function() {});
 			modulateChord(totalModulation);
 
@@ -220,6 +221,9 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			}
 		});
 
+	}else{
+		if ((data.blid!==null || data.blid!==undefined) && playerMode === "editor")
+		{jumpToLyric(data.blid);}
 	}
 });
 
@@ -279,7 +283,12 @@ var moveChordHighlight = function(fromid, toid, callback) {
 	callback();
 };
 
+var jumpToLyric = function(whichLyric){
+	moveLyricHighlight(currentLyric, whichLyric, true, function(){currentLyric = parseInt(whichLyric);});
+};	
+
 var moveLyricHighlight = function(fromid, toid, shouldscroll, callback) {
+//	console.log(fromid, toid, shouldscroll, callback);
 	var fromidString;
 	var toidString;
 
@@ -350,6 +359,7 @@ var nudgeChord = function(increment) {
 };
 
 var nudgeLyric = function(increment) {
+	console.log("nudged", increment);
 	//move the active chord given a value relative to the current chord
 	var newPos = currentLyric + increment;
 	if (newPos < 0) {
@@ -440,7 +450,8 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 
 	underlineJumpToChord(whichchord); //currentChord is changed here.
 
-	if (playerMode === "editor" && document.getElementById('audioplayer').paused === true && chordTimings[whichchord - firstChord] !== null) { //rewind or fast forward
+	if (playerMode === "editor" && document.getElementById('audioplayer').paused === true && chordTimings[whichchord - firstChord] !== null && chordTimings[whichchord - firstChord] !== undefined) { //rewind or fast forward
+		console.log (chordTimings[whichchord - firstChord]);
 		document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
 	}
 
