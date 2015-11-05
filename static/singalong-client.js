@@ -53,6 +53,20 @@ ntp.init(socket);
 //********************** JQUERY LISTENS FOR LOCAL EVENTS FROM USER ******************
 $(document).ready(function() { //
 
+if (getQueryVariable("changeSong")) {
+   	changeSong(getQueryVariable("changeSong"));
+    setTimeout(function()
+    {
+    	
+    		$('html,body').animate({
+					scrollTop: 0
+				}, 100); //scroll to top at new load. Just makes it more 
+    	  console.log("whee!");
+    	
+    	},1000);
+}
+
+
 	$.getJSON("/ua", function(data) { //don't set these into a cookie until adjusted by server
 
 		//the next few lines are commented out because we are still messing with this system.
@@ -95,6 +109,7 @@ $(document).ready(function() { //
 
 			if (actualKey === 68) { //D chord right
 
+
 				if (currentChord - firstChord === -1 && playerMode === "editor" && chordsArmed === true && (document.getElementById('audioplayer').paused === true)) { //we are actively recording chord timings
 					chordTimings[0] = 0; //Go button
 					sendLyric(1); //advance the lyric button to Go as well
@@ -109,7 +124,17 @@ $(document).ready(function() { //
 
 					//set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
 				}
-				nudgeChord(1);
+
+				if (currentChord - firstChord === -1 && (getQueryVariable("mode") === "tvchordchart")){ //we're in TV mode
+				    playAudioTV();
+				}
+				else if ((currentChord-lastPos ===0)  && (getQueryVariable("mode") === "tvchordchart")){ //we're in TV mode
+			       console.log("returning control to parent frame");
+			       top.hideAllDivs()
+			}
+				 else{
+			    	nudgeChord(1);
+			    }
 			}
 			if (actualKey === 66) { //B flat/sharp overrride
 				sendFlat();
@@ -174,7 +199,7 @@ socket.on('bHighlighting', function(data) {
 });
 
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Received every left or right movement.
-	
+	console.log("got a new bCurrentSong");
 	if (data.song !== currentSong) { //if there's a new song, or it's the index
 		currentSchedulerChord = 0;
 		currentChord = 0;
@@ -197,11 +222,15 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 				scrollTop: 0
 			}, 0); //scroll to top at new load. Just makes it more professional
 			currentLyric = (data.blid);
-			console.log(data.blid);
 		    moveLyricHighlight(currentLyric, data.blid, true, function() {});
 			modulateChord(totalModulation);
 
-			if (getQueryVariable("mode") === "chordchart") {
+
+
+			if (getQueryVariable("mode") === "tvchordchart") {
+				activateTVChordChartMode(data.bid);
+			} else if
+			(getQueryVariable("mode") === "chordchart") {
 				activateChordChartMode(data.bid);
 			} else {
 				activateKaraokeMode(data.bid);
@@ -221,9 +250,6 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			}
 		});
 
-	}else{
-		if ((data.blid!==null || data.blid!==undefined) && playerMode === "editor")
-		{jumpToLyric(data.blid);}
 	}
 });
 
@@ -283,12 +309,7 @@ var moveChordHighlight = function(fromid, toid, callback) {
 	callback();
 };
 
-var jumpToLyric = function(whichLyric){
-	moveLyricHighlight(currentLyric, whichLyric, true, function(){currentLyric = parseInt(whichLyric);});
-};	
-
 var moveLyricHighlight = function(fromid, toid, shouldscroll, callback) {
-//	console.log(fromid, toid, shouldscroll, callback);
 	var fromidString;
 	var toidString;
 
@@ -359,7 +380,6 @@ var nudgeChord = function(increment) {
 };
 
 var nudgeLyric = function(increment) {
-	console.log("nudged", increment);
 	//move the active chord given a value relative to the current chord
 	var newPos = currentLyric + increment;
 	if (newPos < 0) {
@@ -450,8 +470,7 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 
 	underlineJumpToChord(whichchord); //currentChord is changed here.
 
-	if (playerMode === "editor" && document.getElementById('audioplayer').paused === true && chordTimings[whichchord - firstChord] !== null && chordTimings[whichchord - firstChord] !== undefined) { //rewind or fast forward
-		console.log (chordTimings[whichchord - firstChord]);
+	if (playerMode === "editor" && document.getElementById('audioplayer').paused === true && chordTimings[whichchord - firstChord] !== null) { //rewind or fast forward
 		document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
 	}
 
@@ -463,7 +482,16 @@ var sendLyric = function(whichLyric) {
 	}); //J or L key was tapped
 };
 
+
+var clearAllTimeouts = function(){
+	for (var i = 0; i < chordTimeouts.length; i++) {
+		clearTimeout(chordTimeouts[i]);
+	}
+}    
+    
+
 var changeSong = function(whichsong) {
+    clearAllTimeouts();
 	socket.emit('currentSong', {
 		data: whichsong
 	}); //User clicked a song or return to index link
@@ -797,12 +825,19 @@ var compileTimings = function() {
 	}
 };
 
+
+
+
+
+
+
+
 var playAudio = function() {
 	var i;
 
 	compileTimings();
 
-  var playAllLyricsChords = function(i) { //sets a timer for all chord and lyric changes when playing back
+  var playAllLyricsChords = function(i) { //private function that sets a timer for all chord and lyric changes when playing back
   	chordTimeouts[i] = setTimeout(function() {
 			if (chordsArmed === false) {
 				underlineJumpToChord(i + firstChord);
@@ -830,14 +865,53 @@ var playAudio = function() {
 
 };
 
+
+
+
+
+
+
+
+var playAudioTV = function() {
+	var i;
+
+	compileTimings();
+
+  var playAllLyricsChords = function(i) { //private function that sets a timer for all chord and lyric changes when playing back
+  	chordTimeouts[i] = setTimeout(function() {
+    sendChord(i + firstChord);
+		
+
+		}, ((chordTimings[i] - document.getElementById('audioplayer').currentTime) * 1000) / document.getElementById('audioplayer').playbackRate);
+	};
+
+  
+  
+
+	//read chord and lyrics timings out of arrays and auto-play the lyrics.
+	for (i = 0; i < chordTimings.length; i++) {
+		if ((chordTimings[i] !== null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime >= -0.1)) {
+		playAllLyricsChords(i);
+		}
+	}
+
+	document.getElementById('speedslider').disabled = true;
+	document.getElementById('audioplayer').play();
+
+};
+
+
+
+
+
+
+
+
 var pauseAudio = function() {
 	document.getElementById('audioplayer').pause();
 	document.getElementById('speedslider').disabled = false;
 
-	for (var i = 0; i < chordTimeouts.length; i++) {
-		clearTimeout(chordTimeouts[i]);
-	}
-
+    clearAllTimeouts();
 	if (typeof lyricTimeouts[currentChord - firstChord] !== "undefined") {
 		for (i = 0; i < lyricTimeouts[currentChord - firstChord].length; i++) {
 			clearTimeout(lyricTimeouts[currentChord - firstChord][i]);
@@ -972,6 +1046,31 @@ var activateKaraokeMode = function(bid) {
 	}, 500);
 
 };
+
+
+var activateTVChordChartMode = function(bid) {
+	$('link').attr('href', 'singalong-client-tv.css');
+	karaokeMode = false;
+	textSizer(function() {});
+	setTimeout(function() {
+		jumpToChord(bid);
+		underlineJumpToChord(bid);
+	}, 500);
+
+		$(".Parenthesis").addClass("tvwhite"); //Can't for the life of me remember why I called it Parenthesis
+
+		for (var i = 0; i < lastPos; i++) {
+			$("#chordNumber" + i).addClass("tvwhite");
+		}
+		for (i = 0; i < lastLyric; i++) {
+	    	$("#lyricNumber" + i).addClass("tvwhite");
+		}
+
+
+
+};
+
+
 
 var activateChordChartMode = function(bid) {
 	$('link').attr('href', 'singalong-client.css');

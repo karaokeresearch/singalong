@@ -58,7 +58,7 @@
 var socket = io.connect();
 ntp.init(socket);      
 playalong.init(socket);
-
+playalong.preLoadDelay = "-100"; //not sure why this is necessary since I switched to automatic playback, but it is for some godforsaken reason
 
 gyro.frequency=50;
 //var maxMotion=10;

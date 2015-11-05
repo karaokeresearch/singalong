@@ -1,6 +1,15 @@
 # singalong.js
 **A product of the Karaoke Research Council**
 
+##Updated in 0.7.1:
+
+I've been using this software on TV show. I've modified it to work with a green screen and to play the .ogg file all the way through while updating every client rather than using the foot pedal throughout. If you'd like to use this mode, use a URL like:
+
+http://localhost/singalong.html?changeSong=God_Rest_You_Merry_Gentlemen.txt&mode=tvchordchart
+
+Once that page loads, advance to "Start" and the song will begin playing itself. All clients in the room can play along with the song.
+
+##Overview:
 Singalong is a suite of tools for rehearsing and facilitating live musical performances using a web browser.
 
 * A browser karaoke display with lyric highlighting that works in real time without the use of a click track
@@ -126,39 +135,6 @@ A modern compliant browser with Javascript support is required to view and  cont
 
 Playalong.js requires a device and browser capable of playing OGG or WAV files via the Web Audio API.
 
-## Todo 
-This is my basic effort to make some software to do live-band karaoke and singalongs with my friends. I welcome help from more experienced coders and musicians.
-
-* More sophisticated security. Currently, the sole security feature is that all input must come from the machine serving the singalong session. At the very least, a whitelist of allowed clients to send input. Currently, you can change 
-```var disableSecurity=0;```
-to
-```var disableSecurity=1;```
-... in singalong.js but that turns off everything. Eventually, it would be great to have a real authentication system allowing multiple private sessions to be happening at once.
-
-* Code cleanup. I'm a Javascript novice and not the world's greatest programmer. The code could use an audit and I'm sure some things could be done more efficiently.
-
-* Ability to change key signatures and then output new text format chord charts with the changes intact.
-
-* Force refresh mode, for when you're actively editing a chord chart and don't want to have to return to the main menu to reload the current chart.
-
-* "Client-only" option for standalone use where all server-side logic is moved to the client and files are loaded via copy-paste
-
-* Determine if my crazy method for determining song sharpness/flatness has any basis in music theory whatsoever (it seems to work most of the time, though.)
-
-## Changelog 
-v0.6.0 - First release with the virtual instruments addon, playalong. Implemented a scheduler to predict upcoming chord changes.
-
-v0.5.1 - Bug fixes, including one that un-breaks the application.
-
-v0.5.0 - Karaoke mode implemented, including complete editor implemented. Most unacceptable bugs fixed.
-
-v0.4.2 - eliminated "apostrophes in file names" bug
-
-v0.4.1 - actually working as advertised version
-
-v0.4.0 - initial port to node/socket.io and networked terminals
-
-v0.3 - initial public release. Generated in perl and contained no server component. 0.4 series represents the first all-Javascript release.
 
 ## Credits
 Written (so far) by Ross Brackett.

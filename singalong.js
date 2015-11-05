@@ -33,6 +33,7 @@ var express = require('express'),
         log: false
     });
 
+
 io.sockets.on('connection', ntp.sync); //ntp server
 
 
@@ -72,6 +73,10 @@ var calibrationClients=[];
 var calibrating=false;
 var selectedChord='C'; //for clients connecting before the very first song is played
 var nextChord={};
+
+app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
+app.use('/audio', express.static(audioDirectory)); //Where the static files are loaded from
+
 
 //************** HELPER FUNCTIONS ********************
 var loadNewSong=function(newsong){ //loads the appropriate file (or the index) into parsedHTML, which is where the current HTML to be loaded sits.
@@ -757,8 +762,6 @@ if (securityCheck(req.ip)) {
 
 
 
-app.use(express.static(__dirname + '/static')); //Where the static files are loaded from
-app.use('/audio', express.static(audioDirectory)); //Where the static files are loaded from
 
 
 
