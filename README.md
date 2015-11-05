@@ -3,7 +3,7 @@
 
 ##Updated in 0.7.1:
 
-I've been using this software on TV show. I've modified it to work with a green screen and to play the .ogg file all the way through while updating every client rather than using the foot pedal throughout. If you'd like to use this mode, use a URL like:
+I've been using this software on the Karaoke Research Council TV show. I've modified it to work with a green screen and to play the .ogg file all the way through while updating every client rather than using the foot pedal throughout. If you'd like to use this mode, use a URL like:
 
 http://localhost/singalong.html?changeSong=God_Rest_You_Merry_Gentlemen.txt&mode=tvchordchart
 
