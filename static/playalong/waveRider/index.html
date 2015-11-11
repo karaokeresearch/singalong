@@ -29,19 +29,31 @@
 		<script type="text/javascript" src="../playalong.js"></script>
 
 		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
-		<div id="console" onclick="playalong.loadIOS()" style="font-size:2em; font-family=Sans;">LOADING</div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:1.5em; font-family=Sans;">LOADING</div>
+		<br><br>
+		<form action="">
+		<div style="font-size:1.5em; font-family=Sans;">Available instruments:</div>
+		<input type="radio" name="instrument" onclick="changeInstrument('stringshigh');" checked value="stringshigh" />Strings (high)<br>
+		<input type="radio" name="instrument" onclick="changeInstrument('stringslow');" value="stringslow" />Strings (low)<br>
+		<input type="radio" name="instrument" onclick="changeInstrument('organ');" value="organ" />Organ<br>
+		<input type="radio" name="instrument" onclick="changeInstrument('humanvoxhigh');" value="humanvoxhigh" />Human Vocals (high)<br>
+		<input type="radio" name="instrument" onclick="changeInstrument('humanvoxlow');" value="humanvoxlow" />Human Vocals (low)<br>
+
+
+	<!--
 		<select style="font-size:1em" onchange="changeInstrument()" id="instrument">
 			<option value="organ">Organ</option>
 			<!-- //We reject this one because I can't make an mp3 file this small... FOR NOW
 			<option value="8-bit">8-bit</option>
 			
-			-->
+			--> <!--
 			<option value="humanvoxlow">Human Vocals (low)</option>
 			<option value="humanvoxhigh">Human Vocals (high)</option>
 			<option value="stringslow">Strings (low)</option>
 			<option selected="selected" value="stringshigh">Strings (high)</option>
-		</select>
-
+		</select> -->
+		
+	</form>
 		<div id="currentChord" style="font-size:2em; font-family=Sans;"></div>
 		
 		
@@ -95,14 +107,16 @@ var stopPlaying=function(){
 };
 
 
-var changeInstrument = function(){
-	loadLoops($("#instrument").val());
+var changeInstrument = function(instrument){
+	loadLoops(instrument);
+
+//	loadLoops($("#instrument").val());
 }
 
 var loadLoops= function(directory){
 
 	if (playalong.playing===true){stopPlaying();}
-	$("#console").html("LOADING");
+	$("#console").html("<b>LOADING</b>");
 
 	if (baseTone.length>0){
 			for (i=1; i<=24; i++){

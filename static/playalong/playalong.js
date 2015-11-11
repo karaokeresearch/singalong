@@ -207,9 +207,9 @@ playalong.lockOrientation= function() {
 
 	playalong.soundsLoaded= function(){
 	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone" || playalong.osName==="Windows Phone OS" || playalong.osName==="Windows Mobile")){
-			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT" + "<br>" + playalong.lagOffset + "ms latency detected" + "</span>");
+			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT</span>" + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 	}else{
-			$("#console").html(instructions);
+			$("#console").html(instructions + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 	}
 		startPlaying();
 }
@@ -226,7 +226,7 @@ playalong.lockOrientation= function() {
 			playalong.lockOrientation();
 			},1); //you've got to be kidding me. This fixes Firefox orientation lock #haxx #findabetterway
 		
-		$("#console").html(instructions);
+		$("#console").html(instructions + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 		playalong.activated=true;
 	}
 	
