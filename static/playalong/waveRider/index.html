@@ -58,7 +58,7 @@
 var socket = io.connect();
 ntp.init(socket);      
 playalong.init(socket);
-playalong.preLoadDelay = "-100"; //not sure why this is necessary since I switched to automatic playback, but it is for some godforsaken reason
+playalong.preLoadDelay = 0; //not sure why this is necessary since I switched to automatic playback, but it is for some godforsaken reason
 
 gyro.frequency=50;
 //var maxMotion=10;
@@ -193,7 +193,14 @@ var changeChord = function (whichChord){
 
 var decreaseInterval=0.017;
 
-
+var debugPlayback = function(){
+	setInterval(function (){
+	tone1.volume(1);
+	tone2.volume(1);
+	tone3.volume(1);
+	tone4.volume(1);
+  },1000);
+}
 
 
 

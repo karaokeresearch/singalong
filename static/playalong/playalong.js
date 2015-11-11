@@ -10,6 +10,7 @@
 	playalong.sounds={};
 	playalong.preLoadDelay=0;
 	playalong.activated=false;
+	playalong.lagOffset=0;
 
 	playalong.sounds.silence= new Howl({
 				urls: ['../silence.wav'],
@@ -38,12 +39,14 @@
 
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
 		//console.log(data);
+		//console.log(data.nextChange, playalong.lagOffset, playalong.preLoadDelay,data.nextChord);
 			if (data.itemType==="chordChange"){
 			if (data.nextChange<=ntp.serverTime()-playalong.lagOffset){
 				changeChord(data.nextChord);
 				playalong.currentChord=data.nextChord;
 				}//if timestamped in the past, don't wait 0.25sec to run
 				else{			
+		
 				playalong.playQueue.push(["chordChange", (parseInt(data.nextChange)-playalong.lagOffset)-	playalong.preLoadDelay,data.nextChord])
 			}
 		}
@@ -286,6 +289,7 @@ playalong.lockOrientation= function() {
 					setTimeout(function (){
 						changeChord(whatsnext);
 						playalong.currentChord=whatsnext;
+						//console.log(whatsnext);
 
 					}, (playalong.playQueue[0][1] - ntp.serverTime()));
 				}());
