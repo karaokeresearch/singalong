@@ -194,11 +194,22 @@ var changeChord = function (whichChord){
 var decreaseInterval=0.017;
 
 var debugPlayback = function(){
+	var whichTone = Math.floor( Math.random() * 4) +1;
+	console.log(whichTone);
 	setInterval(function (){
-	tone1.volume(1);
-	tone2.volume(1);
-	tone3.volume(1);
-	tone4.volume(1);
+	if (whichTone === 1){
+		tone1.volume(1);
+	}	
+	if (whichTone === 2){
+		tone2.volume(1);
+	}	
+	if (whichTone === 3){
+		tone3.volume(1);
+	}	
+	if (whichTone === 4){
+		tone4.volume(1);
+	}	
+
   },1000);
 }
 
