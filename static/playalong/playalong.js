@@ -10,6 +10,7 @@
 	playalong.sounds={};
 	playalong.preLoadDelay=0;
 	playalong.activated=false;
+	playalong.lagOffset=0;
 
 	playalong.sounds.silence= new Howl({
 				urls: ['../silence.wav'],
@@ -38,12 +39,14 @@
 
 	socket.on('bClientQueue', function (data) { //listen for chord change requests
 		//console.log(data);
+		//console.log(data.nextChange, playalong.lagOffset, playalong.preLoadDelay,data.nextChord);
 			if (data.itemType==="chordChange"){
 			if (data.nextChange<=ntp.serverTime()-playalong.lagOffset){
 				changeChord(data.nextChord);
 				playalong.currentChord=data.nextChord;
 				}//if timestamped in the past, don't wait 0.25sec to run
 				else{			
+		
 				playalong.playQueue.push(["chordChange", (parseInt(data.nextChange)-playalong.lagOffset)-	playalong.preLoadDelay,data.nextChord])
 			}
 		}
@@ -204,9 +207,9 @@ playalong.lockOrientation= function() {
 
 	playalong.soundsLoaded= function(){
 	if ((playalong.activated===false) && (playalong.osName==="Android" || playalong.osName==="iOS" || playalong.osName==="Firefox OS" || playalong.osName==="Windows Phone" || playalong.osName==="Windows Phone OS" || playalong.osName==="Windows Mobile")){
-			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT" + "<br>" + playalong.lagOffset + "ms latency detected" + "</span>");
+			$("#console").html("<span>TAP HERE TO ACTIVATE INSTRUMENT</span>" + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 	}else{
-			$("#console").html(instructions);
+			$("#console").html(instructions + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 	}
 		startPlaying();
 }
@@ -223,7 +226,7 @@ playalong.lockOrientation= function() {
 			playalong.lockOrientation();
 			},1); //you've got to be kidding me. This fixes Firefox orientation lock #haxx #findabetterway
 		
-		$("#console").html(instructions);
+		$("#console").html(instructions + "<br>" + '<span style="font-size:0.5em; font-family=Sans;">' + playalong.lagOffset + "ms latency detected" + "</span><br>");
 		playalong.activated=true;
 	}
 	
@@ -286,6 +289,7 @@ playalong.lockOrientation= function() {
 					setTimeout(function (){
 						changeChord(whatsnext);
 						playalong.currentChord=whatsnext;
+						//console.log(whatsnext);
 
 					}, (playalong.playQueue[0][1] - ntp.serverTime()));
 				}());

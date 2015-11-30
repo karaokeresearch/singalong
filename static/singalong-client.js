@@ -399,7 +399,8 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 	var futureSpeedMultiplier;
 	var dumbNextChange;
 
-	if (whichchord - currentChord === -1) { //left 
+	console.log("sendChord", whichchord);
+	if (whichchord - currentChord === -1) { //left
 		socket.emit('oops', {
 			oops: true
 		});
@@ -413,7 +414,7 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 		if (isNaN(futureSpeedMultiplier) || futureSpeedMultiplier < 0.33 || futureSpeedMultiplier > 3) {
 			futureSpeedMultiplier = 1;
 		}
-		//				
+		//
 
 		dumbNextChange = parseInt((chordTimings[currentChord - firstChord + 2] - chordTimings[currentChord - firstChord + 1]) * 1000 * futureSpeedMultiplier);
 
@@ -438,7 +439,7 @@ var sendChord = function(whichchord) { //wherein we send to the server "next" an
 		chordNumber = whichchord;
 	}
 
-	
+
 
 	socket.emit('next', {
 		selectedChord: selectedChord,
@@ -876,24 +877,7 @@ var playAudioTV = function() {
 	var i;
 
 	compileTimings();
-
-  var playAllLyricsChords = function(i) { //private function that sets a timer for all chord and lyric changes when playing back
-  	chordTimeouts[i] = setTimeout(function() {
-    sendChord(i + firstChord);
-		
-
-		}, ((chordTimings[i] - document.getElementById('audioplayer').currentTime) * 1000) / document.getElementById('audioplayer').playbackRate);
-	};
-
-  
-  
-
-	//read chord and lyrics timings out of arrays and auto-play the lyrics.
-	for (i = 0; i < chordTimings.length; i++) {
-		if ((chordTimings[i] !== null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime >= -0.1)) {
-		playAllLyricsChords(i);
-		}
-	}
+	sendChord(firstChord);
 
 	document.getElementById('speedslider').disabled = true;
 	document.getElementById('audioplayer').play();
@@ -1047,8 +1031,9 @@ var activateKaraokeMode = function(bid) {
 
 };
 
-
 var activateTVChordChartMode = function(bid) {
+startingChord = 0;
+lastSent = 0;
 	$('link').attr('href', 'singalong-client-tv.css');
 	karaokeMode = false;
 	textSizer(function() {});
@@ -1065,8 +1050,31 @@ var activateTVChordChartMode = function(bid) {
 		for (i = 0; i < lastLyric; i++) {
 	    	$("#lyricNumber" + i).addClass("tvwhite");
 		}
+//start up a queue to trigger chord change sends
 
+setInterval(function() {
+	if (document.getElementById('audioplayer').paused === false){            //audio is playing
+		i = startingChord;
+		do {
+		i++;
+		} 
+		while (chordTimings[i] <= document.getElementById('audioplayer').currentTime)
+ 		startingChord=i-1;
+	  if ((chordTimings[i] - document.getElementById('audioplayer').currentTime)*1000 <500){//any chord changes in the next 500ms?
+	   if (i>lastSent){
+	   	var howManyMS= (chordTimings[i] - document.getElementById('audioplayer').currentTime)*1000;
+	   	console.log("whee", i + firstChord, chordTimings[i], document.getElementById('audioplayer').currentTime,  "in ", howManyMS, "ms");
+	  	setTimeout(function(i){ 
+	  		sendChord(i + firstChord);
+	  		console.log("queueing", i + firstChord);
+	  		},howManyMS,i); 
+	  	lastSent=i;
+	  	}
+	  }
 
+	
+	}
+}, 250);
 
 };
 
