@@ -146,3 +146,5 @@ Special thanks to David Ney, Wes Davis, Rob Stauffer and Ben Rathkamp for helpin
 Singalong utilizes a bazillion cool javascript libraries. Thanks to the geniuses who made these things, otherwise this application would not exist. Oh, and also thanks to stackoverflow.com, you folks run a good website.
 
 Thanks to node.js!
+
+App testing services provided by BrowserStack (https://www.browserstack.com/)
