@@ -1,0 +1,57 @@
+<html>
+	<head>
+				<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+		<title>Motion Instrument</title>
+	</head>
+	<body bgcolor="#ffa500">
+<style>
+ 
+         body
+         {
+            box-sizing: border-box;
+				    text-size-adjust: 100%;
+				    -moz-text-size-adjust: 100%;
+				    -ms-text-size-adjust: 100%;
+				    -webkit-text-size-adjust: 100%;
+            margin: 0em auto;
+            padding: 0 0em;
+         }
+ </style>
+
+		<script type="text/javascript" src="../cookies.js"></script>
+		<script type="text/javascript" src="../gyro.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="../../jquery-2.1.3.min.js"></script>
+
+		<div id="calibrate" style="font-size:10em; font-family=Sans;"></div>
+		<div id="console" onclick="playalong.loadIOS()" style="font-size:1.5em; font-family=Sans;"></div>
+	
+		<BR>
+
+<a href="/index.html">
+
+
+<script type="text/javascript" >
+
+var socket = io.connect();
+gyro.frequency=10;
+
+
+$(document).ready(function () { //
+
+});
+
+
+
+gyro.startTracking(function(o) {
+		var combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+        socket.emit('dance', {
+			gyro: o
+		});
+
+});
+
+
+		</script>
+	</body>
+</html>

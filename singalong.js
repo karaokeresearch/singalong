@@ -36,6 +36,7 @@ var express = require('express'),
 
 io.sockets.on('connection', ntp.sync); //ntp server
 
+var dancerConsole = io.of('/dancerConsole');
 
 
 
@@ -766,6 +767,13 @@ if (securityCheck(req.ip)) {
 
 
 //************** LISTENERS ********************
+
+dancerConsole.on('connection', function(socket){
+  console.log('A dancer console connected!');
+});
+
+
+
 io.sockets.on('connection', function (socket) {
     // Welcome messages on connection to just the connecting client
     socket.emit('bTotMod', {
@@ -1111,10 +1119,26 @@ io.sockets.on('connection', function (socket) {
 			}
 		});
 
+	  socket.on('dance', function (data) { //unmute a client
+//			console.log('\033[2J');
+//			console.log("x " + Math.round(data.gyro.x*10)/10);
+//            console.log("y " + Math.round(data.gyro.y*10)/10);
+            dancerConsole.emit('xy', {
+                x: data.gyro.x,
+                y: data.gyro.y,
+                z: data.gyro.z
+                });
+            
+		});
+
+
 
 
 
 
 });
+
+
+
 
 }());

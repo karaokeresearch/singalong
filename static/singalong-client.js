@@ -154,12 +154,12 @@ if (getQueryVariable("changeSong")) {
 			if (actualKey === 74) { //J lyric left
 				nudgeLyric(-1);
 			}
-			if (actualKey === 76) { //K lyric right
+			if (actualKey === 76) { //L lyric right
 				if (lyricsArmed === true && (document.getElementById('audioplayer').paused === false)) { //we are active recording lyrics timings
 					lyricTimings[currentLyric] = document.getElementById('audioplayer').currentTime; //not plus 1 because we add one to eliminate the "Ready" chord
 					$("#lyricNumber" + (currentLyric + 1)).addClass("recorded");
-
 				}
+                
 				nudgeLyric(1);
 			}
 
@@ -200,6 +200,7 @@ socket.on('bHighlighting', function(data) {
 
 socket.on('bcurrentSong', function(data) { //what is the current song and where are we in it?  Received every left or right movement.
 	console.log("got a new bCurrentSong");
+    console.log("data");
 	if (data.song !== currentSong) { //if there's a new song, or it's the index
 		currentSchedulerChord = 0;
 		currentChord = 0;
@@ -208,6 +209,7 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 		averageSpeedMultiplierArray = [];
 		averageSpeedMultiplier = 1;
 		speedMultiplier = 1;
+
 
 		$("body").load("/load", function() {
 			lyricsArmed = false;
@@ -250,7 +252,9 @@ socket.on('bcurrentSong', function(data) { //what is the current song and where 
 			}
 		});
 
-	}
+	}else{		 if(data.blid){   moveLyricHighlight(currentLyric, data.blid, true, function() {});
+		                           modulateChord(totalModulation);}
+    }
 });
 
 //**************HELPER FUNCTIONS

@@ -19,7 +19,7 @@
  </style>
 
 		<script type="text/javascript" src="../cookies.js"></script>
-		<script type="text/javascript" src="../gyro.js"></script>
+		
 		<script type="text/javascript" src="../howler.js"></script>
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="../ntpclient.js"></script>
@@ -68,13 +68,19 @@
 <script type="text/javascript" >
 
 var socket = io.connect();
+var dancerConsole = io('/dancerConsole');
+
+
 ntp.init(socket);      
 playalong.init(socket);
 playalong.preLoadDelay = 0; //not sure why this is necessary since I switched to automatic playback, but it is for some godforsaken reason
 
-gyro.frequency=50;
+//gyro.frequency=50;
 //var maxMotion=10;
 var averageMotion=15;
+
+var maxVol=0.25; //keep things from peaking
+
 
 var tone1;
 var tone2;
@@ -89,7 +95,33 @@ var instructions='<span><b>WAVE RIDER</b><br>Instructions: Tilt the phone to var
 
 $(document).ready(function () { //
 	loadLoops("stringshigh");
+	
 });
+
+//*************** SOCKET.IO LISTENERS ***********************
+dancerConsole.on('xy', function(data) { //dance activity
+
+
+
+		yVol=Math.abs(data.y/10);
+		zVol=Math.abs(data.z/10);
+		if (yVol>1){yVol=1}
+		if (zVol>1){zVol=1}
+		yVol = yVol*maxVol;
+		zVol = zVol*maxVol;
+		
+
+		
+	if (data.y >3 && tone1.volume()<yVol){tone1.volume(yVol)}
+    if (data.y <=-3 && tone2.volume()<yVol){tone2.volume(yVol)}
+	
+	if (data.z >3 && tone3.volume()<zVol){tone3.volume(zVol)}
+    if (data.z <=-3 && tone4.volume()<zVol){tone4.volume(zVol)}
+
+
+	    
+});
+
 
 
 var startPlaying=function(){
@@ -130,7 +162,7 @@ var loadLoops= function(directory){
 	
 		if (i!==24){
 			baseTone[i] = new Howl({
-				urls: [wavurl+'.ogg', wavurl+'.wav'],
+				urls: [wavurl+'.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0
@@ -138,7 +170,7 @@ var loadLoops= function(directory){
 	
 		}else{
 			baseTone[24] = new Howl({
-				urls: [wavurl+'.ogg', wavurl+'.wav'],
+				urls: [wavurl+'.wav'],
 				autoplay: true,
 				loop: true,
 				volume: 0,
@@ -205,7 +237,7 @@ var changeChord = function (whichChord){
 
 
 
-var decreaseInterval=0.017;
+var decreaseInterval=0.0075*maxVol;
 
 var fakeHuman = function(){
 	var whichTone = Math.floor( Math.random() * 4) +1;
@@ -234,58 +266,64 @@ var fakeHuman = function(){
 
 
 
+setInterval(function(){ 
 
 
-gyro.startTracking(function(o) {
 	if (playalong.playing===true){
 
 		
 
 
-		combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
-
-		if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
-
-		loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
-
-		if (loudness <0) {loudness=0}
-		var whichLoud;
-
-
-		if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
-			if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
-				tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
-				}else{tone4.volume(tone4.volume()-decreaseInterval)}
-			}else{
-				tone4.volume(tone4.volume()-decreaseInterval)
-			}
-
-			if (o.beta>0 && o.beta<180){ //90 center point
-				if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
-					tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
-					}else{tone1.volume(tone1.volume()-decreaseInterval)}
-
-				}else{
-					tone1.volume(tone1.volume()-decreaseInterval)
-				}
-
-				if (o.beta>-90 && o.beta<90){ //0 center point
-					if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
-						tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
-						}else{tone2.volume(tone2.volume()-decreaseInterval)}
-
-					}else{
-						tone2.volume(tone2.volume()-decreaseInterval)
-					}
-
-					if (o.beta>-180 && o.beta<-0){ // -90 center point
-						if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
-							tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
-							}else{tone3.volume(tone3.volume()-decreaseInterval)}
-
-						}else{
-							tone3.volume(tone3.volume()-decreaseInterval)
-						}
+//		combinedXYZ=(Math.abs(o.x) + Math.abs(o.y) + Math.abs(o.z));
+//
+//		if (combinedXYZ >15){averageMotion = (averageMotion+ combinedXYZ)/2} //built in "compressor" that makes the instrument less dynamic but works with a wider range of responses from gyro.js
+//		loudness=(combinedXYZ/(averageMotion*1.5))-0.1;
+//
+//		if (loudness <0) {loudness=0}
+//		var whichLoud;
+//
+//
+//		if (o.beta>90 || o.beta<-90){    //180 / -180 center point //face down
+//			if (tone4.volume() <=((Math.abs(o.beta)-90)/90)*(loudness)){
+//				tone4.volume(((Math.abs(o.beta)-90)/90)*(loudness));
+//				}else{tone4.volume(tone4.volume()-decreaseInterval)}
+//			}else{
+//				tone4.volume(tone4.volume()-decreaseInterval)
+//			}
+//
+//			if (o.beta>0 && o.beta<180){ //90 center point
+//				if (tone1.volume() <= (Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)){
+//					tone1.volume((Math.abs(Math.abs(o.beta-90)-90)/90)*(loudness)) //straight up
+//					}else{tone1.volume(tone1.volume()-decreaseInterval)}
+//
+//				}else{
+//					tone1.volume(tone1.volume()-decreaseInterval)
+//				}
+//
+//				if (o.beta>-90 && o.beta<90){ //0 center point
+//					if (tone2.volume() <= (Math.abs(Math.abs(o.beta)-90)/90)*(loudness)){
+//						tone2.volume((Math.abs(Math.abs(o.beta)-90)/90)*(loudness)) //face up
+//						}else{tone2.volume(tone2.volume()-decreaseInterval)}
+//
+//					}else{
+//						tone2.volume(tone2.volume()-decreaseInterval)
+//					}
+//
+//					if (o.beta>-180 && o.beta<-0){ // -90 center point
+//						if (tone3.volume() <= (Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)){
+//							tone3.volume((Math.abs(Math.abs(o.beta+90)-90)/90)*(loudness)) //upside down
+//							}else{tone3.volume(tone3.volume()-decreaseInterval)}
+//
+//						}else{
+//							tone3.volume(tone3.volume()-decreaseInterval)
+//						}
+//
+	
+                    	
+                    	tone1.volume(tone1.volume()-decreaseInterval);
+                        tone2.volume(tone2.volume()-decreaseInterval);	
+                        tone3.volume(tone3.volume()-decreaseInterval);	
+                        tone4.volume(tone4.volume()-decreaseInterval);	
 
 						if (tone4.volume() <decreaseInterval){tone4.volume(0);}
 						if (tone3.volume() <decreaseInterval){tone3.volume(0);}
@@ -293,7 +331,7 @@ gyro.startTracking(function(o) {
 						if (tone1.volume() <decreaseInterval){tone1.volume(0);}
 
 	}
-});
+}, 10);
 
 
 		</script>
