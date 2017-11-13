@@ -89,37 +89,11 @@ if (getQueryVariable("changeSong")) {
 
 			if (actualKey === 68) { //D chord right
 
-
-				if (currentChord - firstChord === -1 && playerMode === "editor" && chordsArmed === true && (document.getElementById('audioplayer').paused === true)) { //we are actively recording chord timings
-					chordTimings[0] = 0; //Go button
-					sendLyric(1); //advance the lyric button to Go as well
-					lyricTimings[0] = 0; //Go button
-					document.getElementById('audioplayer').currentTime = 0; //rewind 
-					playAudio(); //begin playback
-				}
-
-				if (playerMode === "editor" && chordsArmed === true && (document.getElementById('audioplayer').paused === false)) { //we are actively recording chord timings
-					chordTimings[currentChord + 1 - firstChord] = document.getElementById('audioplayer').currentTime;
-					$("#chordNumber" + (currentChord + 1)).addClass("recorded");
-
-					//set CurrentChord array item associated with the related DIV to have a time value stored in it.  Same below for lyrics.
-				}
-
-				if (currentChord - firstChord === -1 && (getQueryVariable("mode") === "tvchordchart")){ //we're in TV mode
-				    playAudioTV();
-				}
-				else if ((currentChord-lastPos ===0)  && (getQueryVariable("mode") === "tvchordchart")){ //we're in TV mode
-			       console.log("returning control to parent frame");
-			       top.hideAllDivs()
-			}
-				 else{
 			    	nudgeChord(1);
-			    }
 			}
 			if (actualKey === 66) { //B flat/sharp overrride
 				sendFlat();
 			}
-
 
 			if (actualKey === 87) { //W modulate key up
 				sendMod(1);
@@ -238,23 +212,21 @@ var textSizer = function(callback) { //resize the text on the page.  The 0.6 has
 	callback();
 };
 
-var goToByScroll = function(toid) { //moves a scroll spot 1/5 of the way down the screen to the currently selected chord
-	
-	if ((($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 5)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
 
+
+var goToByScroll = function(toid,speed,stop) { //moves a scroll spot 1/2 of the way down the screen to the currently selected chord
+	
+	if ((($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 2)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
+		if (stop){
+			$('html,body').stop();
+		}
 		$('html,body').animate({
-			scrollTop: $("#" + toid).offset().top - $(window).height() / 5
-		}, 600); //this value is how many ms it takes for transitions
+			scrollTop: $("#" + toid).offset().top - $(window).height() / 2
+		}, speed); //this value is how many ms it takes for transitions
 
 	}
 };
 
-var moveChordUnderline = function(fromid, toid, callback) {
-	//first, erase the highlight from the previous chord
-	$("#chordNumber" + fromid).removeClass("underlinedchord");
-	$("#chordNumber" + toid).addClass("underlinedchord");
-	callback();
-};
 
 var moveChordHighlight = function(fromid, toid, callback) {
 	//first, erase the highlight from the previous chord
@@ -265,119 +237,80 @@ var moveChordHighlight = function(fromid, toid, callback) {
 };
 
 
+var oldPosition = $(document).scrollTop();
+var newPosition = $(document).scrollTop();
+var pixelsPerSecond=0;
+
+setInterval(function(){
+
+		newPosition = $(document).scrollTop();
+		if (newPosition-oldPosition>0){
+			var ratePerSecond= (newPosition-oldPosition)/2;
+			pixelsPerSecond = (pixelsPerSecond + ratePerSecond)/2;
+			console.log(ratePerSecond,pixelsPerSecond);	
+		}
+		oldPosition=newPosition;
+},2000);
+
+var determineNextVerticalChord = function(chordNumber){
+
+	var myPos = ($("#chordNumber" + chordNumber).offset().top);
+	var i=0;
+	for (i = chordNumber; i<lastPos;i++){
+		
+		 if ($("#chordNumber" + i).offset().top - myPos>5){
+		 	
+		  //console.log(i, myPos, $("#chordNumber" + i).offset().top);
+		 	return i;
+		 	break;
+		}
+	
+	}
+
+}
+
 var nudgeChord = function(increment) {
 	//move the active chord given a value relative to the current chord
 	var newPos = currentChord + increment;
-	if (newPos < 0) {
-		newPos = lastPos;
+	moveChordHighlight(currentChord,newPos,function(){});
+	currentChord = newPos;
+	
+	if (currentChord >1){
+  	var prevDivScrollTop =  $("#chordNumber" + (currentChord-1)).offset().top 
+  }
+  var thisDivScrollTop =  $("#chordNumber" + currentChord).offset().top 
+	var nextDivScrollTop =  $("#chordNumber" + (determineNextVerticalChord(newPos))).offset().top;
+	var scrollTime = (nextDivScrollTop-thisDivScrollTop)/pixelsPerSecond;	
+	console.log("--" +  prevDivScrollTop, thisDivScrollTop, nextDivScrollTop, pixelsPerSecond,scrollTime);
+	
+  if(currentChord >1 && prevDivScrollTop!=thisDivScrollTop){//this is a different level than the last one.
+		console.log("scrolling to " + determineNextVerticalChord(newPos) + " for secs:" + scrollTime);
+		goToByScroll("chordNumber"+newPos, 750, true)
+		goToByScroll("chordNumber"+determineNextVerticalChord(newPos), (scrollTime*1000)-750,false)
 	}
-	if (newPos > lastPos) {
-		newPos = 0;
-	}
-	sendChord(newPos);
+
 };
 
 //***************** EMITTER FUNCTIONS **********************
 var sendChord = function(whichchord) { //wherein we send to the server "next" and "id"
-	var chordNumber;
-	var selectedChord;
-	var nextChord;
-	var futureSpeedMultiplier;
-	var dumbNextChange;
-
-	console.log("sendChord", whichchord);
-	if (whichchord - currentChord === -1) { //left
-		socket.emit('oops', {
-			oops: true
-		});
-	}
-
-	if (whichchord - currentChord === 1) { //likely pushed the D key
-		currentChordTimeStamp = Date.now();
-		futureSpeedMultiplier = ((currentChordTimeStamp - prevChordTimeStamp) / ((chordTimings[currentChord + 1 - firstChord] - chordTimings[currentChord - firstChord]) * 1000));
-		prevChordTimeStamp = Date.now(); //next time 'round
-
-		if (isNaN(futureSpeedMultiplier) || futureSpeedMultiplier < 0.33 || futureSpeedMultiplier > 3) {
-			futureSpeedMultiplier = 1;
-		}
-		//
-
-		dumbNextChange = parseInt((chordTimings[currentChord - firstChord + 2] - chordTimings[currentChord - firstChord + 1]) * 1000 * futureSpeedMultiplier);
-
-		nextChange = dumbNextChange;
-
-		nextChord = $("#chordNumber" + (currentChord + 2)).html();
-		selectedChord = $("#chordNumber" + (currentChord + 1)).html();
-
-		//Preview chords and the first three chords are manual so as to eliminate confusion at top of song.
-		if (isNaN(nextChange) || currentChord < firstChord + 3) {
-			chordNumber = currentChord + 1; //not actually in the body of the song.
-			nextChord = $("#chordNumber" + (currentChord + 1)).html();
-			nextChange = 0;
-		} else {
-			chordNumber = currentChord + 2;
-		}
-
-	} else {
-		selectedChord = $("#chordNumber" + (whichchord)).html();
-		nextChord = $("#chordNumber" + (whichchord)).html();
-		nextChange = 0;
-		chordNumber = whichchord;
-	}
-
-
-
-	socket.emit('next', {
-		selectedChord: selectedChord,
-		nextChord: nextChord,
-		nextChange: nextChange,
-		chordNumber: chordNumber,
-		speedMultiplier: futureSpeedMultiplier
-
-	});
 
 	socket.emit('id', {
 		data: whichchord
 	});
-	//The first three chords are manual so as to eliminate confusion at top of song.
-	if (currentChord === firstChord + 2) {
-		chordNumber = currentChord + 2;
-		nextChord = $("#chordNumber" + (currentChord + 2)).html();
-		nextChange = dumbNextChange;
-
-		socket.emit('next', {
-			selectedChord: selectedChord,
-			nextChord: nextChord,
-			nextChange: nextChange,
-			speedMultiplier: futureSpeedMultiplier,
-			chordNumber: chordNumber
-		});
-
-	}
-
-	underlineJumpToChord(whichchord); //currentChord is changed here.
-
-	if (playerMode === "editor" && document.getElementById('audioplayer').paused === true && chordTimings[whichchord - firstChord] !== null) { //rewind or fast forward
-		document.getElementById('audioplayer').currentTime = chordTimings[whichchord - firstChord];
-	}
 
 };
 
 
 
-var clearAllTimeouts = function(){
-	for (var i = 0; i < chordTimeouts.length; i++) {
-		clearTimeout(chordTimeouts[i]);
-	}
-}    
-    
+  
 
 var changeSong = function(whichsong) {
-    clearAllTimeouts();
+    
 	socket.emit('currentSong', {
 		data: whichsong
 	}); //User clicked a song or return to index link
 };
+
 
 var jumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
 	if (playerMode === "singalong") { //playback mode.  This chunk of code triggers lyrics
@@ -393,7 +326,7 @@ var jumpToChord = function(whichchord) { //jump a chord given an integer value t
 		if (whichchord > firstChord || currentSchedulerChord > firstChord) //don't scroll until you're past the preview.
 		{
 			if (!(whichchord - currentSchedulerChord === 1 && ($("#chordNumber" + whichchord).offset().top) - $(document).scrollTop() - ($(window).height() / 5) < 0)) {
-				goToByScroll("chordNumber" + whichchord);
+				goToByScroll("chordNumber" + whichchord, 600,true);
 			}
 		}
 		currentSchedulerChord = parseInt(whichchord);
@@ -401,13 +334,6 @@ var jumpToChord = function(whichchord) { //jump a chord given an integer value t
 
 };
 
-var underlineJumpToChord = function(whichchord) { //jump a chord given an integer value that corresponds with a chord's div id
-	
-	moveChordUnderline(currentChord, whichchord, function() { //implemented as a callback theoretically to reduce mobile browser choppiness on the animation
-		currentChord = parseInt(whichchord);
-	});
-
-};
 
 var sendMod = function(increment) {
 	totalModulation += increment;
@@ -677,84 +603,10 @@ var detchordVal = function(chordname) {
 
 
 
-var playAudio = function() {
-	var i;
-
-	
-
-  var playAllLyricsChords = function(i) { //private function that sets a timer for all chord and lyric changes when playing back
-  	chordTimeouts[i] = setTimeout(function() {
-			if (chordsArmed === false) {
-				underlineJumpToChord(i + firstChord);
-				jumpToChord(i + firstChord);
-			}
-		
-			if (lyricsArmed === false) {
-				triggerLyrics(i, 1 / document.getElementById('audioplayer').playbackRate);
-			} //1 is the multipliers, which should be 1 with pre-programmed playback
-		}, ((chordTimings[i] - document.getElementById('audioplayer').currentTime) * 1000) / document.getElementById('audioplayer').playbackRate);
-	};
-
-  
-  
-
-	//read chord and lyrics timings out of arrays and auto-play the lyrics.
-	for (i = 0; i < chordTimings.length; i++) {
-		if ((chordTimings[i] !== null) && (chordTimings[i] - document.getElementById('audioplayer').currentTime >= -0.1)) {
-		playAllLyricsChords(i);
-		}
-	}
-
-	document.getElementById('speedslider').disabled = true;
-	document.getElementById('audioplayer').play();
-
-};
 
 
 
 
-
-
-
-
-var playAudioTV = function() {
-	var i;
-
-	
-	sendChord(firstChord);
-
-	document.getElementById('speedslider').disabled = true;
-	document.getElementById('audioplayer').play();
-
-};
-
-
-
-
-
-
-
-
-var triggerLyrics = function(chordnum, multiplier) {
-
-
-	//console.log ("triggerLyrics - " + chordnum);
-	var i = 0;
-	lyricTimeouts[chordnum] = [];
-	if (lyricOffsets[chordnum] !== undefined) {
-		lyricOffsets[chordnum].forEach(function(name) {
-			i++;
-			lyricTimeouts[chordnum][i] = setTimeout(function() {
-				
-				if (currentSchedulerChord === chordnum + firstChord) { //is this the currently-selected chord and if not, don't scroll 
-					moveLyricHighlight(currentLyric, name[1] + 1, true, function() {});
-				} else {
-					moveLyricHighlight(currentLyric, name[1] + 1, false, function() {});
-				}
-			}, name[0] * 1000 * multiplier);
-		});
-	}
-};
 
 
 
@@ -787,7 +639,7 @@ lastSent = 0;
 	textSizer(function() {});
 	setTimeout(function() {
 		jumpToChord(bid);
-		underlineJumpToChord(bid);
+		
 	}, 500);
 
 		$(".Parenthesis").addClass("tvwhite"); //Can't for the life of me remember why I called it Parenthesis
@@ -812,15 +664,11 @@ var activateChordChartMode = function(bid) {
 	textSizer(function() {});
 	setTimeout(function() {
 		jumpToChord(bid);
-		underlineJumpToChord(bid);
+		
 	}, 500);
 
 };
 
-var changePlaybackRate = function(rate) {
-	document.getElementById('audioplayer').playbackRate = rate;
-	$("#playbackrate").html(Number(rate).toFixed(2));
-};
 
 var getQueryVariable = function(variable) {
 
