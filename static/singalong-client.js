@@ -217,14 +217,15 @@ var textSizer = function(callback) { //resize the text on the page.  The 0.6 has
 var goToByScroll = function(toid,speed,stop) { //moves a scroll spot 1/2 of the way down the screen to the currently selected chord
 	
 	if ((($("#" + toid).offset().top) - $(document).scrollTop() - ($(window).height() / 2)) > (fontSizepx / 2)) { //check to see if they are different otherwise you are wasting cycles
+		console.log("We decided to goToByScroll", toid,speed,stop);
 		if (stop){
 			$('html,body').stop();
 		}
 		$('html,body').animate({
 			scrollTop: $("#" + toid).offset().top - $(window).height() / 2
 		}, speed); //this value is how many ms it takes for transitions
-
-	}
+	return true;
+	}else{return false};
 };
 
 
@@ -285,8 +286,14 @@ var nudgeChord = function(increment) {
 	
   if(currentChord >1 && prevDivScrollTop!=thisDivScrollTop){//this is a different level than the last one.
 		console.log("scrolling to " + determineNextVerticalChord(newPos) + " for secs:" + scrollTime);
-		goToByScroll("chordNumber"+newPos, 750, true)
-		goToByScroll("chordNumber"+determineNextVerticalChord(newPos), (scrollTime*1000)-750,false)
+	  var correctedScrollTime;
+	  if(goToByScroll("chordNumber"+newPos, 750, true)==false){//didn't actually
+				correctedScrollTime = scrollTime*1000;
+		}	else{ correctedScrollTime = (scrollTime*1000)-750}
+			
+			
+		goToByScroll("chordNumber"+newPos, 750, true);
+		goToByScroll("chordNumber"+determineNextVerticalChord(newPos), correctedScrollTime,false);
 	}
 
 };
