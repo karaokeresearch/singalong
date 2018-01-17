@@ -1,0 +1,43 @@
+@font-face {
+    font-family: Bitstream Vera Sans Mono Bold;
+    src: url('VeraMoBd.eot?') format('embedded-opentype'),
+    url('VeraMoBd.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: Bitstream Vera Sans Mono;
+    src: url('VeraMono.eot?') format('embedded-opentype'),
+    url('VeraMono.ttf') format('truetype');
+}
+
+.boldText{
+    font-family:Bitstream Vera Sans Mono Bold, Courier New;
+}
+
+.regularText{
+    font-family:Bitstream Vera Sans Mono, Courier New;
+
+}
+
+.chordLine{
+    font-family:Bitstream Vera Sans Mono Bold, Courier New;
+}
+
+
+.lyricLine{
+    font-family:Bitstream Vera Sans Mono, Courier New;
+    padding-bottom: 1.5em;
+}
+
+
+.sectionLine{
+    font-family:Bitstream Vera Sans Mono Bold, Courier New;
+    padding-bottom: 1em;
+}
+
+
+.emptyLine{
+    font-family:Bitstream Vera Sans Mono Bold, Courier New;
+    line-height: 0.5em;
+}
+ 
