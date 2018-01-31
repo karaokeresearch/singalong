@@ -7,6 +7,10 @@ var sectionRegex = /(^[^\s]*?:\s*$)/;
 var songLines=[];
 var chords=[]; //chord index, array containing [distanceToNextChord, distanceToNextLine]
 var longestLine=0
+var currentChord=0;
+var hitOnce = []; //determines if a user has hit a key or not
+
+
 
 var printPage=function(){
 	
@@ -26,7 +30,7 @@ var printPage=function(){
 				 var linePos=0;
 				 for (var j=0; j<chordSplit.length;j++){ //go through each chord on this line.
 					 if (chordSplit[j].match(/\w/)){ // it's an actual Chord					 	
-					  h += '<a href="' + chordNumber+ '">' +chordSplit[j] +'</a>';	
+					  h += '<span class="chord" id="c' + chordNumber+ '">' +chordSplit[j] +'</span>';	
 					 	chordNumber++;
 					 	}
 					 	else if (chordSplit[j].match(/\s/)){
@@ -65,11 +69,37 @@ var printPage=function(){
 	
 	
 	$( "#pageContainer" ).html( h ); 
+
+selectChord(currentChord);
+
+} //end printPage
+
+var selectChord= function(chord){
+	$("#c" + chord).css("background-color", "black");
+	$("#c" + chord).css("color", "white");
+	$("#c" + chord).css("outline-color", "black");
+};
+
+
+var deSelectChord= function(chord){
+	$("#c" + chord).css("background-color", "white");
+	$("#c" + chord).css("color", "grey");
+	$("#c" + chord).css("outline-color", "white");
+	
+};
+
+var switchChord = function(fromChord, toChord){
+	deSelectChord(fromChord);
+	currentChord = toChord;
+	selectChord(toChord);
 }
 
 
 
+
 $( document ).ready(function() {
+
+
 
 	$.get( "/songs/test.txt", function( data ) {
 
@@ -191,4 +221,49 @@ $( document ).ready(function() {
 	  
 	})//end get
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+	$(document).on('keydown', function(event) {
+		actualKey = (event.which);
+		if (hitOnce[actualKey] !== 1) {
+			if (actualKey === 65) { //A chord left
+
+		switchChord(currentChord, currentChord-1);
+			}
+
+			if (actualKey === 68) { //D chord right
+
+			    	switchChord(currentChord, currentChord+1);
+			}
+			if (actualKey === 66) { //B flat/sharp overrride
+				sendFlat();
+			}
+
+			if (actualKey === 87) { //W modulate key up
+				sendMod(1);
+			}
+			if (actualKey === 83) { //S modulate key down
+				sendMod(-1);
+			}
+
+			hitOnce[actualKey] = 1;
+		} //end keydown area
+	}); //end document ready JQuery area
+
+	$(document).on('keyup', function(event) {
+		hitOnce[event.which] = 0;
+	});
+	
+	
 });//end document ready

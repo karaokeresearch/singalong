@@ -10,19 +10,18 @@
     url('VeraMono.ttf') format('truetype');
 }
 
-.boldText{
-    font-family:Bitstream Vera Sans Mono Bold, Courier New;
-}
 
-.regularText{
-    font-family:Bitstream Vera Sans Mono, Courier New;
-
-}
 
 .chordLine{
     font-family:Bitstream Vera Sans Mono Bold, Courier New;
+    color: grey;
 }
 
+.chord{
+	outline-style: solid;
+	outline-color: white;
+	outline-width: 0.20em;
+}
 
 .lyricLine{
     font-family:Bitstream Vera Sans Mono, Courier New;
