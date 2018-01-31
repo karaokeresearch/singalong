@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<style>
+    		
+    		body { margin: 1em; padding: 0em; }
+
+    		
+    		</style>
+    	
+    	
+        <title>Singalong</title>
+
+        <meta name="viewport" content="width=device-width" />
+        <meta name="viewport" content="initial-scale=1.0" />
+
+        <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="singalong-client.js"></script>
+
+    </head>
+
+    <body>
+			<div id="pageContainer2" style="background-color:green;"><span style="background-color:pink;  display: inline-block; padding:0; margin:0;" id="boo">Yolo</div>
+
+<script>
+	windowWidth = $(window).width();
+	spanWidth= $("#boo").width();
+	divWidth= $("#pageContainer2").width();
+	
+	elementFontHeight = parseFloat($("#boo").css("font-size").replace(/px/,""));
+	fontHeightInVW= elementFontHeight / (windowWidth/100);
+	newFontVW =(divWidth /spanWidth) * fontHeightInVW;
+	$("#boo").css("font-size",newFontVW + "vw");
+	
+	
+	
+	
+	
+	</script>
+
+    </body>
+
+</html>
+
+
